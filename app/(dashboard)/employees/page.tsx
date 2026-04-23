@@ -255,9 +255,9 @@ function QuickViewPanel({ emp }: { emp: EmployeeCard }) {
         </button>
       </div>
 
-      {/* Profile */}
-      <div className="relative flex flex-1 flex-col overflow-y-auto px-6 pb-6">
-        <div className="relative z-10 -mt-10 mb-4">
+      {/* Profile — overflow-y-auto를 제거해야 아바타의 -mt-10이 배너 위로 오버랩 가능 */}
+      <div className="relative flex flex-1 flex-col px-6 pb-6">
+        <div className="relative z-20 -mt-10 mb-4">
           <InitialsAvatar
             name={emp.name}
             size="lg"
