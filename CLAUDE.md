@@ -81,20 +81,21 @@
 ```
 /
 ├── app/
+│   ├── page.tsx                    # 루트 "/" — 로그아웃 랜딩 (stitch 05_landing)
 │   ├── (auth)/login/
-│   ├── (dashboard)/
-│   │   ├── layout.tsx              # 사이드바 + 상단바
-│   │   ├── page.tsx                # 대시보드 메인
-│   │   ├── employees/              # 직원정보
-│   │   ├── attendance/             # 근태입력
-│   │   ├── payroll/                # 급여계산
+│   ├── (dashboard)/                # route group — URL에 반영 안 됨
+│   │   ├── layout.tsx              # 사이드바 + 상단바 + 하단탭
+│   │   ├── dashboard/              # "/dashboard" — 대시보드 메인
+│   │   ├── employees/              # "/employees" — 직원정보
+│   │   ├── attendance/             # "/attendance" — 근태입력
+│   │   ├── payroll/                # "/payroll" — 급여계산
 │   │   │   ├── page.tsx
-│   │   │   └── [employeeId]/       # 급여명세서
-│   │   ├── leave/                  # 연차관리
-│   │   ├── expenses/               # 지출입력
-│   │   ├── vendors/                # 거래처
-│   │   ├── assets/                 # 자산관리
-│   │   └── closing/                # 월말결산 체크리스트
+│   │   │   └── [employeeId]/       # "/payroll/[id]" — 급여명세서
+│   │   ├── leave/                  # "/leave" — 연차관리
+│   │   ├── expenses/               # "/expenses" — 지출입력
+│   │   ├── vendors/                # "/vendors" — 거래처
+│   │   ├── assets/                 # "/assets" — 자산관리
+│   │   └── closing/                # "/closing" — 월말결산 체크리스트
 │   └── api/
 │       ├── payroll/calculate/      # 급여 계산 API
 │       ├── leave/accrual/          # 연차 발생 계산
