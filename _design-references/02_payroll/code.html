@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Chongmu PRO Elite - Intelligent Payroll Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-on-surface": "#283044",
+                        "on-surface": "#dae2fd",
+                        "surface-variant": "#2d3449",
+                        "tertiary-fixed-dim": "#7bd0ff",
+                        "on-error-container": "#ffdad6",
+                        "error-container": "#93000a",
+                        "on-surface-variant": "#c7c4d7",
+                        "tertiary": "#7bd0ff",
+                        "surface-dim": "#0b1326",
+                        "primary-fixed": "#e1e0ff",
+                        "on-secondary-fixed-variant": "#39485a",
+                        "on-error": "#690005",
+                        "on-tertiary": "#00354a",
+                        "inverse-primary": "#494bd6",
+                        "surface": "#0b1326",
+                        "surface-container-high": "#222a3d",
+                        "on-secondary": "#233143",
+                        "on-tertiary-container": "#002d40",
+                        "primary-fixed-dim": "#c0c1ff",
+                        "secondary": "#b9c8de",
+                        "inverse-surface": "#dae2fd",
+                        "outline-variant": "#464554",
+                        "on-primary-container": "#0d0096",
+                        "surface-tint": "#c0c1ff",
+                        "secondary-fixed-dim": "#b9c8de",
+                        "surface-container-low": "#131b2e",
+                        "on-secondary-fixed": "#0d1c2d",
+                        "secondary-container": "#39485a",
+                        "on-primary-fixed-variant": "#2f2ebe",
+                        "error": "#ffb4ab",
+                        "on-tertiary-fixed-variant": "#004c69",
+                        "on-background": "#dae2fd",
+                        "secondary-fixed": "#d4e4fa",
+                        "tertiary-fixed": "#c4e7ff",
+                        "surface-container": "#171f33",
+                        "primary-container": "#8083ff",
+                        "on-tertiary-fixed": "#001e2c",
+                        "on-primary-fixed": "#07006c",
+                        "background": "#0b1326",
+                        "surface-container-lowest": "#060e20",
+                        "on-secondary-container": "#a7b6cc",
+                        "outline": "#908fa0",
+                        "tertiary-container": "#009bd1",
+                        "primary": "#c0c1ff",
+                        "surface-container-highest": "#2d3449",
+                        "surface-bright": "#31394d",
+                        "on-primary": "#1000a9"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "gutter": "24px",
+                        "stack-md": "16px",
+                        "stack-sm": "8px",
+                        "stack-lg": "32px",
+                        "container-padding": "32px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Inter"],
+                        "data-tabular": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display-xl": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                        "data-tabular": ["14px", { "lineHeight": "1.4", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "display-xl": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-sm": ["12px", { "lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-lg": ["30px", { "lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "1.5", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(199, 196, 215, 0.1);
+            box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.2);
+        }
+        .glass-panel-rim {
+            position: relative;
+        }
+        .glass-panel-rim::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: inherit;
+            padding: 1px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+        /* Custom scrollbar for tables */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(144, 143, 160, 0.3); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(144, 143, 160, 0.5); }
+    </style>
+</head>
+<body class="bg-background text-on-background h-screen overflow-hidden flex font-body-md text-body-md antialiased selection:bg-primary-container selection:text-on-primary-container">
+<!-- SideNavBar (Shared Component) -->
+<aside class="fixed left-0 top-0 h-full flex flex-col py-6 border-r border-slate-800/40 bg-[#020617]/80 backdrop-blur-2xl text-indigo-500 dark:text-indigo-400 font-['Inter'] font-medium text-sm tracking-wide h-screen w-72 border-r shadow-[4px_0_24px_rgba(0,0,0,0.5)] z-50">
+<!-- Header -->
+<div class="px-6 mb-8 flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-inverse-primary flex items-center justify-center shadow-lg">
+<span class="material-symbols-outlined text-on-primary" style="font-variation-settings: 'FILL' 1;">domain</span>
+</div>
+<div>
+<h1 class="text-xl font-black text-white leading-tight">Chongmu PRO</h1>
+<p class="text-xs text-slate-400">Enterprise Edition</p>
+</div>
+</div>
+<!-- Main Navigation -->
+<nav class="flex-1 px-4 space-y-1 overflow-y-auto">
+<!-- Inactive -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 hover:text-slate-200 hover:bg-slate-800/20 transition-all duration-300 ease-out hover:pl-2" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+                Command Center
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 hover:text-slate-200 hover:bg-slate-800/20 transition-all duration-300 ease-out hover:pl-2" href="#">
+<span class="material-symbols-outlined">groups</span>
+                Workforce
+            </a>
+<!-- Active (Payroll Engine) -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg bg-indigo-500/10 text-indigo-400 border-r-2 border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.1)] transition-all duration-300 ease-out hover:pl-2" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">payments</span>
+                Payroll Engine
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 hover:text-slate-200 hover:bg-slate-800/20 transition-all duration-300 ease-out hover:pl-2" href="#">
+<span class="material-symbols-outlined">history_toggle_off</span>
+                Time &amp; Attendance
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 hover:text-slate-200 hover:bg-slate-800/20 transition-all duration-300 ease-out hover:pl-2" href="#">
+<span class="material-symbols-outlined">card_membership</span>
+                Benefits
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 hover:text-slate-200 hover:bg-slate-800/20 transition-all duration-300 ease-out hover:pl-2" href="#">
+<span class="material-symbols-outlined">analytics</span>
+                Strategic Reports
+            </a>
+</nav>
+<!-- CTA -->
+<div class="px-6 mt-6 mb-4">
+<button class="w-full py-2.5 rounded-DEFAULT bg-primary/10 border border-primary/30 text-primary hover:bg-primary hover:text-on-primary transition-all duration-200 font-label-sm text-label-sm flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">add_circle</span>
+                Generate Report
+            </button>
+</div>
+<!-- Footer Navigation -->
+<div class="px-4 border-t border-slate-800/30 pt-4 space-y-1">
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-500 hover:text-slate-200 hover:bg-slate-800/20 transition-all duration-300 ease-out hover:pl-2" href="#">
+<span class="material-symbols-outlined text-sm">settings_suggest</span>
+                System Settings
+            </a>
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-500 hover:text-slate-200 hover:bg-slate-800/20 transition-all duration-300 ease-out hover:pl-2" href="#">
+<span class="material-symbols-outlined text-sm">receipt_long</span>
+                Audit Logs
+            </a>
+</div>
+</aside>
+<!-- Main Content Wrapper -->
+<div class="flex-1 flex flex-col ml-72">
+<!-- TopAppBar (Shared Component) -->
+<header class="sticky top-0 z-40 flex justify-between items-center w-full px-8 h-16 bg-slate-950/80 border-b border-slate-800/50 backdrop-blur-md text-indigo-500 dark:text-indigo-400 font-['Inter'] antialiased text-slate-200 shadow-2xl">
+<!-- Left: Brand/Context -->
+<div class="flex items-center gap-4">
+<div class="text-lg font-bold tracking-tight text-white uppercase">Chongmu PRO Elite</div>
+<div class="h-4 w-px bg-slate-800/50"></div>
+<!-- Search Bar (on_left) -->
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-slate-400 text-sm">search</span>
+<input class="bg-surface-container-high border border-outline-variant/30 rounded-full py-1.5 pl-9 pr-4 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-on-surface placeholder:text-outline w-64 transition-all duration-200" placeholder="Search employees, batches..." type="text"/>
+</div>
+</div>
+<!-- Right: Actions -->
+<div class="flex items-center gap-6">
+<!-- Secondary Action -->
+<button class="text-sm font-medium text-slate-400 hover:text-slate-100 transition-all duration-200 ease-in-out">Help Center</button>
+<!-- Trailing Icons -->
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-full text-slate-400 hover:text-slate-100 hover:bg-slate-800/40 transition-all duration-200 ease-in-out active:scale-95 cursor-pointer relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="p-2 rounded-full text-slate-400 hover:text-slate-100 hover:bg-slate-800/40 transition-all duration-200 ease-in-out active:scale-95 cursor-pointer">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<button class="p-2 rounded-full text-slate-400 hover:text-slate-100 hover:bg-slate-800/40 transition-all duration-200 ease-in-out active:scale-95 cursor-pointer">
+<span class="material-symbols-outlined">help</span>
+</button>
+</div>
+<div class="h-6 w-px bg-slate-800/50"></div>
+<!-- Profile -->
+<button class="flex items-center gap-3 hover:bg-slate-800/40 p-1 pr-3 rounded-full transition-all duration-200">
+<img alt="Executive User Profile" class="w-8 h-8 rounded-full border border-slate-700" data-alt="close up professional headshot of an executive with dark hair wearing a navy suit against a neutral grey background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCsuh0vTqIMdblHKedbjhT405DTz37rONwukRGZ7XhUeVV7XaK2wT7xZSBazoBnYQR1gViLtKI1DQ5LMSx3OWGRgDz-ZKGYQi0ybAClL8eopvffzSIw3vNIi1EZIkSY1jMPn3BirNCGfufcPcTGue2njElyRpQK3Sgb6f9lFicchWiySYBs4t26UnhZaufQNRpqpoD_BnANjh96QGuYWL5hudTwHfdGS5JJrCcrRK6E0bUk3PyBhw1g67hffq9bm5YrGOptSIbv"/>
+<span class="material-symbols-outlined text-slate-400">arrow_drop_down</span>
+</button>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="flex-1 p-container-padding overflow-y-auto bg-background">
+<div class="max-w-7xl mx-auto space-y-stack-lg">
+<!-- Page Header -->
+<div class="flex justify-between items-end">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-2">Payroll Execution Matrix</h2>
+<p class="text-on-surface-variant font-body-md text-body-md">Manage, calculate, and disburse scheduled payments with absolute precision.</p>
+</div>
+<div class="flex gap-4">
+<button class="px-4 py-2 rounded-DEFAULT bg-surface-container-high border border-outline-variant/50 text-on-surface hover:bg-surface-container-highest transition-colors font-label-sm text-label-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">download</span>
+                            Export Ledger
+                        </button>
+<button class="px-6 py-2 rounded-DEFAULT bg-gradient-to-b from-primary to-inverse-primary text-on-primary hover:opacity-90 transition-opacity font-label-sm text-label-sm shadow-[0_0_15px_rgba(192,193,255,0.3)] flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">lock_open</span>
+                            Authorize Batch
+                        </button>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-12 gap-gutter">
+<!-- LEFT COLUMN: Data Table (Spans 8 cols) -->
+<div class="col-span-12 xl:col-span-8 flex flex-col gap-stack-md">
+<!-- Filters & Controls -->
+<div class="glass-panel glass-panel-rim rounded-lg p-4 flex justify-between items-center bg-surface-container-low">
+<div class="flex gap-4">
+<div class="relative">
+<select class="appearance-none bg-surface border border-outline-variant/40 rounded-DEFAULT py-1.5 pl-3 pr-8 text-on-surface font-data-tabular text-data-tabular focus:ring-1 focus:ring-primary focus:border-primary outline-none">
+<option>All Departments</option>
+<option>Engineering</option>
+<option>Executive</option>
+<option>Sales</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-outline pointer-events-none text-[18px]">expand_more</span>
+</div>
+<div class="relative">
+<select class="appearance-none bg-surface border border-outline-variant/40 rounded-DEFAULT py-1.5 pl-3 pr-8 text-on-surface font-data-tabular text-data-tabular focus:ring-1 focus:ring-primary focus:border-primary outline-none">
+<option>Status: All</option>
+<option>Confirmed</option>
+<option>Draft</option>
+<option>Exception</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-outline pointer-events-none text-[18px]">expand_more</span>
+</div>
+</div>
+<div class="text-outline-variant font-label-sm text-label-sm">
+                                Showing 1-5 of 142 Records
+                            </div>
+</div>
+<!-- The Data Table -->
+<div class="glass-panel glass-panel-rim rounded-lg overflow-hidden flex-1 bg-surface-container-lowest border border-outline-variant/20">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container-low border-b border-outline-variant/30 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
+<tr>
+<th class="px-6 py-4 font-semibold">Employee</th>
+<th class="px-6 py-4 font-semibold text-right">Base Salary</th>
+<th class="px-6 py-4 font-semibold text-right">Allowances</th>
+<th class="px-6 py-4 font-semibold text-right">Deductions</th>
+<th class="px-6 py-4 font-semibold text-right">Net Pay</th>
+<th class="px-6 py-4 font-semibold text-center">Status</th>
+<th class="px-4 py-4 w-10"></th>
+</tr>
+</thead>
+<tbody class="font-data-tabular text-data-tabular divide-y divide-outline-variant/10 text-on-surface">
+<!-- Row 1: Confirmed -->
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-6 py-3">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-primary font-bold text-xs border border-outline-variant/20">AS</div>
+<div>
+<div class="font-medium text-on-surface">Adrian Sterling</div>
+<div class="text-xs text-on-surface-variant font-body-md">ENG-1042</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-3 text-right">$12,500.00</td>
+<td class="px-6 py-3 text-right text-tertiary-fixed-dim">+$1,200.00</td>
+<td class="px-6 py-3 text-right text-error-container">-$3,450.00</td>
+<td class="px-6 py-3 text-right font-semibold text-white">$10,250.00</td>
+<td class="px-6 py-3 text-center">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary-container/20 border border-primary-container/50 text-primary-container font-label-sm text-[10px]">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+                                                Confirmed
+                                            </span>
+</td>
+<td class="px-4 py-3 text-right opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-outline hover:text-primary"><span class="material-symbols-outlined text-[18px]">more_vert</span></button>
+</td>
+</tr>
+<!-- Row 2: Draft -->
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-6 py-3">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-secondary font-bold text-xs border border-outline-variant/20">EL</div>
+<div>
+<div class="font-medium text-on-surface">Evelyn Lin</div>
+<div class="text-xs text-on-surface-variant font-body-md">MKT-2291</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-3 text-right">$9,800.00</td>
+<td class="px-6 py-3 text-right text-tertiary-fixed-dim">+$450.00</td>
+<td class="px-6 py-3 text-right text-error-container">-$2,100.00</td>
+<td class="px-6 py-3 text-right font-semibold text-white">$8,150.00</td>
+<td class="px-6 py-3 text-center">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-variant border border-outline-variant/50 text-on-surface-variant font-label-sm text-[10px]">
+<span class="w-1.5 h-1.5 rounded-full bg-on-surface-variant"></span>
+                                                Draft
+                                            </span>
+</td>
+<td class="px-4 py-3 text-right opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-outline hover:text-primary"><span class="material-symbols-outlined text-[18px]">more_vert</span></button>
+</td>
+</tr>
+<!-- Row 3: Exception -->
+<tr class="hover:bg-primary/5 transition-colors group border-l-2 border-l-error bg-error/5">
+<td class="px-6 py-3">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-error font-bold text-xs border border-outline-variant/20">MR</div>
+<div>
+<div class="font-medium text-on-surface">Marcus Reed</div>
+<div class="text-xs text-error font-body-md">Missing Tax ID</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-3 text-right">$14,200.00</td>
+<td class="px-6 py-3 text-right text-tertiary-fixed-dim">+$0.00</td>
+<td class="px-6 py-3 text-right text-outline-variant">--</td>
+<td class="px-6 py-3 text-right font-semibold text-outline-variant">Pending</td>
+<td class="px-6 py-3 text-center">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-error-container/20 border border-error-container/50 text-error font-label-sm text-[10px]">
+<span class="material-symbols-outlined text-[12px]">warning</span>
+                                                Review
+                                            </span>
+</td>
+<td class="px-4 py-3 text-right opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-outline hover:text-primary"><span class="material-symbols-outlined text-[18px]">more_vert</span></button>
+</td>
+</tr>
+<!-- Row 4: Confirmed -->
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-6 py-3">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-primary font-bold text-xs border border-outline-variant/20">SC</div>
+<div>
+<div class="font-medium text-on-surface">Sarah Chen</div>
+<div class="text-xs text-on-surface-variant font-body-md">ENG-1088</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-3 text-right">$11,000.00</td>
+<td class="px-6 py-3 text-right text-tertiary-fixed-dim">+$800.00</td>
+<td class="px-6 py-3 text-right text-error-container">-$2,900.00</td>
+<td class="px-6 py-3 text-right font-semibold text-white">$8,900.00</td>
+<td class="px-6 py-3 text-center">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary-container/20 border border-primary-container/50 text-primary-container font-label-sm text-[10px]">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+                                                Confirmed
+                                            </span>
+</td>
+<td class="px-4 py-3 text-right opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-outline hover:text-primary"><span class="material-symbols-outlined text-[18px]">more_vert</span></button>
+</td>
+</tr>
+<!-- Row 5: Draft -->
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-6 py-3">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-secondary font-bold text-xs border border-outline-variant/20">JD</div>
+<div>
+<div class="font-medium text-on-surface">James Doyle</div>
+<div class="text-xs text-on-surface-variant font-body-md">SAL-3012</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-3 text-right">$7,500.00</td>
+<td class="px-6 py-3 text-right text-tertiary-fixed-dim">+$3,200.00</td>
+<td class="px-6 py-3 text-right text-error-container">-$2,800.00</td>
+<td class="px-6 py-3 text-right font-semibold text-white">$7,900.00</td>
+<td class="px-6 py-3 text-center">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-variant border border-outline-variant/50 text-on-surface-variant font-label-sm text-[10px]">
+<span class="w-1.5 h-1.5 rounded-full bg-on-surface-variant"></span>
+                                                Draft
+                                            </span>
+</td>
+<td class="px-4 py-3 text-right opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-outline hover:text-primary"><span class="material-symbols-outlined text-[18px]">more_vert</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- RIGHT COLUMN: Actions & Summaries (Spans 4 cols) -->
+<div class="col-span-12 xl:col-span-4 flex flex-col gap-stack-lg">
+<!-- Batch Calculation Status Card -->
+<div class="glass-panel glass-panel-rim rounded-xl p-6 relative overflow-hidden bg-surface-container">
+<!-- Decorative glow -->
+<div class="absolute -top-10 -right-10 w-32 h-32 bg-primary/20 rounded-full blur-2xl pointer-events-none"></div>
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-primary">calendar_month</span>
+<h3 class="font-headline-md text-[18px] text-white">Batch Calculation</h3>
+</div>
+<div class="flex items-end justify-between mb-2">
+<div>
+<div class="text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider mb-1">Target Period</div>
+<div class="font-headline-md text-headline-md text-primary-fixed">January 2026</div>
+</div>
+<div class="text-right">
+<div class="text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider mb-1">Status</div>
+<div class="font-data-tabular text-data-tabular text-tertiary-fixed-dim">Processing</div>
+</div>
+</div>
+<!-- Progress Indicator -->
+<div class="mt-6 mb-8">
+<div class="flex justify-between text-xs font-data-tabular text-on-surface-variant mb-2">
+<span>Calculated: 128/142</span>
+<span class="text-primary-fixed">90%</span>
+</div>
+<div class="w-full h-2 bg-surface-container-highest rounded-full overflow-hidden shadow-inner border border-outline-variant/20">
+<div class="h-full bg-gradient-to-r from-primary-container to-primary shadow-[0_0_10px_rgba(192,193,255,0.5)] rounded-full w-[90%] relative">
+<!-- Shimmer effect simulation -->
+<div class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full"></div>
+</div>
+</div>
+</div>
+<button class="w-full py-3 rounded-lg bg-surface border border-outline-variant/30 text-on-surface hover:bg-surface-container-high transition-colors font-label-sm text-label-sm flex items-center justify-center gap-2 group shadow-sm">
+<span class="material-symbols-outlined text-[18px] group-hover:rotate-180 transition-transform duration-500">sync</span>
+                                Recalculate Drafts
+                            </button>
+</div>
+<!-- Aggregate Summary Panel -->
+<div class="glass-panel glass-panel-rim rounded-xl p-6 bg-surface-container-low flex flex-col gap-4">
+<h3 class="font-headline-md text-[18px] text-white border-b border-outline-variant/20 pb-4 mb-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary">account_balance</span>
+                                Financial Aggregates
+                            </h3>
+<!-- Metric Item -->
+<div class="flex justify-between items-center p-3 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors border border-transparent hover:border-outline-variant/20">
+<div>
+<div class="text-on-surface-variant font-label-sm text-label-sm">Total Gross Payroll</div>
+<div class="font-data-tabular text-data-tabular text-xs mt-0.5 opacity-70">Base + Allowances</div>
+</div>
+<div class="font-headline-md text-[20px] text-white tracking-tight">$1,425,800.00</div>
+</div>
+<!-- Metric Item -->
+<div class="flex justify-between items-center p-3 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors border border-transparent hover:border-outline-variant/20">
+<div>
+<div class="text-on-surface-variant font-label-sm text-label-sm">Total Deductions</div>
+<div class="font-data-tabular text-data-tabular text-xs mt-0.5 opacity-70 text-error-container">4 Insurances + Tax</div>
+</div>
+<div class="font-headline-md text-[20px] text-error-container tracking-tight">-$384,150.00</div>
+</div>
+<div class="h-px bg-gradient-to-r from-transparent via-outline-variant/30 to-transparent my-2"></div>
+<!-- Net Output -->
+<div class="flex justify-between items-end p-4 rounded-lg bg-gradient-to-br from-primary-container/10 to-transparent border border-primary-container/20">
+<div>
+<div class="text-primary-fixed font-label-sm text-label-sm uppercase tracking-wider mb-1">Total Net Disbursable</div>
+<div class="font-data-tabular text-data-tabular text-xs opacity-70">Jan 2026 Cycle</div>
+</div>
+<div class="font-display-xl text-[32px] text-primary-fixed drop-shadow-[0_0_10px_rgba(192,193,255,0.2)]">
+                                    $1,041,650.00
+                                </div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

@@ -1,0 +1,3 @@
+-- supabase/seed.sql
+-- Phase 1에서 seed 데이터 작성.
+-- 직원 15명, 3개월치 근태·급여·지출, insurance_rates 2026년 실제값 반영.
