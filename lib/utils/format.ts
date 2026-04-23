@@ -43,6 +43,25 @@ export function formatDelta(ratio: number): string {
   return `${sign}${(ratio * 100).toFixed(1)}%`;
 }
 
+/**
+ * 내용연수·계약기간 등의 남은 기간을 한국식으로 포맷.
+ * - 0 이하: "만료"
+ * - 1개월 미만: "1개월 미만"
+ * - 1~11개월: "N개월"
+ * - 12개월 이상: "N년" 또는 "N년 M개월"
+ *
+ * 예: 0.05 → "1개월 미만", 0.9 → "11개월", 1.5 → "1년 6개월", 2.0 → "2년"
+ */
+export function formatRemainingYears(years: number): string {
+  if (years <= 0) return "만료";
+  const totalMonths = Math.round(years * 12);
+  if (totalMonths < 1) return "1개월 미만";
+  if (totalMonths < 12) return `${totalMonths}개월`;
+  const y = Math.floor(totalMonths / 12);
+  const m = totalMonths % 12;
+  return m === 0 ? `${y}년` : `${y}년 ${m}개월`;
+}
+
 export function maskBankAccount(account: string): string {
   if (!account) return "";
   const digits = account.replace(/[^0-9]/g, "");

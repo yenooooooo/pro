@@ -319,23 +319,23 @@ function PayrollTableRow({ row }: { row: PayrollRow }) {
 function StatusBadge({ status }: { status: RowStatus }) {
   if (status === "confirmed") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-primary-container/50 bg-primary-container/20 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary-container">
-        <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-primary-container" />
+      <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-primary-container/50 bg-primary-container/20 px-2.5 py-1 text-[11px] font-semibold text-primary-container">
+        <span aria-hidden className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-primary-container" />
         확정
       </span>
     );
   }
   if (status === "draft") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-outline-variant/50 bg-surface-variant px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant">
-        <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-on-surface-variant" />
+      <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-outline-variant/50 bg-surface-variant px-2.5 py-1 text-[11px] font-semibold text-on-surface-variant">
+        <span aria-hidden className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-on-surface-variant" />
         초안
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-error-container/50 bg-error-container/20 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-error-soft">
-      <AlertTriangle aria-hidden className="h-3 w-3" />
+    <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-error-container/50 bg-error-container/20 px-2.5 py-1 text-[11px] font-semibold text-error-soft">
+      <AlertTriangle aria-hidden className="h-3 w-3 flex-shrink-0" />
       검토필요
     </span>
   );

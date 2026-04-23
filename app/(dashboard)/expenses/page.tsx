@@ -209,7 +209,7 @@ export default function ExpensesPage() {
                       {row.date}
                     </td>
                     <td className="px-6 py-3">
-                      <span className="rounded-md border border-outline-variant/30 bg-surface-container px-2 py-1 text-[11px] text-on-surface-variant">
+                      <span className="inline-block whitespace-nowrap rounded-md border border-outline-variant/30 bg-surface-container px-2 py-1 text-[11px] text-on-surface-variant">
                         {row.category}
                       </span>
                     </td>
@@ -226,7 +226,7 @@ export default function ExpensesPage() {
                     <td className="px-6 py-3 text-center">
                       <span
                         className={cn(
-                          "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold",
+                          "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] font-semibold",
                           METHOD_COLOR[row.method],
                         )}
                       >

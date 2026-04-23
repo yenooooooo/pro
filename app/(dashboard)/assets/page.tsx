@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
 import { cn } from "@/lib/utils/cn";
-import { formatKRW } from "@/lib/utils/format";
+import { formatKRW, formatRemainingYears } from "@/lib/utils/format";
 
 type AssetCategory = "IT기기" | "사무가구" | "차량" | "기타";
 type AssetStatus = "사용중" | "수리중" | "폐기" | "매각";
@@ -248,14 +248,17 @@ export default function AssetsPage() {
                       <td className="px-6 py-3 text-right tabular-nums">
                         {formatKRW(a.acquisitionCost)}
                       </td>
-                      <td className="px-6 py-3 text-right tabular-nums">
-                        {a.yearsRemaining <= 0 ? (
-                          <span className="text-error-soft">만료</span>
-                        ) : (
-                          <span className={isExpiring ? "text-error-soft" : "text-on-surface"}>
-                            {a.yearsRemaining.toFixed(1)}년
-                          </span>
-                        )}
+                      <td className="px-6 py-3 text-right">
+                        <span
+                          className={cn(
+                            "whitespace-nowrap tabular-nums",
+                            a.yearsRemaining <= 0 || isExpiring
+                              ? "text-error-soft"
+                              : "text-on-surface",
+                          )}
+                        >
+                          {formatRemainingYears(a.yearsRemaining)}
+                        </span>
                       </td>
                       <td className="px-6 py-3">
                         {a.assignedTo ? (
@@ -274,7 +277,7 @@ export default function AssetsPage() {
                       <td className="px-6 py-3 text-center">
                         <span
                           className={cn(
-                            "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold",
+                            "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] font-semibold",
                             STATUS_COLOR[a.status],
                           )}
                         >
@@ -355,8 +358,8 @@ export default function AssetsPage() {
                       <div className="text-body-md font-medium text-on-surface">{a.name}</div>
                       <div className="text-label-sm text-error-soft">
                         {a.yearsRemaining <= 0
-                          ? `${Math.abs(a.yearsRemaining).toFixed(1)}년 초과`
-                          : `${a.yearsRemaining.toFixed(1)}년 남음`}
+                          ? `${formatRemainingYears(Math.abs(a.yearsRemaining))} 초과`
+                          : `${formatRemainingYears(a.yearsRemaining)} 남음`}
                         {" · "}
                         <span className="text-on-surface-variant">{a.assetNo}</span>
                       </div>

@@ -244,7 +244,7 @@ export default function LeavePage() {
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-on-surface">{row.name}</span>
-                          <span className="rounded border border-outline-variant/30 bg-surface-container px-2 py-0.5 text-[10px] uppercase tracking-wider text-on-surface-variant">
+                          <span className="whitespace-nowrap rounded border border-outline-variant/30 bg-surface-container px-2 py-0.5 text-[11px] text-on-surface-variant">
                             {yearsOfService}년차
                           </span>
                         </div>

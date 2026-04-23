@@ -190,13 +190,13 @@ export default function AttendancePage() {
                       </td>
                       <td className="px-6 py-3 text-center">
                         {over52 ? (
-                          <span className="inline-flex items-center gap-1.5 rounded-full border border-error-container/50 bg-error-container/20 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-error-soft">
-                            <AlertTriangle aria-hidden className="h-3 w-3" />
+                          <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-error-container/50 bg-error-container/20 px-2.5 py-1 text-[11px] font-semibold text-error-soft">
+                            <AlertTriangle aria-hidden className="h-3 w-3 flex-shrink-0" />
                             초과 {total - WEEK52_THRESHOLD}h
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1.5 rounded-full border border-primary-container/50 bg-primary-container/20 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary-container">
-                            <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-primary-container" />
+                          <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-primary-container/50 bg-primary-container/20 px-2.5 py-1 text-[11px] font-semibold text-primary-container">
+                            <span aria-hidden className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-primary-container" />
                             정상
                           </span>
                         )}
