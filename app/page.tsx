@@ -9,6 +9,7 @@ import {
   Wallet,
 } from "lucide-react";
 
+// 브랜딩 섹션 — stitch 원본 영문 유지
 const SECTION_LINKS = [
   { label: "Executive Intelligence", href: "#intelligence", active: true },
   { label: "Global Compliance", href: "#compliance" },
@@ -16,12 +17,13 @@ const SECTION_LINKS = [
   { label: "Resources", href: "#resources" },
 ];
 
+// 법적 링크 — 한국 법제 용어 사용
 const FOOTER_LINKS = [
-  "Intelligence Portal",
-  "Compliance Standards",
-  "Workforce Ops",
-  "Legal",
-  "Privacy",
+  "서비스 소개",
+  "규정 준수",
+  "인력 운영",
+  "이용약관",
+  "개인정보처리방침",
 ];
 
 export default function LandingPage() {
@@ -60,13 +62,13 @@ export default function LandingPage() {
               href="/login"
               className="text-label-sm uppercase tracking-widest text-on-surface-variant transition-colors hover:text-white"
             >
-              Login
+              로그인
             </Link>
             <Link
               href="/login"
-              className="rounded border border-primary-electric/50 bg-primary-container px-4 py-2 text-label-sm uppercase tracking-wider text-white shadow-[0_0_15px_rgba(99,102,241,0.3)] transition-all duration-200 hover:bg-primary-container/80 active:scale-95 md:px-6 md:py-2.5"
+              className="rounded border border-primary-electric/50 bg-primary-container px-4 py-2 text-label-sm font-semibold text-white shadow-[0_0_15px_rgba(99,102,241,0.3)] transition-all duration-200 hover:bg-primary-container/80 active:scale-95 md:px-6 md:py-2.5"
             >
-              Get Started
+              시작하기
             </Link>
           </div>
         </div>
@@ -118,23 +120,23 @@ export default function LandingPage() {
           </h1>
 
           <p className="mx-auto max-w-2xl text-body-lg leading-relaxed text-on-surface-variant">
-            Precision-engineered for high-stakes decision making. Command your global
-            operations through an elite, cryptographically secure terminal designed for
-            definitive clarity.
+            중소기업 총무의 월간 반복 업무를 하나로 묶은 미니 ERP. 근로기준법·국세청 기준으로
+            계산하는 엔터프라이즈급 프로덕트로, 엑셀 파일 10개 대신 웹앱 1개로 총무 업무의 흐름을
+            통합합니다.
           </p>
 
           {/* Initialize Protocol button */}
           <div className="mt-stack-md">
             <Link
               href="/login"
-              className="group relative inline-flex items-center overflow-hidden rounded border border-primary-electric/30 bg-gradient-to-b from-inverse-primary to-primary-electric px-8 py-4 text-label-sm uppercase tracking-[0.1em] text-on-primary transition-all duration-300 hover:shadow-[0_0_40px_-5px_rgba(192,193,255,0.6)]"
+              className="group relative inline-flex items-center overflow-hidden rounded border border-primary-electric/30 bg-gradient-to-b from-inverse-primary to-primary-electric px-8 py-4 text-label-sm font-semibold uppercase tracking-[0.1em] text-on-primary transition-all duration-300 hover:shadow-[0_0_40px_-5px_rgba(192,193,255,0.6)]"
             >
               <span
                 aria-hidden
                 className="absolute inset-0 translate-y-full bg-white/20 transition-transform duration-300 ease-out group-hover:translate-y-0"
               />
               <span className="relative flex items-center gap-2">
-                Initialize Protocol
+                시작하기
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </span>
             </Link>
@@ -163,8 +165,8 @@ export default function LandingPage() {
                   Strategic Dashboard
                 </h3>
                 <p className="max-w-md text-body-md text-on-surface-variant">
-                  Executive-level visibility into global operations. Real-time telemetry
-                  across all business units with deterministic predictive insights.
+                  KPI·차트·알림이 한 화면에. 이번달 급여·지출, 연차 사용률, 결산 진행률을
+                  실시간으로 집계하여 경영 판단의 근거를 제공합니다.
                 </p>
               </div>
               {/* Abstract sparkline glow */}
@@ -195,8 +197,8 @@ export default function LandingPage() {
               Payroll Engine
             </h3>
             <p className="relative text-body-md text-on-surface-variant">
-              Deterministic compensation routing with zero-variance global compliance and
-              instantaneous settlement.
+              근로기준법·간이세액표 기준 급여 자동계산. 4대보험 공제, 비과세 처리, 지방소득세까지
+              한 번에.
             </p>
           </div>
 
@@ -214,8 +216,7 @@ export default function LandingPage() {
               Workforce Directory
             </h3>
             <p className="relative text-body-md text-on-surface-variant">
-              Immutable organizational taxonomy. Deep mapping of human capital
-              architecture and access protocols.
+              직원·부서·직급을 한 눈에. 입사부터 퇴사, 휴직까지 인사 이력을 빠짐없이 관리합니다.
             </p>
           </div>
 
@@ -235,8 +236,8 @@ export default function LandingPage() {
                   Monthly Closing
                 </h3>
                 <p className="max-w-md text-body-md text-on-surface-variant">
-                  Automated ledger reconciliation. Eliminate manual variance with
-                  cryptographically secure, unalterable audit trails.
+                  월말결산 체크리스트로 빠짐없이 마감. 근태·급여·4대보험·원천세·법인카드 정산까지
+                  자동 리포트 생성.
                 </p>
               </div>
               {/* Variance mini-card */}
@@ -266,7 +267,7 @@ export default function LandingPage() {
               Chongmu PRO Elite
             </span>
             <p className="text-sm text-outline">
-              © 2026 Chongmu PRO Elite. Precision-engineered for global scale.
+              © 2026 Chongmu PRO Elite · 중소기업 총무 업무의 완성형 미니 ERP
             </p>
           </div>
           <div className="flex flex-wrap justify-center gap-6">

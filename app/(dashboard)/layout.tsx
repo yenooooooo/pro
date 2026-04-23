@@ -7,12 +7,14 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen">
       <Sidebar />
-      <TopBar />
-      <main className="pb-24 pl-0 pt-4 md:pb-8 md:pl-16 lg:pl-72">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-container-padding">
-          {children}
-        </div>
-      </main>
+      <div className="md:ml-16 lg:ml-72">
+        <TopBar />
+        <main className="min-h-[calc(100vh-4rem)] pb-24 md:pb-8">
+          <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-container-padding lg:py-8">
+            {children}
+          </div>
+        </main>
+      </div>
       <BottomTabBar />
     </div>
   );
