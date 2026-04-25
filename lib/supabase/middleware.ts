@@ -13,7 +13,7 @@ export async function updateSession(request: NextRequest) {
     return response;
   }
 
-  const supabase = createServerClient<Database, "chongmu">(
+  const supabase = createServerClient<Database>(
     url,
     anonKey,
     {

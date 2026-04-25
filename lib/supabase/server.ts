@@ -13,7 +13,7 @@ export function createClient() {
     );
   }
 
-  return createServerClient<Database, "chongmu">(
+  return createServerClient<Database>(
     url,
     anonKey,
     {

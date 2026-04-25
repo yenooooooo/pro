@@ -9,7 +9,7 @@ export function createClient() {
       "[Supabase] NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY가 .env.local에 설정되지 않았습니다. Phase 1에서 Supabase 프로젝트를 만든 뒤 .env.example을 복사해 채워 주세요.",
     );
   }
-  return createBrowserClient<Database, "chongmu">(url, anonKey, {
+  return createBrowserClient<Database>(url, anonKey, {
     db: { schema: "chongmu" },
   });
 }
