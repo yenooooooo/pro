@@ -40,16 +40,24 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isAuthRoute = request.nextUrl.pathname.startsWith("/login");
+  const isLoginRoute = request.nextUrl.pathname.startsWith("/login");
   const isPublicRoute =
     request.nextUrl.pathname === "/" ||
     request.nextUrl.pathname.startsWith("/_next") ||
     request.nextUrl.pathname.startsWith("/api/public");
 
-  if (!user && !isAuthRoute && !isPublicRoute) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
+  // 비인증 → 보호 라우트 → /login
+  if (!user && !isLoginRoute && !isPublicRoute) {
+    const target = request.nextUrl.clone();
+    target.pathname = "/login";
+    return NextResponse.redirect(target);
+  }
+
+  // 이미 로그인된 사용자가 /login 에 머물 이유가 없음 → /dashboard
+  if (user && isLoginRoute) {
+    const target = request.nextUrl.clone();
+    target.pathname = "/dashboard";
+    return NextResponse.redirect(target);
   }
 
   return response;
