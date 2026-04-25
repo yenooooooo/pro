@@ -60,7 +60,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-4 md:gap-6">
             <Link
               href="/login"
-              className="text-label-sm uppercase tracking-widest text-on-surface-variant transition-colors hover:text-white"
+              className="text-label-sm font-medium text-on-surface-variant transition-colors hover:text-white"
             >
               로그인
             </Link>

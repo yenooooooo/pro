@@ -236,7 +236,7 @@ function VendorCard({ vendor }: { vendor: Vendor }) {
         </div>
         <span
           className={cn(
-            "rounded-md border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider",
+            "inline-flex whitespace-nowrap rounded-md border px-2.5 py-1 text-[11px] font-semibold",
             CATEGORY_COLOR[vendor.category],
           )}
         >

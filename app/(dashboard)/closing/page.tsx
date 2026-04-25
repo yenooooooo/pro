@@ -105,7 +105,7 @@ export default function ClosingPage() {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-tertiary-sky opacity-75" />
             <span className="relative inline-flex h-3 w-3 rounded-full bg-tertiary-sky" />
           </span>
-          <span className="text-label-sm uppercase tracking-wider text-tertiary-sky">
+          <span className="text-label-sm font-medium text-tertiary-sky">
             실시간 기록 중
           </span>
         </div>
@@ -149,7 +149,7 @@ export default function ClosingPage() {
               <span className="text-[40px] font-bold leading-none tabular-nums text-white">
                 {PROGRESS_PCT}%
               </span>
-              <span className="mt-1 text-label-sm uppercase tracking-widest text-on-surface-variant">
+              <span className="mt-1 text-label-sm text-on-surface-variant">
                 완료
               </span>
             </div>
@@ -257,7 +257,7 @@ function GaugeStat({
       >
         {value}
       </span>
-      <span className="text-[10px] uppercase tracking-widest text-outline">{label}</span>
+      <span className="text-[11px] text-outline">{label}</span>
     </div>
   );
 }
@@ -308,7 +308,7 @@ function ClosingTaskCard({ task }: { task: ClosingTask }) {
           <p className="mt-1 text-[13px] text-on-surface-variant">{task.description}</p>
 
           {(task.assignee || task.completedAt) && (
-            <div className="mt-2 flex flex-wrap gap-3 text-[11px] font-semibold uppercase tracking-wider text-outline">
+            <div className="mt-2 flex flex-wrap gap-3 text-[11px] font-semibold text-outline">
               {task.assignee ? (
                 <span className="flex items-center gap-1">
                   <User aria-hidden className="h-3 w-3" />

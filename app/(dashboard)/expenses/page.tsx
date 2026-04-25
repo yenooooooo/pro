@@ -188,7 +188,7 @@ export default function ExpensesPage() {
           {/* 테이블 */}
           <div className="glass-panel overflow-x-auto rounded-lg bg-surface-container-lowest">
             <table className="w-full min-w-[800px] border-collapse text-left">
-              <thead className="border-b border-outline-variant/30 bg-surface-container-low text-label-sm uppercase tracking-wider text-on-surface-variant">
+              <thead className="border-b border-outline-variant/30 bg-surface-container-low text-label-sm text-on-surface-variant">
                 <tr>
                   <th className="px-6 py-4 font-semibold">일자</th>
                   <th className="px-6 py-4 font-semibold">카테고리</th>
@@ -265,7 +265,7 @@ export default function ExpensesPage() {
               <CreditCard aria-hidden className="h-5 w-5 text-primary-electric" />
               <h3 className="text-[18px] font-semibold text-white">Monthly Spend</h3>
             </div>
-            <div className="mb-2 text-label-sm uppercase tracking-wider text-on-surface-variant">
+            <div className="mb-2 text-label-sm font-medium text-on-surface-variant">
               2026년 4월 누적
             </div>
             <div className="flex items-baseline gap-2">

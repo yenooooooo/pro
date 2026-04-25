@@ -193,7 +193,7 @@ function EmployeeGridCard({ emp }: { emp: EmployeeCard }) {
         />
         <span
           className={cn(
-            "rounded-md border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider",
+            "inline-flex whitespace-nowrap rounded-md border px-2.5 py-1 text-[11px] font-semibold",
             DEPT_BADGE[emp.dept],
           )}
         >
@@ -296,7 +296,7 @@ function QuickViewPanel({ emp }: { emp: EmployeeCard }) {
         {/* 재무 정보 */}
         <div className="space-y-6">
           <div>
-            <h4 className="mb-3 text-label-sm uppercase tracking-wider text-on-surface-variant">
+            <h4 className="mb-3 text-label-sm font-medium text-on-surface-variant">
               재무 정보
             </h4>
             <div className="flex items-center justify-between rounded-lg border border-outline-variant/30 bg-surface-dim p-4">
@@ -326,7 +326,7 @@ function QuickViewPanel({ emp }: { emp: EmployeeCard }) {
 
           {/* 연차 현황 */}
           <div>
-            <h4 className="mb-3 text-label-sm uppercase tracking-wider text-on-surface-variant">
+            <h4 className="mb-3 text-label-sm font-medium text-on-surface-variant">
               연차 현황
             </h4>
             <div className="grid grid-cols-2 gap-3">

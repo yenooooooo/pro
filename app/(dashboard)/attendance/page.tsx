@@ -144,7 +144,7 @@ export default function AttendancePage() {
           {/* 테이블 */}
           <div className="glass-panel overflow-x-auto rounded-lg bg-surface-container-lowest">
             <table className="w-full min-w-[700px] border-collapse text-left">
-              <thead className="border-b border-outline-variant/30 bg-surface-container-low text-label-sm uppercase tracking-wider text-on-surface-variant">
+              <thead className="border-b border-outline-variant/30 bg-surface-container-low text-label-sm text-on-surface-variant">
                 <tr>
                   <th className="px-6 py-4 font-semibold">직원</th>
                   <th className="px-6 py-4 text-right font-semibold">근무일</th>

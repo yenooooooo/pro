@@ -171,7 +171,7 @@ export default function LeavePage() {
                 <span className="text-[40px] font-bold leading-none tabular-nums text-white">
                   {USAGE_PCT}%
                 </span>
-                <span className="mt-1 text-label-sm uppercase tracking-widest text-on-surface-variant">
+                <span className="mt-1 text-label-sm text-on-surface-variant">
                   사용률
                 </span>
               </div>
@@ -258,7 +258,7 @@ export default function LeavePage() {
                         </span>
                         <span
                           className={cn(
-                            "text-label-sm uppercase tracking-wider",
+                            "text-label-sm font-medium",
                             usagePct < 50
                               ? "text-error-soft"
                               : usagePct < 80
@@ -314,7 +314,7 @@ function GaugeStat({
       >
         {value}
       </span>
-      <span className="text-[10px] uppercase tracking-widest text-outline">{label}</span>
+      <span className="text-[11px] text-outline">{label}</span>
     </div>
   );
 }

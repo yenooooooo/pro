@@ -123,7 +123,7 @@ export default function DashboardPage() {
             />
             <div className="relative z-10">
               <div className="mb-4 flex items-center justify-between">
-                <span className="text-label-sm uppercase tracking-wider text-on-surface-variant">
+                <span className="text-label-sm font-medium text-on-surface-variant">
                   {kpi.label}
                 </span>
                 <kpi.icon
@@ -273,7 +273,7 @@ export default function DashboardPage() {
               </h3>
               <button
                 type="button"
-                className="text-label-sm uppercase tracking-widest text-primary-electric transition-colors hover:text-primary-container"
+                className="text-label-sm font-medium text-primary-electric transition-colors hover:text-primary-container"
               >
                 전체보기
               </button>

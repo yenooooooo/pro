@@ -143,7 +143,7 @@ export default function PayrollPage() {
           {/* 테이블 */}
           <div className="glass-panel overflow-x-auto rounded-lg bg-surface-container-lowest">
             <table className="w-full min-w-[720px] border-collapse text-left">
-              <thead className="border-b border-outline-variant/30 bg-surface-container-low text-label-sm uppercase tracking-wider text-on-surface-variant">
+              <thead className="border-b border-outline-variant/30 bg-surface-container-low text-label-sm text-on-surface-variant">
                 <tr>
                   <th className="px-6 py-4 font-semibold">직원</th>
                   <th className="px-6 py-4 text-right font-semibold">기본급</th>
@@ -177,7 +177,7 @@ export default function PayrollPage() {
             </div>
             <div className="mb-2 flex items-end justify-between">
               <div>
-                <div className="mb-1 text-label-sm uppercase tracking-wider text-on-surface-variant">
+                <div className="mb-1 text-label-sm font-medium text-on-surface-variant">
                   대상 기간
                 </div>
                 <div className="text-headline-md font-semibold text-primary-electric">
@@ -185,7 +185,7 @@ export default function PayrollPage() {
                 </div>
               </div>
               <div className="text-right">
-                <div className="mb-1 text-label-sm uppercase tracking-wider text-on-surface-variant">
+                <div className="mb-1 text-label-sm font-medium text-on-surface-variant">
                   상태
                 </div>
                 <div className="text-data-tabular text-tertiary-sky">처리 중</div>
@@ -237,7 +237,7 @@ export default function PayrollPage() {
               />
               <div className="my-2 h-px bg-outline-variant/30" />
               <div>
-                <div className="mb-1 text-label-sm uppercase tracking-wider text-on-surface-variant">
+                <div className="mb-1 text-label-sm font-medium text-on-surface-variant">
                   실지급 총액
                 </div>
                 <div className="flex items-baseline gap-2">
@@ -245,7 +245,7 @@ export default function PayrollPage() {
                     {formatKRW(AGG_NET)}
                   </span>
                 </div>
-                <div className="mt-1 text-label-sm uppercase tracking-widest text-on-surface-variant">
+                <div className="mt-1 text-label-sm text-on-surface-variant">
                   2026년 4월 마감
                 </div>
               </div>
@@ -371,7 +371,7 @@ function AggregateRow({
 }) {
   return (
     <div>
-      <div className="mb-1 text-label-sm uppercase tracking-wider text-on-surface-variant">
+      <div className="mb-1 text-label-sm font-medium text-on-surface-variant">
         {label}
       </div>
       <div

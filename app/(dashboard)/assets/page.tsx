@@ -205,7 +205,7 @@ export default function AssetsPage() {
 
           <div className="glass-panel overflow-x-auto rounded-lg bg-surface-container-lowest">
             <table className="w-full min-w-[900px] border-collapse text-left">
-              <thead className="border-b border-outline-variant/30 bg-surface-container-low text-label-sm uppercase tracking-wider text-on-surface-variant">
+              <thead className="border-b border-outline-variant/30 bg-surface-container-low text-label-sm text-on-surface-variant">
                 <tr>
                   <th className="px-6 py-4 font-semibold">자산번호 · 분류</th>
                   <th className="px-6 py-4 font-semibold">자산명</th>
@@ -306,7 +306,7 @@ export default function AssetsPage() {
             </div>
             <div className="space-y-4">
               <div>
-                <div className="mb-1 text-label-sm uppercase tracking-wider text-on-surface-variant">
+                <div className="mb-1 text-label-sm font-medium text-on-surface-variant">
                   취득 총액
                 </div>
                 <div className="text-[22px] font-semibold tabular-nums text-white">
@@ -314,7 +314,7 @@ export default function AssetsPage() {
                 </div>
               </div>
               <div>
-                <div className="mb-1 text-label-sm uppercase tracking-wider text-on-surface-variant">
+                <div className="mb-1 text-label-sm font-medium text-on-surface-variant">
                   잔존가액 (정액법)
                 </div>
                 <div className="text-[22px] font-semibold tabular-nums text-primary-electric">

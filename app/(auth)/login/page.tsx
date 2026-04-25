@@ -10,7 +10,7 @@ export default function LoginPage() {
         </p>
         <div className="mt-6 space-y-4">
           <div>
-            <label className="text-label-sm uppercase tracking-widest text-on-surface-variant">
+            <label className="text-label-sm font-medium text-on-surface-variant">
               이메일
             </label>
             <input
@@ -22,7 +22,7 @@ export default function LoginPage() {
             />
           </div>
           <div>
-            <label className="text-label-sm uppercase tracking-widest text-on-surface-variant">
+            <label className="text-label-sm font-medium text-on-surface-variant">
               비밀번호
             </label>
             <input
@@ -41,7 +41,7 @@ export default function LoginPage() {
         </div>
         <Link
           href="/"
-          className="mt-6 block text-center text-label-sm uppercase tracking-widest text-on-surface-variant hover:text-on-surface"
+          className="mt-6 block text-center text-label-sm font-medium text-on-surface-variant hover:text-on-surface"
         >
           ← 랜딩으로
         </Link>
