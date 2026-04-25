@@ -251,7 +251,7 @@ export default function LeavePage() {
                         <div className="text-xs text-on-surface-variant">{row.employeeNo}</div>
                       </div>
                     </div>
-                    <div className="flex-1 sm:max-w-xs">
+                    <div className="sm:w-72">
                       <div className="mb-1 flex items-center justify-between text-data-tabular">
                         <span className="tabular-nums text-on-surface-variant">
                           {row.used} / {row.totalGranted}일
@@ -277,7 +277,7 @@ export default function LeavePage() {
                         />
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 text-right">
+                    <div className="flex items-center gap-2 sm:w-20 sm:justify-end">
                       <CalendarCheck aria-hidden className="h-4 w-4 text-primary-electric" />
                       <span className="text-headline-md font-semibold tabular-nums text-white">
                         {row.remaining}
