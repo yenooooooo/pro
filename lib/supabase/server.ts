@@ -13,10 +13,11 @@ export function createClient() {
     );
   }
 
-  return createServerClient<Database>(
+  return createServerClient<Database, "chongmu">(
     url,
     anonKey,
     {
+      db: { schema: "chongmu" },
       cookies: {
         get(name: string) {
           return cookieStore.get(name)?.value;

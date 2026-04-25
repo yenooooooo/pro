@@ -1,10 +1,11 @@
 /**
- * Supabase 타입 — Phase 1에서 `supabase gen types typescript` 명령으로 자동 생성 예정.
- * 현재는 빌드 통과용 최소 placeholder.
+ * Supabase 타입 — chongmu 스키마 대상.
+ * 빌드 통과용 placeholder. 실제 사용 전:
+ *   npx supabase gen types typescript --linked --schema chongmu > types/database.ts
  * @see https://supabase.com/docs/guides/api/rest/generating-types
  */
 export type Database = {
-  public: {
+  chongmu: {
     Tables: Record<string, never>;
     Views: Record<string, never>;
     Functions: Record<string, never>;

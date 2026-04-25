@@ -13,10 +13,11 @@ export async function updateSession(request: NextRequest) {
     return response;
   }
 
-  const supabase = createServerClient<Database>(
+  const supabase = createServerClient<Database, "chongmu">(
     url,
     anonKey,
     {
+      db: { schema: "chongmu" },
       cookies: {
         get(name: string) {
           return request.cookies.get(name)?.value;

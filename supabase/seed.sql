@@ -1,5 +1,5 @@
 -- supabase/seed.sql
--- 총무PRO 시드 데이터.
+-- 총무PRO 시드 데이터 — chongmu 스키마 대상.
 -- 적용 순서: 0001_initial_schema → 0002_rls_policies → seed.sql
 -- 근거: PLAN.md §1.2.
 -- 데이터 양:
@@ -11,7 +11,7 @@
 --   - attendance 3개월치 (직원당 평일, generate_series로 동적 생성)
 --   - closing_tasks 8 템플릿 + closing_history 2026-04 진행 중 + leave_balances 15
 
-set search_path = public;
+set search_path = chongmu, public;
 
 -- ═══════════════════════════════════════════════════════════
 -- 1. 부서 (3개)
