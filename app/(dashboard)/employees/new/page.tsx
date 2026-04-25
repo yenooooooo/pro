@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { EmployeeForm } from "./_components/EmployeeForm";
+import { EmployeeForm } from "@/components/features/employees/EmployeeForm";
 
 export default async function NewEmployeePage() {
   const supabase = createClient();
@@ -36,7 +36,11 @@ export default async function NewEmployeePage() {
         </p>
       </div>
 
-      <EmployeeForm departments={departments ?? []} positions={positions ?? []} />
+      <EmployeeForm
+        mode="create"
+        departments={departments ?? []}
+        positions={positions ?? []}
+      />
     </div>
   );
 }

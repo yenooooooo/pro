@@ -13,11 +13,6 @@ import { cn } from "@/lib/utils/cn";
 type Option = { id: string; name: string };
 type PositionOption = Option & { level: number };
 
-type Props = {
-  departments: Option[];
-  positions: PositionOption[];
-};
-
 const Schema = z.object({
   employee_no: z
     .string()
@@ -54,31 +49,45 @@ const Schema = z.object({
     .max(11, "최대 11명"),
 });
 
-type Input = z.infer<typeof Schema>;
+export type EmployeeFormValues = z.infer<typeof Schema>;
 
-export function EmployeeForm({ departments, positions }: Props) {
+type Props = {
+  mode: "create" | "edit";
+  employeeId?: string;
+  initialValues?: Partial<EmployeeFormValues>;
+  departments: Option[];
+  positions: PositionOption[];
+};
+
+export function EmployeeForm({
+  mode,
+  employeeId,
+  initialValues,
+  departments,
+  positions,
+}: Props) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
 
-  const form = useForm<Input>({
+  const form = useForm<EmployeeFormValues>({
     resolver: zodResolver(Schema),
     defaultValues: {
-      employee_no: "",
-      name: "",
-      department_id: "",
-      position_id: "",
-      hire_date: "",
-      birth_date: "",
-      phone: "",
-      email: "",
-      bank_name: "",
-      bank_account: "",
-      base_salary: 3_000_000,
-      dependents: 1,
+      employee_no: initialValues?.employee_no ?? "",
+      name: initialValues?.name ?? "",
+      department_id: initialValues?.department_id ?? "",
+      position_id: initialValues?.position_id ?? "",
+      hire_date: initialValues?.hire_date ?? "",
+      birth_date: initialValues?.birth_date ?? "",
+      phone: initialValues?.phone ?? "",
+      email: initialValues?.email ?? "",
+      bank_name: initialValues?.bank_name ?? "",
+      bank_account: initialValues?.bank_account ?? "",
+      base_salary: initialValues?.base_salary ?? 3_000_000,
+      dependents: initialValues?.dependents ?? 1,
     },
   });
 
-  async function onSubmit(values: Input) {
+  async function onSubmit(values: EmployeeFormValues) {
     setServerError(null);
     const supabase = createClient();
     const payload = {
@@ -94,31 +103,52 @@ export function EmployeeForm({ departments, positions }: Props) {
       bank_account: values.bank_account ? values.bank_account.trim() : null,
       base_salary: values.base_salary,
       dependents: values.dependents,
-      status: "active" as const,
     };
 
-    const { data, error } = await supabase
-      .schema("chongmu")
-      .from("employees")
-      .insert(payload)
-      .select("id")
-      .single();
-
-    if (error) {
-      if (error.code === "23505") {
-        setServerError("이미 사용 중인 사번입니다.");
-        form.setError("employee_no", { message: "이미 사용 중인 사번" });
-      } else {
-        setServerError(error.message);
+    if (mode === "create") {
+      const { data, error } = await supabase
+        .schema("chongmu")
+        .from("employees")
+        .insert({ ...payload, status: "active" })
+        .select("id")
+        .single();
+      if (error) {
+        if (error.code === "23505") {
+          setServerError("이미 사용 중인 사번입니다.");
+          form.setError("employee_no", { message: "이미 사용 중인 사번" });
+        } else {
+          setServerError(error.message);
+        }
+        return;
       }
-      return;
+      router.push(`/employees?selected=${data.id}`);
+      router.refresh();
+    } else {
+      if (!employeeId) {
+        setServerError("employeeId가 누락됐습니다.");
+        return;
+      }
+      const { error } = await supabase
+        .schema("chongmu")
+        .from("employees")
+        .update(payload)
+        .eq("id", employeeId);
+      if (error) {
+        if (error.code === "23505") {
+          setServerError("이미 사용 중인 사번입니다.");
+          form.setError("employee_no", { message: "이미 사용 중인 사번" });
+        } else {
+          setServerError(error.message);
+        }
+        return;
+      }
+      router.push(`/employees?selected=${employeeId}`);
+      router.refresh();
     }
-
-    router.push(`/employees?selected=${data.id}`);
-    router.refresh();
   }
 
   const isSubmitting = form.formState.isSubmitting;
+  const submitLabel = mode === "create" ? "직원 등록" : "변경 저장";
 
   return (
     <form
@@ -291,7 +321,11 @@ export function EmployeeForm({ departments, positions }: Props) {
 
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
         <Link
-          href="/employees"
+          href={
+            mode === "edit" && employeeId
+              ? `/employees/${employeeId}`
+              : "/employees"
+          }
           className="inline-flex min-h-11 items-center justify-center rounded-lg border border-outline-variant/50 bg-surface-container-high px-6 text-label-sm text-on-surface transition-colors hover:bg-surface-container-highest"
         >
           취소
@@ -309,7 +343,7 @@ export function EmployeeForm({ departments, positions }: Props) {
           ) : (
             <>
               <Save aria-hidden className="h-4 w-4" />
-              직원 등록
+              {submitLabel}
             </>
           )}
         </button>

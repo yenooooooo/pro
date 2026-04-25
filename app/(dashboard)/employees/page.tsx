@@ -1,5 +1,6 @@
 import {
   CalendarDays,
+  Eye,
   Landmark,
   Mail,
   Pencil,
@@ -387,6 +388,13 @@ function QuickViewPanel({
               메시지
             </span>
           )}
+          <Link
+            href={`/employees/${emp.id}`}
+            aria-label="상세"
+            className="inline-flex min-h-11 w-10 items-center justify-center rounded border border-outline-variant/50 bg-surface-container-high py-2 text-on-surface transition-colors hover:bg-surface-bright"
+          >
+            <Eye className="h-4 w-4" />
+          </Link>
           <Link
             href={`/employees/${emp.id}/edit`}
             aria-label="편집"
