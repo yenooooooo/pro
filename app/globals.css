@@ -107,6 +107,107 @@
     background-clip: text;
     color: transparent;
   }
+
+  /* ============================================================
+   * Avant-garde 디자인 유틸리티 (랜딩·대시보드 stitch v2)
+   * ============================================================ */
+
+  /* 50px 격자 — 랜딩 ambient background */
+  .grid-bg {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+
+  /* 20px 인디고 격자 — 대시보드 main canvas */
+  .hologram-grid {
+    background-image:
+      linear-gradient(rgba(99, 102, 241, 0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(99, 102, 241, 0.08) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  /* 카드 내부 림 라이트 (인덱스 위에 absolute로 깔아 사용) */
+  .glass-panel-inner {
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.05) 0%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-left: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  /* 깊은 글래스 패널 (랜딩 전용 — blur 강화·border 약화) */
+  .glass-panel-deep {
+    background: rgba(13, 17, 30, 0.4);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+  }
+
+  /* 모서리 ㄱ-자 테두리 — 카드/배지 hover 강조 */
+  .tech-border {
+    position: relative;
+  }
+  .tech-border::before,
+  .tech-border::after {
+    content: "";
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border: 1px solid rgba(99, 102, 241, 0.5);
+    transition: all 0.3s ease;
+    pointer-events: none;
+  }
+  .tech-border::before {
+    top: 0;
+    left: 0;
+    border-right: none;
+    border-bottom: none;
+  }
+  .tech-border::after {
+    bottom: 0;
+    right: 0;
+    border-left: none;
+    border-top: none;
+  }
+  .tech-border:hover::before,
+  .tech-border:hover::after {
+    width: 20px;
+    height: 20px;
+    border-color: rgba(99, 102, 241, 1);
+  }
+
+  /* 800px 회전 지구 — 랜딩 hero. translate를 keyframe에 포함해야 회전축이 중심에 고정 */
+  .earth-sphere {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 800px;
+    height: 800px;
+    border-radius: 50%;
+    background:
+      url("https://images.unsplash.com/photo-1614730321146-b6fa6a46bcb4?q=80&w=2574&auto=format&fit=crop")
+      center/cover;
+    box-shadow:
+      inset -50px -50px 100px rgba(0, 0, 0, 0.9),
+      inset 20px 20px 60px rgba(255, 255, 255, 0.2),
+      0 0 100px rgba(99, 102, 241, 0.3);
+    opacity: 0.8;
+    mix-blend-mode: screen;
+    animation: earth-spin 120s linear infinite;
+  }
+  @keyframes earth-spin {
+    0% {
+      transform: translate(-50%, -50%) rotate(0deg);
+    }
+    100% {
+      transform: translate(-50%, -50%) rotate(360deg);
+    }
+  }
 }
 
 /* ============================================================

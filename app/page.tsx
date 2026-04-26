@@ -1,288 +1,344 @@
 import Link from "next/link";
 import {
   ArrowRight,
-  BadgeCheck,
-  FileSignature,
-  Hexagon,
-  LineChart,
-  Lock,
+  BarChart3,
+  ClipboardCheck,
+  Cpu,
+  Globe,
+  Network,
+  Terminal,
   Wallet,
 } from "lucide-react";
 
-// 브랜딩 섹션 — stitch 원본 영문 유지
 const SECTION_LINKS = [
-  { label: "Executive Intelligence", href: "#intelligence", active: true },
-  { label: "Global Compliance", href: "#compliance" },
-  { label: "Workforce", href: "#workforce" },
-  { label: "Resources", href: "#resources" },
+  { label: "ARCHITECTURE", href: "#architecture", active: true },
+  { label: "MODULES", href: "#modules" },
+  { label: "METRICS", href: "#metrics" },
+  { label: "TERMINAL", href: "#terminal" },
 ];
 
-// 법적 링크 — 한국 법제 용어 사용
 const FOOTER_LINKS = [
   "서비스 소개",
-  "규정 준수",
-  "인력 운영",
   "이용약관",
   "개인정보처리방침",
 ];
 
 export default function LandingPage() {
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-background text-on-surface">
+    <div className="relative min-h-screen overflow-x-hidden bg-[#02040a] text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container">
       {/* ============================================================
-       * Top Nav
+       * Ambient background FX — grid + noise overlay
        * ============================================================ */}
-      <nav className="fixed top-0 z-50 w-full border-b border-white/10 bg-slate-950/60 shadow-2xl shadow-indigo-500/10 backdrop-blur-md transition-all duration-200">
-        <div className="flex w-full items-center justify-between px-6 py-4 md:px-10 md:py-5">
-          <Link href="/" className="flex items-center gap-2">
-            <Hexagon className="h-7 w-7 fill-primary-electric/20 text-primary-electric" />
-            <span className="text-headline-md font-bold uppercase tracking-tighter text-white sm:text-2xl">
-              Chongmu PRO Elite
-            </span>
+      <div aria-hidden className="pointer-events-none fixed inset-0 z-[-1] grid-bg" />
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 z-[-1] opacity-20 mix-blend-overlay"
+        style={{
+          backgroundImage:
+            "url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPjxyZWN0IHdpZHRoPSI0IiBoZWlnaHQ9IjQiIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSIvPjwvc3ZnPg==')",
+        }}
+      />
+
+      {/* ============================================================
+       * Top nav — sticky, glass, brand + ARCHITECTURE links
+       * ============================================================ */}
+      <nav className="sticky top-0 z-[100] flex items-center justify-between border-b border-white/10 px-6 py-4 glass-panel-deep md:px-8">
+        <Link href="/" className="flex items-center gap-3">
+          <span className="text-2xl font-black uppercase tracking-tighter text-white drop-shadow-[0_0_15px_rgba(99,102,241,0.8)]">
+            Chongmu PRO Elite
+          </span>
+        </Link>
+
+        <div className="hidden items-center gap-10 md:flex">
+          {SECTION_LINKS.map((l) => (
+            <a
+              key={l.label}
+              href={l.href}
+              className={
+                l.active
+                  ? "border-b-2 border-indigo-500 pb-1 text-label-sm font-bold tracking-tight text-white shadow-[0_2px_10px_rgba(99,102,241,0.5)] transition-all duration-300"
+                  : "pb-1 text-label-sm font-medium tracking-tight text-slate-400 transition-colors hover:text-white hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]"
+              }
+            >
+              {l.label}
+            </a>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-4 md:gap-6">
+          <div className="hidden items-center gap-4 text-slate-400 md:flex">
+            <button
+              type="button"
+              aria-label="System status"
+              className="flex items-center justify-center transition-all duration-300 hover:text-white"
+            >
+              <Cpu aria-hidden className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              aria-label="Terminal"
+              className="flex items-center justify-center transition-all duration-300 hover:text-white"
+            >
+              <Terminal aria-hidden className="h-5 w-5" />
+            </button>
+          </div>
+          <Link
+            href="/login"
+            className="rounded-sm border border-transparent bg-white px-6 py-2.5 text-label-sm font-bold uppercase tracking-widest text-black transition-all duration-300 hover:bg-indigo-500 hover:text-white hover:shadow-[0_0_20px_rgba(99,102,241,0.6)]"
+          >
+            시작하기
           </Link>
-
-          <div className="hidden items-center gap-8 md:flex">
-            {SECTION_LINKS.map((l) => (
-              <a
-                key={l.label}
-                href={l.href}
-                className={
-                  l.active
-                    ? "border-b-2 border-primary-electric pb-1 text-primary-electric transition-all duration-200 hover:text-white"
-                    : "pb-1 text-on-surface-variant transition-colors duration-200 hover:text-white"
-                }
-              >
-                {l.label}
-              </a>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-4 md:gap-6">
-            <Link
-              href="/login"
-              className="text-label-sm font-medium text-on-surface-variant transition-colors hover:text-white"
-            >
-              로그인
-            </Link>
-            <Link
-              href="/login"
-              className="rounded border border-primary-electric/50 bg-primary-container px-4 py-2 text-label-sm font-semibold text-white shadow-[0_0_15px_rgba(99,102,241,0.3)] transition-all duration-200 hover:bg-primary-container/80 active:scale-95 md:px-6 md:py-2.5"
-            >
-              시작하기
-            </Link>
-          </div>
         </div>
       </nav>
 
       {/* ============================================================
-       * Hero with cinematic globe background
+       * Hero — earth sphere, scanline, radial mask, dual CTA
        * ============================================================ */}
-      <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden pt-24 lg:min-h-[1024px]">
-        {/* Globe background image */}
+      <header className="relative flex min-h-[1000px] w-full items-center justify-center overflow-hidden">
+        {/* 3D earth background */}
         <div
           aria-hidden
-          className="absolute inset-0 z-0 bg-cover bg-center"
-          style={{
-            backgroundImage:
-              "url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop')",
-          }}
+          className="pointer-events-none absolute inset-0 z-0 mt-32 flex items-center justify-center"
+          style={{ perspective: "1000px", transformStyle: "preserve-3d" }}
+        >
+          <div className="earth-sphere" />
+        </div>
+
+        {/* Scanning beam */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 z-10 overflow-hidden">
+          <div className="h-[2px] w-full animate-scanline bg-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.8)]" />
+        </div>
+
+        {/* Deep gradient mask */}
+        <div
+          aria-hidden
+          className="absolute inset-0 z-10 bg-[radial-gradient(ellipse_at_center,transparent_0%,#02040a_70%)]"
         />
-        {/* Navy overlay */}
         <div
           aria-hidden
-          className="absolute inset-0 bg-background/90 backdrop-blur-sm"
-        />
-        {/* 800px primary glow orb */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary-electric/10 blur-[120px] md:h-[800px] md:w-[800px]"
+          className="absolute inset-0 z-10 bg-gradient-to-b from-[#02040a]/80 via-transparent to-[#02040a]"
         />
 
-        <div className="relative z-10 mx-auto mt-12 flex max-w-5xl flex-col items-center gap-stack-lg px-container-padding text-center">
-          {/* System Online pill */}
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary-electric/20 bg-surface-container/50 px-4 py-1.5 backdrop-blur-md">
-            <span
-              aria-hidden
-              className="h-2 w-2 animate-pulse rounded-full bg-primary-electric shadow-[0_0_8px_#c0c1ff]"
-            />
-            <span className="text-label-sm uppercase tracking-widest text-primary-electric">
-              System Online
-            </span>
+        <div className="relative z-20 mt-[-10vh] flex w-full max-w-7xl flex-col items-center px-container-padding text-center">
+          <div className="mb-stack-lg inline-flex items-center gap-3 rounded-sm border border-indigo-500/40 px-5 py-2 text-label-sm uppercase tracking-widest text-indigo-300 glass-panel-deep tech-border animate-reveal-up opacity-0 [animation-delay:0.05s]">
+            <Globe aria-hidden className="h-3.5 w-3.5" />
+            GLOBAL ENTERPRISE COMMAND CENTER
           </div>
 
-          {/* Hero title with 3-color gradient */}
-          <h1 className="text-4xl font-bold uppercase tracking-tighter text-white drop-shadow-2xl sm:text-5xl md:text-6xl lg:text-display-xl lg:text-[56px]">
-            The Future Of
-            <br />
-            <span className="bg-gradient-to-r from-primary-electric via-inverse-surface to-tertiary-sky bg-clip-text text-transparent">
-              Enterprise Management
+          <h1 className="mb-stack-md max-w-5xl text-[44px] font-black leading-[1.05] tracking-tighter text-white drop-shadow-[0_0_30px_rgba(255,255,255,0.2)] animate-reveal-up opacity-0 [animation-delay:0.15s] sm:text-[56px] md:text-[64px]">
+            경영의{" "}
+            <span className="bg-gradient-to-r from-indigo-400 via-blue-300 to-cyan-400 bg-clip-text text-transparent drop-shadow-[0_0_20px_rgba(99,102,241,0.4)]">
+              한계를 넘어서는
             </span>
+            <br />
+            ULTIMATE 시스템
           </h1>
 
-          <p className="mx-auto max-w-2xl text-body-lg leading-relaxed text-on-surface-variant">
-            중소기업 총무의 월간 반복 업무를 하나로 묶은 미니 ERP. 근로기준법·국세청 기준으로
-            계산하는 엔터프라이즈급 프로덕트로, 엑셀 파일 10개 대신 웹앱 1개로 총무 업무의 흐름을
-            통합합니다.
+          <p className="mb-stack-lg max-w-3xl text-body-lg font-light text-slate-400 animate-reveal-up opacity-0 [animation-delay:0.25s]">
+            차세대 데이터 구조와 무한한 확장성. 인사·재무·운영을 통합하는 단 하나의 마스터 컨트롤 프로토콜.
           </p>
 
-          {/* Initialize Protocol button */}
-          <div className="mt-stack-md">
+          <div className="flex flex-col items-center gap-4 animate-reveal-up opacity-0 [animation-delay:0.35s] sm:flex-row sm:gap-6">
             <Link
               href="/login"
-              className="group relative inline-flex items-center overflow-hidden rounded border border-primary-electric/30 bg-gradient-to-b from-inverse-primary to-primary-electric px-8 py-4 text-label-sm font-semibold uppercase tracking-[0.1em] text-on-primary transition-all duration-300 hover:shadow-[0_0_40px_-5px_rgba(192,193,255,0.6)]"
+              className="group relative overflow-hidden rounded-sm bg-white px-8 py-4 text-label-sm font-bold uppercase tracking-widest text-black shadow-[0_0_30px_rgba(255,255,255,0.2)] transition-all duration-500 hover:bg-indigo-400 hover:text-white hover:shadow-[0_0_40px_rgba(99,102,241,0.6)]"
             >
+              <span className="relative z-10 inline-flex items-center gap-2">
+                시작하기
+                <ArrowRight aria-hidden className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </span>
               <span
                 aria-hidden
-                className="absolute inset-0 translate-y-full bg-white/20 transition-transform duration-300 ease-out group-hover:translate-y-0"
+                className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-blue-500 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
               />
-              <span className="relative flex items-center gap-2">
-                시작하기
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </span>
             </Link>
+            <a
+              href="#architecture"
+              className="rounded-sm border-white/20 px-8 py-4 text-label-sm font-bold uppercase tracking-widest text-white glass-panel-deep tech-border transition-all duration-300 hover:border-white/60 hover:bg-white/10"
+            >
+              구조 보기
+            </a>
+          </div>
+        </div>
+      </header>
+
+      {/* ============================================================
+       * Core Architecture Matrix — bento grid
+       * ============================================================ */}
+      <section id="architecture" className="relative z-20 bg-[#02040a] px-container-padding py-32">
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.05)_0%,transparent_50%)]"
+        />
+        <div className="relative mx-auto max-w-7xl">
+          <div className="mb-20 text-center">
+            <div className="mb-4 text-label-sm uppercase tracking-[0.2em] text-indigo-500">
+              System Components
+            </div>
+            <h2 className="mb-4 text-4xl font-bold tracking-tight text-white">
+              Core Architecture Matrix
+            </h2>
+            <p className="mx-auto max-w-2xl text-body-md text-slate-400">
+              엘리트 스케일업을 위한 고도화된 모듈형 인프라스트럭처
+            </p>
+          </div>
+
+          <div className="relative grid grid-cols-1 gap-6 md:grid-cols-12">
+            {/* Connective lines */}
+            <div
+              aria-hidden
+              className="absolute left-0 top-1/2 hidden h-px w-full bg-indigo-500/10 lg:block"
+            />
+            <div
+              aria-hidden
+              className="absolute left-1/3 top-0 hidden h-full w-px bg-indigo-500/10 lg:block"
+            />
+            <div
+              aria-hidden
+              className="absolute left-2/3 top-0 hidden h-full w-px bg-indigo-500/10 lg:block"
+            />
+
+            {/* MOD-01 Master Control Dashboard (large) */}
+            <ModuleCard
+              modCode="MOD-01"
+              size="large"
+              title="Master Control Dashboard"
+              description="실시간 글로벌 기업 지표를 나노 단위로 스캔합니다. 분산된 데이터를 즉각적으로 수집하여 홀로그래픽 수준의 직관적 시각화로 매핑, 최고 수준의 의사결정을 지원합니다."
+              icon={BarChart3}
+              iconBg="bg-indigo-500/10"
+              iconBorder="border-indigo-500/30"
+              iconColor="text-indigo-400"
+              accentClass="group-hover:bg-indigo-500/20 group-hover:text-indigo-300 group-hover:shadow-[0_0_20px_rgba(99,102,241,0.4)]"
+              cornerSide="br"
+            />
+
+            {/* MOD-02 Quantum Payroll Engine */}
+            <ModuleCard
+              modCode="MOD-02"
+              size="small"
+              title="Quantum Payroll Engine"
+              description="다중 지역, 복합 세제를 실시간으로 연산하는 무결점 정산 코어. 0.0001%의 오차율을 보장합니다."
+              icon={Wallet}
+              iconBg="bg-blue-500/10"
+              iconBorder="border-blue-500/30"
+              iconColor="text-blue-400"
+            />
+
+            {/* MOD-03 Human Capital Matrix */}
+            <ModuleCard
+              modCode="MOD-03"
+              size="small"
+              title="Human Capital Matrix"
+              description="조직도 토폴로지 매핑부터 퍼포먼스 분석까지. 인적 자원 데이터를 동적으로 관리하는 노드 시스템."
+              icon={Network}
+              iconBg="bg-cyan-500/10"
+              iconBorder="border-cyan-500/30"
+              iconColor="text-cyan-400"
+            />
+
+            {/* MOD-04 Automated Closing Protocol (large) */}
+            <ModuleCard
+              modCode="MOD-04"
+              size="large"
+              title="Automated Closing Protocol"
+              description="복잡한 재무 마감 프로세스를 단일 스크립트로 압축. 스마트 컨트랙트 기반의 전자결재망과 연동되어 왜곡 없는 투명한 재무 결산을 초고속으로 완료합니다."
+              icon={ClipboardCheck}
+              iconBg="bg-purple-500/10"
+              iconBorder="border-purple-500/30"
+              iconColor="text-purple-400"
+              accentClass="group-hover:bg-purple-500/20 group-hover:shadow-[0_0_20px_rgba(168,85,247,0.4)]"
+              cornerSide="bl"
+            />
           </div>
         </div>
       </section>
 
       {/* ============================================================
-       * Bento Grid — Four Pillars (overlaps hero via -mt-24)
+       * Footer — minimal terminal
        * ============================================================ */}
-      <section className="relative z-20 mx-auto -mt-24 max-w-7xl px-container-padding pb-32">
-        <div className="grid grid-cols-1 gap-gutter md:grid-cols-3">
-          {/* Pillar 1: Strategic Dashboard — LARGE (2 cols) */}
-          <div className="group relative col-span-1 overflow-hidden rounded-xl border border-b-transparent border-l-white/10 border-r-transparent border-t-white/10 bg-surface-container-high/40 p-8 shadow-2xl shadow-black/50 backdrop-blur-xl transition-all duration-500 hover:border-t-primary-electric/30 hover:bg-surface-container-highest/60 md:col-span-2">
-            <div
-              aria-hidden
-              className="absolute inset-0 bg-gradient-to-br from-primary-electric/5 to-transparent opacity-0 transition-opacity duration-700 group-hover:opacity-100"
-            />
-            <div className="relative z-10 flex h-full flex-col justify-between">
-              <div>
-                <LineChart
-                  aria-hidden
-                  className="mb-stack-md h-10 w-10 text-primary-electric drop-shadow-[0_0_10px_rgba(192,193,255,0.5)]"
-                />
-                <h3 className="mb-stack-sm text-headline-lg font-semibold tracking-tight text-on-surface">
-                  Strategic Dashboard
-                </h3>
-                <p className="max-w-md text-body-md text-on-surface-variant">
-                  KPI·차트·알림이 한 화면에. 이번달 급여·지출, 연차 사용률, 결산 진행률을
-                  실시간으로 집계하여 경영 판단의 근거를 제공합니다.
-                </p>
-              </div>
-              {/* Abstract sparkline glow */}
-              <div className="relative mt-8 h-24 w-full overflow-hidden rounded border-b border-primary-electric/20 bg-gradient-to-t from-surface-dim to-transparent">
-                <div
-                  aria-hidden
-                  className="absolute bottom-0 h-px w-full bg-primary-electric/40 shadow-[0_0_10px_#c0c1ff]"
-                />
-                <div
-                  aria-hidden
-                  className="absolute bottom-0 left-1/4 h-16 w-1/2 bg-gradient-to-t from-primary-electric/20 to-transparent blur-xl"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Pillar 2: Payroll Engine — SMALL */}
-          <div className="group relative overflow-hidden rounded-xl border border-b-transparent border-l-white/10 border-r-transparent border-t-white/10 bg-surface-container-high/40 p-8 shadow-2xl shadow-black/50 backdrop-blur-xl transition-all duration-500 hover:border-t-tertiary-sky/30 hover:bg-surface-container-highest/60">
-            <div
-              aria-hidden
-              className="absolute inset-0 bg-gradient-to-br from-tertiary-sky/5 to-transparent opacity-0 transition-opacity duration-700 group-hover:opacity-100"
-            />
-            <Wallet
-              aria-hidden
-              className="relative mb-stack-md h-10 w-10 text-tertiary-sky"
-            />
-            <h3 className="relative mb-stack-sm text-headline-md font-semibold text-on-surface">
-              Payroll Engine
-            </h3>
-            <p className="relative text-body-md text-on-surface-variant">
-              근로기준법·간이세액표 기준 급여 자동계산. 4대보험 공제, 비과세 처리, 지방소득세까지
-              한 번에.
-            </p>
-          </div>
-
-          {/* Pillar 3: Workforce Directory — SMALL */}
-          <div className="group relative overflow-hidden rounded-xl border border-b-transparent border-l-white/10 border-r-transparent border-t-white/10 bg-surface-container-high/40 p-8 shadow-2xl shadow-black/50 backdrop-blur-xl transition-all duration-500 hover:border-t-secondary-slate/30 hover:bg-surface-container-highest/60">
-            <div
-              aria-hidden
-              className="absolute inset-0 bg-gradient-to-br from-secondary-slate/5 to-transparent opacity-0 transition-opacity duration-700 group-hover:opacity-100"
-            />
-            <BadgeCheck
-              aria-hidden
-              className="relative mb-stack-md h-10 w-10 text-secondary-slate"
-            />
-            <h3 className="relative mb-stack-sm text-headline-md font-semibold text-on-surface">
-              Workforce Directory
-            </h3>
-            <p className="relative text-body-md text-on-surface-variant">
-              직원·부서·직급을 한 눈에. 입사부터 퇴사, 휴직까지 인사 이력을 빠짐없이 관리합니다.
-            </p>
-          </div>
-
-          {/* Pillar 4: Monthly Closing — LARGE (2 cols) with variance mini-card */}
-          <div className="group relative col-span-1 overflow-hidden rounded-xl border border-b-transparent border-l-white/10 border-r-transparent border-t-white/10 bg-surface-container-high/40 p-8 shadow-2xl shadow-black/50 backdrop-blur-xl transition-all duration-500 hover:border-t-primary-electric/30 hover:bg-surface-container-highest/60 md:col-span-2">
-            <div
-              aria-hidden
-              className="absolute inset-0 bg-gradient-to-br from-primary-electric/5 to-transparent opacity-0 transition-opacity duration-700 group-hover:opacity-100"
-            />
-            <div className="relative flex h-full flex-col items-start gap-8 md:flex-row md:items-center">
-              <div className="flex-1">
-                <FileSignature
-                  aria-hidden
-                  className="mb-stack-md h-10 w-10 text-on-surface"
-                />
-                <h3 className="mb-stack-sm text-headline-lg font-semibold tracking-tight text-on-surface">
-                  Monthly Closing
-                </h3>
-                <p className="max-w-md text-body-md text-on-surface-variant">
-                  월말결산 체크리스트로 빠짐없이 마감. 근태·급여·4대보험·원천세·법인카드 정산까지
-                  자동 리포트 생성.
-                </p>
-              </div>
-              {/* Variance mini-card */}
-              <div className="relative flex h-32 w-full flex-col items-center justify-center gap-2 overflow-hidden rounded border border-outline-variant/20 bg-surface-dim p-4 md:w-64">
-                <div className="absolute right-0 top-0 p-2">
-                  <Lock aria-hidden className="h-3 w-3 text-primary-electric/50" />
-                </div>
-                <span className="text-3xl font-bold tabular-nums text-white">
-                  0.00%
-                </span>
-                <span className="text-label-sm uppercase tracking-widest text-on-surface-variant">
-                  Variance Detected
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ============================================================
-       * Footer
-       * ============================================================ */}
-      <footer className="mt-24 w-full border-t border-slate-900 bg-slate-950">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-8 px-12 py-16 md:flex-row">
-          <div className="flex flex-col items-center gap-4 md:items-start">
-            <span className="text-lg font-black uppercase tracking-tighter text-primary-electric">
-              Chongmu PRO Elite
-            </span>
-            <p className="text-sm text-outline">
-              © 2026 Chongmu PRO Elite · 중소기업 총무 업무의 완성형 미니 ERP
-            </p>
-          </div>
-          <div className="flex flex-wrap justify-center gap-6">
-            {FOOTER_LINKS.map((label) => (
-              <a
-                key={label}
-                href="#"
-                className="text-sm text-outline transition-opacity duration-300 hover:text-primary-electric hover:underline hover:decoration-primary-electric/50"
-              >
-                {label}
-              </a>
-            ))}
-          </div>
+      <footer className="border-t border-white/5 bg-[#010205] py-8 text-center text-label-sm uppercase tracking-widest text-slate-600">
+        <p>© 2026 Chongmu PRO Elite · 중소기업 총무 업무의 완성형 미니 ERP</p>
+        <div className="mt-3 flex flex-wrap justify-center gap-6">
+          {FOOTER_LINKS.map((label) => (
+            <a
+              key={label}
+              href="#"
+              className="text-slate-500 transition-colors hover:text-indigo-400"
+            >
+              {label}
+            </a>
+          ))}
         </div>
       </footer>
+    </div>
+  );
+}
+
+type ModuleCardProps = {
+  modCode: string;
+  size: "large" | "small";
+  title: string;
+  description: string;
+  icon: typeof BarChart3;
+  iconBg: string;
+  iconBorder: string;
+  iconColor: string;
+  accentClass?: string;
+  cornerSide?: "br" | "bl";
+};
+
+function ModuleCard({
+  modCode,
+  size,
+  title,
+  description,
+  icon: Icon,
+  iconBg,
+  iconBorder,
+  iconColor,
+  accentClass,
+  cornerSide,
+}: ModuleCardProps) {
+  const colSpan = size === "large" ? "md:col-span-8" : "md:col-span-4";
+  const padding = size === "large" ? "p-10" : "p-8";
+  const titleClass =
+    size === "large"
+      ? "text-2xl font-bold tracking-tight"
+      : "text-xl font-semibold tracking-tight";
+  const iconSize = size === "large" ? "h-14 w-14" : "h-12 w-12";
+  const iconInner = size === "large" ? "h-7 w-7" : "h-6 w-6";
+
+  return (
+    <div
+      className={`group relative z-10 overflow-hidden rounded-sm transition-colors duration-500 hover:bg-surface-container-high/40 glass-panel-deep tech-border ${colSpan} ${padding}`}
+    >
+      <div className="absolute right-4 top-4 text-label-sm uppercase tracking-widest text-slate-600">
+        {modCode}
+      </div>
+      {cornerSide === "br" ? (
+        <div
+          aria-hidden
+          className="absolute bottom-4 right-4 h-12 w-12 border-b border-r border-indigo-500/30"
+        />
+      ) : null}
+      {cornerSide === "bl" ? (
+        <div
+          aria-hidden
+          className="absolute bottom-4 left-4 h-12 w-12 border-b border-l border-indigo-500/30"
+        />
+      ) : null}
+
+      <div className="relative z-10 flex h-full flex-col">
+        <div
+          className={`mb-6 flex ${iconSize} items-center justify-center rounded-sm border ${iconBg} ${iconBorder} ${iconColor} transition-transform duration-500 group-hover:scale-110 ${accentClass ?? ""}`}
+        >
+          <Icon aria-hidden className={iconInner} />
+        </div>
+        <h3 className={`mb-4 text-white ${titleClass}`}>{title}</h3>
+        <p className="max-w-xl text-body-md leading-relaxed text-slate-400">
+          {description}
+        </p>
+      </div>
     </div>
   );
 }

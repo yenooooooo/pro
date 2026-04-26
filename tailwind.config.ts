@@ -136,10 +136,40 @@ const config: Config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        scanline: {
+          "0%": { transform: "translateY(-100%)" },
+          "100%": { transform: "translateY(100vh)" },
+        },
+        "pulse-glow": {
+          "0%, 100%": { filter: "drop-shadow(0 0 15px rgba(99, 102, 241, 0.6))" },
+          "50%": { filter: "drop-shadow(0 0 30px rgba(99, 102, 241, 0.9))" },
+        },
+        "rotate-slow": {
+          "0%": { transform: "rotate(0deg)" },
+          "100%": { transform: "rotate(360deg)" },
+        },
+        "rotate-reverse-slow": {
+          "0%": { transform: "rotate(360deg)" },
+          "100%": { transform: "rotate(0deg)" },
+        },
+        "float-particle": {
+          "0%, 100%": { transform: "translate(0, 0) scale(1)", opacity: "0.3" },
+          "50%": { transform: "translate(15px, -15px) scale(1.2)", opacity: "0.7" },
+        },
+        "reveal-up": {
+          "0%": { opacity: "0", transform: "translateY(40px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        scanline: "scanline 8s linear infinite",
+        "pulse-glow": "pulse-glow 4s ease-in-out infinite",
+        "rotate-slow": "rotate-slow 20s linear infinite",
+        "rotate-reverse-slow": "rotate-reverse-slow 25s linear infinite",
+        "float-particle": "float-particle 4s ease-in-out infinite",
+        "reveal-up": "reveal-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards",
       },
     },
   },

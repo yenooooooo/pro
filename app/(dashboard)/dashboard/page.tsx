@@ -1,395 +1,401 @@
 import {
   AlertTriangle,
-  CalendarX,
-  ClipboardCheck,
-  FileWarning,
+  Building2,
+  Cpu,
+  Gauge,
+  Globe,
+  Info,
   Minus,
-  Package,
-  RefreshCw,
-  Timer,
+  Network,
+  Radar,
+  Satellite,
+  ShieldAlert,
   TrendingUp,
-  Wallet,
 } from "lucide-react";
-import { formatDelta, formatKRWCompact } from "@/lib/utils/format";
 
-// Phase 6에서 실제 집계 쿼리로 교체. 현재는 stitch 시안 수치로 데모.
-type CurrencyKPI = {
+// Phase 6에서 실 집계 쿼리로 교체. 현재는 stitch v2 시안 수치.
+type KPI = {
   label: string;
-  kind: "currency";
-  amount: number;
-  delta: number | null;
-  deltaLabel: string;
-  icon: typeof Wallet;
+  value: string;
+  delta: { dir: "up" | "down" | "flat"; text: string };
+  icon: typeof Cpu;
+  iconColor: string;
+  sparkline: "indigo" | "tertiary" | "bars";
 };
-type PercentKPI = {
-  label: string;
-  kind: "percent";
-  percent: number;
-  icon: typeof Wallet;
-  barColor: string;
-};
-type KPI = CurrencyKPI | PercentKPI;
 
 const KPIS: KPI[] = [
   {
-    label: "이번달 총급여",
-    kind: "currency",
-    amount: 42_500_000,
-    delta: 0.024,
-    deltaLabel: "전월 대비",
-    icon: Wallet,
+    label: "운영 매트릭스",
+    value: "94.2%",
+    delta: { dir: "up", text: "+2.4% (24h)" },
+    icon: Cpu,
+    iconColor: "text-indigo-400",
+    sparkline: "indigo",
   },
   {
-    label: "이번달 총지출",
-    kind: "currency",
-    amount: 12_800_000,
-    delta: null,
-    deltaLabel: "안정적 추세",
-    icon: ClipboardCheck,
+    label: "재무 상태 (KRW)",
+    value: "₩4.2B",
+    delta: { dir: "up", text: "+12.8% (MOM)" },
+    icon: Building2,
+    iconColor: "text-tertiary-sky",
+    sparkline: "tertiary",
   },
   {
-    label: "연차 사용률",
-    kind: "percent",
-    percent: 64,
-    icon: CalendarX,
-    barColor: "bg-primary-electric",
-  },
-  {
-    label: "월말결산 진행률",
-    kind: "percent",
-    percent: 85,
-    icon: ClipboardCheck,
-    barColor: "bg-tertiary-sky",
+    label: "네트워크 부하",
+    value: "68.5%",
+    delta: { dir: "flat", text: "Stable" },
+    icon: Gauge,
+    iconColor: "text-error-soft",
+    sparkline: "bars",
   },
 ];
 
-const ALERTS = [
+type Alert = {
+  title: string;
+  description: string;
+  meta: string;
+  tone: "error" | "info";
+  icon: typeof ShieldAlert;
+};
+
+const ALERTS: Alert[] = [
   {
-    title: "계약 만료 임박 거래처 3건",
-    description: "즉시 갱신 검토가 필요합니다.",
-    severity: "error" as const,
-    icon: FileWarning,
+    title: "보안 프로토콜 위반",
+    description: "Node AP-East-1에서 비정상적인 접근 감지됨.",
+    meta: "2m ago",
+    tone: "error",
+    icon: ShieldAlert,
   },
   {
-    title: "주 52시간 초과 직원 5명",
-    description: "개발팀에서 규정 준수 플래그가 발생했습니다.",
-    severity: "warn" as const,
-    icon: Timer,
-  },
-  {
-    title: "자산 실사 대상 12건",
-    description: "분기별 하드웨어 검증이 예정되어 있습니다.",
-    severity: "info" as const,
-    icon: Package,
+    title: "리소스 최적화 필요",
+    description: "데이터베이스 클러스터 메모리 사용량 85% 초과.",
+    meta: "15m ago",
+    tone: "info",
+    icon: Info,
   },
 ];
 
-const DEPT = [
-  { label: "R&D", ratio: 0.45, color: "bg-primary-electric" },
-  { label: "영업", ratio: 0.3, color: "bg-tertiary-sky" },
-];
-const HEADCOUNT = 142;
+const SYNC_TIME = "14:02:45 UTC";
 
 export default function DashboardPage() {
   return (
-    <>
-      {/* Page header */}
-      <div className="mb-stack-lg flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
-        <div>
-          <h2 className="text-headline-lg font-semibold tracking-tight text-on-surface">
-            Strategic Dashboard
-          </h2>
-          <p className="mt-1 text-body-md text-on-surface-variant">
-            실시간으로 집계되는 주요 경영 지표
-          </p>
-        </div>
-        <div className="flex items-center gap-2 rounded-lg border border-outline-variant/30 bg-surface-container-low px-4 py-2 text-data-tabular text-on-surface-variant">
-          <RefreshCw aria-hidden className="h-[18px] w-[18px] text-primary-electric" />
-          마지막 업데이트: 방금 전
-        </div>
-      </div>
+    <div className="relative -mx-4 -my-6 min-h-[calc(100vh-4rem)] overflow-hidden hologram-grid sm:-mx-6 lg:-mx-container-padding lg:-my-8">
+      {/* Ambient indigo glow */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed left-1/2 top-1/2 z-0 h-[800px] w-[800px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-indigo-600/10 blur-[120px]"
+      />
 
-      {/* KPI Row */}
-      <div className="mb-stack-lg grid grid-cols-1 gap-gutter md:grid-cols-2 lg:grid-cols-4">
-        {KPIS.map((kpi) => (
-          <div
-            key={kpi.label}
-            className="glass-panel group relative overflow-hidden rounded-xl p-6 transition-colors duration-300 hover:bg-surface-container-high"
-          >
-            {/* blur glow orb (우상단) */}
+      <div className="relative z-10 mx-auto grid max-w-[1600px] grid-cols-12 gap-gutter px-4 py-6 sm:px-6 lg:px-container-padding lg:py-8">
+        {/* ========== Header ========== */}
+        <div className="col-span-12 mb-stack-md flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
+          <div>
+            <p className="mb-2 inline-flex items-center gap-2 text-label-sm uppercase tracking-widest text-indigo-400">
+              <Radar aria-hidden className="h-4 w-4" />
+              System Status: Nominal
+            </p>
+            <h2 className="text-display-xl font-bold tracking-tight text-white">
+              전략적 인텔리전스 대시보드
+            </h2>
+          </div>
+          <div className="hidden items-center gap-3 rounded-lg border border-outline-variant/30 bg-surface-container-high/50 px-4 py-2 backdrop-blur-md lg:flex">
+            <span className="text-data-tabular text-slate-400">SYNC:</span>
+            <span className="text-data-tabular font-bold tabular-nums text-tertiary-sky">
+              {SYNC_TIME}
+            </span>
+            <span
+              aria-hidden
+              className="ml-2 h-2 w-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"
+            />
+          </div>
+        </div>
+
+        {/* ========== Central Hub (8 cols) ========== */}
+        <div className="col-span-12 grid grid-rows-[auto_1fr] gap-gutter lg:col-span-8">
+          {/* KPI Row */}
+          <div className="grid grid-cols-1 gap-gutter sm:grid-cols-3">
+            {KPIS.map((kpi) => (
+              <KPICard key={kpi.label} kpi={kpi} />
+            ))}
+          </div>
+
+          {/* Intelligence core hub viz */}
+          <div className="glass-panel relative flex min-h-[400px] items-center justify-center overflow-hidden rounded-xl border-t border-indigo-500/20 shadow-[0_-10px_30px_-15px_rgba(99,102,241,0.2)]">
             <div
               aria-hidden
-              className="absolute right-0 top-0 -mr-10 -mt-10 h-32 w-32 rounded-full bg-primary-electric/5 blur-2xl transition-colors group-hover:bg-primary-electric/10"
+              className="absolute inset-0 mix-blend-screen opacity-20"
+              style={{
+                backgroundImage:
+                  "url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80')",
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }}
             />
-            <div className="relative z-10">
-              <div className="mb-4 flex items-center justify-between">
-                <span className="text-label-sm font-medium text-on-surface-variant">
-                  {kpi.label}
-                </span>
-                <kpi.icon
-                  aria-hidden
-                  className="h-9 w-9 rounded-lg bg-primary-electric/10 p-2 text-primary-electric"
-                />
-              </div>
-
-              {kpi.kind === "currency" ? (
-                <>
-                  <KPICurrency amount={kpi.amount} />
-                  <div className="mt-2 flex items-center gap-2 text-data-tabular">
-                    {kpi.delta !== null ? (
-                      <>
-                        <TrendingUp aria-hidden className="h-4 w-4 text-tertiary-sky" />
-                        <span className="text-tertiary-sky">
-                          {kpi.deltaLabel} {formatDelta(kpi.delta)}
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <Minus aria-hidden className="h-4 w-4 text-on-surface-variant" />
-                        <span className="text-on-surface-variant">{kpi.deltaLabel}</span>
-                      </>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <KPIPercent value={kpi.percent} barColor={kpi.barColor} />
-              )}
+            <div className="absolute left-4 top-4 text-data-tabular tabular-nums text-indigo-400/50">
+              SYS.CORE.01
             </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Bento grid — chart 2col + right stack */}
-      <div className="grid grid-cols-1 gap-gutter lg:grid-cols-3">
-        {/* 왼쪽: 6개월 급여·지출 추세 차트 */}
-        <div className="glass-panel flex h-[500px] flex-col rounded-xl p-6 lg:col-span-2">
-          <div className="mb-6 flex items-start justify-between">
-            <div>
-              <h3 className="text-headline-md font-semibold text-on-surface">
-                6-Month Payroll &amp; Expense Trends
-              </h3>
-              <p className="mt-1 text-body-md text-on-surface-variant">
-                최근 6개월 누적 재무 추이
-              </p>
+            <div className="absolute bottom-4 right-4 text-data-tabular tabular-nums text-indigo-400/50">
+              RENDERING_ACTIVE
             </div>
-            <div className="hidden gap-4 sm:flex">
-              <span className="flex items-center gap-2 text-label-sm text-on-surface-variant">
-                <span aria-hidden className="h-3 w-3 rounded-full bg-primary-electric" />
-                급여
-              </span>
-              <span className="flex items-center gap-2 text-label-sm text-on-surface-variant">
+
+            <div className="relative z-10 text-center">
+              <div className="relative flex h-48 w-48 items-center justify-center">
+                {/* Particles */}
                 <span
                   aria-hidden
-                  className="h-3 w-3 rounded-full border border-outline-variant bg-surface-variant"
+                  className="absolute left-10 top-0 h-1 w-1 rounded-full bg-indigo-300 opacity-50 animate-float-particle"
                 />
-                지출
-              </span>
-            </div>
-          </div>
-
-          <div className="relative mt-4 flex w-full flex-1 items-end pb-8">
-            {/* Y축 가로선 */}
-            <div aria-hidden className="absolute inset-0 flex flex-col justify-between pb-8">
-              <div className="h-px w-full bg-outline-variant/10" />
-              <div className="h-px w-full bg-outline-variant/10" />
-              <div className="h-px w-full bg-outline-variant/10" />
-              <div className="h-px w-full bg-outline-variant/10" />
-              <div className="h-px w-full bg-outline-variant/30" />
-            </div>
-
-            {/* SVG 라인 차트 (Phase 6에서 Recharts로 교체) */}
-            <svg
-              role="img"
-              aria-label="6개월 급여·지출 추세"
-              preserveAspectRatio="none"
-              viewBox="0 0 100 100"
-              className="absolute inset-0 h-full w-full pb-8"
-            >
-              <path
-                d="M0,80 L20,75 L40,82 L60,70 L80,78 L100,65"
-                fill="none"
-                stroke="#464554"
-                strokeDasharray="4,4"
-                strokeWidth="1.5"
-              />
-              <defs>
-                <linearGradient id="payrollGrad" x1="0%" x2="0%" y1="0%" y2="100%">
-                  <stop offset="0%" stopColor="#c0c1ff" stopOpacity="0.3" />
-                  <stop offset="100%" stopColor="#c0c1ff" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              <path
-                d="M0,60 L20,50 L40,55 L60,35 L80,40 L100,20 L100,100 L0,100 Z"
-                fill="url(#payrollGrad)"
-              />
-              <path
-                d="M0,60 L20,50 L40,55 L60,35 L80,40 L100,20"
-                fill="none"
-                stroke="#c0c1ff"
-                strokeWidth="3"
-                style={{ filter: "drop-shadow(0px 4px 6px rgba(192, 193, 255, 0.4))" }}
-              />
-              {[
-                { cx: 20, cy: 50 },
-                { cx: 40, cy: 55 },
-                { cx: 60, cy: 35 },
-                { cx: 80, cy: 40 },
-                { cx: 100, cy: 20 },
-              ].map((p) => (
-                <circle
-                  key={p.cx}
-                  cx={p.cx}
-                  cy={p.cy}
-                  r={1.5}
-                  fill="#0b1326"
-                  stroke="#c0c1ff"
-                  strokeWidth="1"
+                <span
+                  aria-hidden
+                  className="absolute bottom-10 right-0 h-1.5 w-1.5 rounded-full bg-tertiary-sky opacity-40 animate-float-particle [animation-delay:1s]"
                 />
-              ))}
-            </svg>
-
-            <div
-              aria-hidden
-              className="absolute bottom-0 left-0 flex w-full justify-between pt-2 text-data-tabular text-on-surface-variant/60"
-            >
-              <span>Jan</span>
-              <span>Feb</span>
-              <span>Mar</span>
-              <span>Apr</span>
-              <span>May</span>
-              <span>Jun</span>
+                <span
+                  aria-hidden
+                  className="absolute right-10 top-20 h-0.5 w-0.5 rounded-full bg-white opacity-60 animate-float-particle [animation-delay:0.5s]"
+                />
+                {/* Outer glow */}
+                <div
+                  aria-hidden
+                  className="absolute h-32 w-32 rounded-full bg-indigo-500/10 blur-3xl animate-pulse-glow"
+                />
+                {/* Rotating rings */}
+                <div
+                  aria-hidden
+                  className="absolute inset-0 rounded-full border border-indigo-500/20 animate-rotate-slow"
+                />
+                <div
+                  aria-hidden
+                  className="absolute inset-4 rounded-full border border-tertiary-sky/20 border-l-tertiary-sky/60 border-t-tertiary-sky/60 animate-rotate-reverse-slow"
+                />
+                <div
+                  aria-hidden
+                  className="absolute inset-8 rounded-full border border-indigo-400/20 border-b-indigo-400/60 border-r-indigo-400/60 animate-rotate-slow"
+                />
+                <div aria-hidden className="absolute h-16 w-16 rounded-full bg-indigo-500/20 blur-xl" />
+                <Network
+                  aria-hidden
+                  className="relative h-12 w-12 text-white drop-shadow-[0_0_15px_rgba(99,102,241,0.8)] animate-pulse-glow"
+                />
+              </div>
+              <p className="mt-6 text-headline-md font-semibold tracking-wide text-white">
+                인텔리전스 코어 활성
+              </p>
+              <p className="mt-2 text-body-md text-slate-400">
+                글로벌 노드 동기화 완료
+              </p>
             </div>
           </div>
         </div>
 
-        {/* 오른쪽 스택 */}
-        <div className="flex h-auto flex-col gap-gutter lg:h-[500px]">
-          {/* 실시간 알림 */}
-          <div className="glass-panel flex flex-1 flex-col rounded-xl p-6">
-            <div className="mb-4 flex items-center justify-between border-b border-outline-variant/20 pb-4">
-              <h3 className="flex items-center gap-2 text-headline-md font-semibold text-on-surface">
+        {/* ========== Side panels (4 cols) ========== */}
+        <div className="col-span-12 flex flex-col gap-gutter lg:col-span-4">
+          {/* 실시간 경고 */}
+          <div className="glass-panel relative flex-1 overflow-hidden rounded-xl p-stack-md">
+            <div
+              aria-hidden
+              className="glass-panel-inner pointer-events-none absolute inset-0 rounded-xl"
+            />
+            <div className="relative mb-stack-md flex items-center justify-between border-b border-slate-700/50 pb-2">
+              <h3 className="flex items-center gap-2 text-headline-md font-semibold text-white">
                 <AlertTriangle aria-hidden className="h-5 w-5 text-error-soft" />
-                실시간 알림
+                실시간 경고
               </h3>
-              <button
-                type="button"
-                className="text-label-sm font-medium text-primary-electric transition-colors hover:text-primary-container"
-              >
-                전체보기
-              </button>
+              <span className="rounded bg-error-container/30 px-2 py-1 text-label-sm font-bold text-on-error-container">
+                {ALERTS.length}
+              </span>
             </div>
-            <ul className="space-y-3 overflow-y-auto pr-2">
+            <ul className="relative flex flex-col gap-2">
               {ALERTS.map((a) => {
-                const bgMap = {
-                  error: "bg-error-soft/10",
-                  warn: "bg-tertiary-sky/10",
-                  info: "bg-outline-variant/20",
-                };
-                const iconMap = {
-                  error: "text-error-soft",
-                  warn: "text-tertiary-sky",
-                  info: "text-on-surface-variant",
-                };
+                const iconColor =
+                  a.tone === "error" ? "text-error-soft" : "text-tertiary-sky";
                 return (
                   <li
                     key={a.title}
-                    className="flex cursor-pointer gap-3 rounded-lg border border-outline-variant/20 bg-surface-container/50 p-3 transition-colors hover:bg-surface-container"
+                    className="flex cursor-pointer items-start gap-3 rounded-lg border border-outline-variant/30 bg-surface-container/50 p-3 transition-colors hover:bg-surface-container"
                   >
-                    <div
-                      className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full ${bgMap[a.severity]}`}
+                    <a.icon
                       aria-hidden
-                    >
-                      <a.icon className={`h-4 w-4 ${iconMap[a.severity]}`} />
+                      className={`mt-0.5 h-5 w-5 flex-shrink-0 ${iconColor}`}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-body-md font-semibold text-white">{a.title}</h4>
+                      <p className="mt-1 text-label-sm text-slate-400">{a.description}</p>
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-body-md font-medium leading-tight text-on-surface">
-                        {a.title}
-                      </p>
-                      <p className="mt-1 text-label-sm text-on-surface-variant">
-                        {a.description}
-                      </p>
-                    </div>
+                    <span className="ml-auto whitespace-nowrap text-data-tabular text-xs tabular-nums text-slate-500">
+                      {a.meta}
+                    </span>
                   </li>
                 );
               })}
             </ul>
           </div>
 
-          {/* 부서별 분포 도넛 */}
-          <div className="glass-panel flex h-48 items-center justify-between rounded-xl p-6">
-            <div>
-              <h3 className="mb-1 text-headline-md font-semibold text-on-surface">
-                부서별 분포
-              </h3>
-              <p className="text-label-sm text-on-surface-variant">인력 구성 비율</p>
-              <ul className="mt-4 space-y-2">
-                {DEPT.map((d) => (
-                  <li
-                    key={d.label}
-                    className="flex items-center gap-2 text-data-tabular text-on-surface-variant"
-                  >
-                    <span aria-hidden className={`h-2 w-2 rounded-full ${d.color}`} />
-                    {d.label} ({Math.round(d.ratio * 100)}%)
-                  </li>
-                ))}
-              </ul>
-            </div>
-
+          {/* 원격 측정 */}
+          <div className="glass-panel relative flex-1 overflow-hidden rounded-xl p-stack-md">
             <div
               aria-hidden
-              className="relative flex h-24 w-24 flex-shrink-0 items-center justify-center rounded-full"
-              style={{
-                background:
-                  "conic-gradient(from 0deg, #c0c1ff 0% 45%, #7bd0ff 45% 75%, #39485a 75% 100%)",
-              }}
-            >
-              <div className="absolute inset-0 rounded-full border border-surface/50" />
-              <div className="z-10 flex h-16 w-16 items-center justify-center rounded-full bg-surface-container-low shadow-inner">
-                <span className="text-label-sm font-bold tabular-nums text-on-surface">
-                  {HEADCOUNT}
+              className="glass-panel-inner pointer-events-none absolute inset-0 rounded-xl"
+            />
+            <div className="relative mb-stack-md flex items-center justify-between border-b border-slate-700/50 pb-2">
+              <h3 className="flex items-center gap-2 text-headline-md font-semibold text-white">
+                <Satellite aria-hidden className="h-5 w-5 text-indigo-400" />
+                원격 측정
+              </h3>
+            </div>
+
+            <div className="relative space-y-4">
+              <TelemetryRow label="서버 응답 시간" value="24ms" pct={15} barColor="bg-indigo-500" />
+              <TelemetryRow
+                label="데이터 처리량"
+                value="1.2 TB/s"
+                pct={78}
+                barColor="bg-tertiary-sky"
+              />
+
+              {/* Mini map */}
+              <div className="relative mt-6 flex h-32 items-center justify-center overflow-hidden rounded-lg border border-outline-variant/30 bg-surface-container-highest/50">
+                <div
+                  aria-hidden
+                  className="absolute inset-0 grayscale opacity-30 mix-blend-luminosity"
+                  style={{
+                    backgroundImage:
+                      "url('https://images.unsplash.com/photo-1524661135-423995f22d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80')",
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                  }}
+                />
+                <span
+                  aria-hidden
+                  className="absolute left-2/3 top-1/3 h-2 w-2 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,1)]"
+                />
+                <span
+                  aria-hidden
+                  className="absolute bottom-1/3 right-1/4 h-2 w-2 rounded-full bg-tertiary-sky shadow-[0_0_10px_rgba(123,208,255,1)]"
+                />
+                <span className="relative z-10 inline-flex items-center gap-1.5 rounded bg-slate-900/80 px-2 py-1 text-label-sm uppercase tracking-widest text-white/60 backdrop-blur-sm">
+                  <Globe aria-hidden className="h-3.5 w-3.5" />
+                  GLOBAL DEPLOYMENT
                 </span>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </>
-  );
-}
-
-function KPICurrency({ amount }: { amount: number }) {
-  const { value, unit } = formatKRWCompact(amount);
-  return (
-    <div className="mb-2 flex items-baseline text-on-surface">
-      <span className="mr-1 text-headline-md text-on-surface-variant">₩</span>
-      <span className="text-4xl font-bold tracking-tighter tabular-nums lg:text-[42px]">
-        {value}
-      </span>
-      <span className="ml-1 text-headline-md text-on-surface-variant">{unit}</span>
     </div>
   );
 }
 
-function KPIPercent({
+function KPICard({ kpi }: { kpi: KPI }) {
+  return (
+    <div className="glass-panel group relative overflow-hidden rounded-xl p-stack-md">
+      <div
+        aria-hidden
+        className="glass-panel-inner pointer-events-none absolute inset-0 rounded-xl"
+      />
+      <div className="relative">
+        <div className="mb-4 flex items-start justify-between">
+          <span className="text-label-sm uppercase tracking-wider text-slate-400">
+            {kpi.label}
+          </span>
+          <kpi.icon aria-hidden className={`h-5 w-5 ${kpi.iconColor}`} />
+        </div>
+        <div className="mb-1 text-headline-lg font-semibold text-white">{kpi.value}</div>
+        <DeltaBadge delta={kpi.delta} />
+
+        {/* Sparkline */}
+        <div className="mt-4 h-8 w-full">
+          {kpi.sparkline === "indigo" ? <SparklineLine variant="indigo" /> : null}
+          {kpi.sparkline === "tertiary" ? <SparklineLine variant="tertiary" /> : null}
+          {kpi.sparkline === "bars" ? <SparklineBars /> : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DeltaBadge({ delta }: { delta: KPI["delta"] }) {
+  if (delta.dir === "flat") {
+    return (
+      <div className="flex items-center gap-1 text-data-tabular text-slate-400">
+        <Minus aria-hidden className="h-4 w-4" />
+        {delta.text}
+      </div>
+    );
+  }
+  return (
+    <div className="flex items-center gap-1 text-data-tabular text-green-400">
+      <TrendingUp aria-hidden className="h-4 w-4" />
+      {delta.text}
+    </div>
+  );
+}
+
+function SparklineLine({ variant }: { variant: "indigo" | "tertiary" }) {
+  const isIndigo = variant === "indigo";
+  return (
+    <div
+      className={`relative h-full w-full border-b ${
+        isIndigo ? "border-indigo-500/50" : "border-tertiary-sky/50"
+      } bg-gradient-to-r from-transparent ${
+        isIndigo ? "via-indigo-500/20" : "via-tertiary-sky/20"
+      } to-transparent`}
+    >
+      <div
+        aria-hidden
+        className={`absolute bottom-0 right-0 h-2 w-2 rounded-full ${
+          isIndigo
+            ? "bg-indigo-400 shadow-[0_0_10px_rgba(99,102,241,0.8)]"
+            : "bg-tertiary-sky shadow-[0_0_10px_rgba(123,208,255,0.8)]"
+        }`}
+      />
+    </div>
+  );
+}
+
+function SparklineBars() {
+  const bars = [
+    { h: "20%", color: "bg-slate-700" },
+    { h: "40%", color: "bg-slate-700" },
+    { h: "60%", color: "bg-indigo-500/50" },
+    { h: "80%", color: "bg-indigo-500/80" },
+    { h: "68%", color: "bg-error-soft/80 shadow-[0_0_10px_rgba(255,180,171,0.5)]" },
+  ];
+  return (
+    <div className="flex h-full items-end gap-1">
+      {bars.map((b, i) => (
+        <div
+          key={i}
+          className={`flex-1 ${b.color}`}
+          style={{ height: b.h }}
+          aria-hidden
+        />
+      ))}
+    </div>
+  );
+}
+
+function TelemetryRow({
+  label,
   value,
-  barColor = "bg-primary-electric",
+  pct,
+  barColor,
 }: {
-  value: number;
-  barColor?: string;
+  label: string;
+  value: string;
+  pct: number;
+  barColor: string;
 }) {
   return (
     <div>
-      <div className="mb-2 flex items-baseline text-on-surface">
-        <span className="text-4xl font-bold tracking-tighter tabular-nums lg:text-[42px]">
-          {value}
-        </span>
-        <span className="ml-1 text-headline-md text-on-surface-variant">%</span>
+      <div className="flex items-center justify-between">
+        <span className="text-label-sm text-slate-400">{label}</span>
+        <span className="text-data-tabular tabular-nums text-white">{value}</span>
       </div>
-      <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-surface-container-highest">
+      <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-slate-800">
         <div
-          className={`h-1.5 rounded-full ${barColor}`}
-          style={{ width: `${value}%` }}
           aria-hidden
+          className={`h-1 rounded-full ${barColor}`}
+          style={{ width: `${pct}%` }}
         />
       </div>
     </div>
