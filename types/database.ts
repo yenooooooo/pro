@@ -710,7 +710,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      apply_leave: {
+        Args: {
+          p_employee_id: string
+          p_leave_type: string
+          p_start_date: string
+          p_end_date: string
+          p_days: number
+          p_reason: string | null
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

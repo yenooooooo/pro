@@ -4,6 +4,7 @@ import {
   CalendarPlus,
   Download,
 } from "lucide-react";
+import Link from "next/link";
 import { differenceInYears } from "date-fns";
 import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
 import { cn } from "@/lib/utils/cn";
@@ -134,15 +135,13 @@ export default async function LeavePage({
             <Download aria-hidden className="h-[18px] w-[18px]" />
             내보내기
           </button>
-          <button
-            type="button"
-            disabled
-            aria-label="연차 신청 (Phase 3.6)"
-            className="inline-flex min-h-11 cursor-not-allowed items-center gap-2 rounded bg-gradient-to-b from-primary-electric to-inverse-primary px-6 py-2 text-label-sm font-semibold text-on-primary opacity-60"
+          <Link
+            href="/leave/new"
+            className="inline-flex min-h-11 items-center gap-2 rounded bg-gradient-to-b from-primary-electric to-inverse-primary px-6 py-2 text-label-sm font-semibold text-on-primary shadow-[0_0_15px_rgba(192,193,255,0.3)] transition-opacity hover:opacity-90"
           >
             <CalendarPlus aria-hidden className="h-[18px] w-[18px]" />
             연차 신청
-          </button>
+          </Link>
         </div>
       </div>
 
