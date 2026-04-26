@@ -6,6 +6,7 @@ import {
   Moon,
   Upload,
 } from "lucide-react";
+import Link from "next/link";
 import { endOfMonth, format, startOfMonth } from "date-fns";
 import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
 import { cn } from "@/lib/utils/cn";
@@ -170,15 +171,13 @@ export default async function AttendancePage({
             <Download aria-hidden className="h-[18px] w-[18px]" />
             내보내기
           </button>
-          <button
-            type="button"
-            disabled
-            aria-label="근태 입력 (Phase 3.3)"
-            className="inline-flex min-h-11 cursor-not-allowed items-center gap-2 rounded bg-gradient-to-b from-primary-electric to-inverse-primary px-6 py-2 text-label-sm font-semibold text-on-primary opacity-60"
+          <Link
+            href="/attendance/new"
+            className="inline-flex min-h-11 items-center gap-2 rounded bg-gradient-to-b from-primary-electric to-inverse-primary px-6 py-2 text-label-sm font-semibold text-on-primary shadow-[0_0_15px_rgba(192,193,255,0.3)] transition-opacity hover:opacity-90"
           >
             <Clock aria-hidden className="h-[18px] w-[18px]" />
             근태 입력
-          </button>
+          </Link>
         </div>
       </div>
 
