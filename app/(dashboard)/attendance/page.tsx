@@ -153,15 +153,13 @@ export default async function AttendancePage({
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
-          <button
-            type="button"
-            disabled
-            aria-label="CSV 가져오기 (Phase 3.4)"
-            className="inline-flex min-h-11 cursor-not-allowed items-center gap-2 rounded border border-outline-variant/50 bg-surface-container-high px-4 py-2 text-label-sm text-on-surface-variant opacity-60"
+          <Link
+            href="/attendance/import"
+            className="inline-flex min-h-11 items-center gap-2 rounded border border-outline-variant/50 bg-surface-container-high px-4 py-2 text-label-sm text-on-surface transition-colors hover:bg-surface-container-highest"
           >
             <Upload aria-hidden className="h-[18px] w-[18px]" />
             CSV 가져오기
-          </button>
+          </Link>
           <button
             type="button"
             disabled
