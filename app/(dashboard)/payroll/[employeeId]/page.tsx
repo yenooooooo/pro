@@ -240,13 +240,13 @@ function Payslip({
       </div>
 
       {/* 실지급액 — 페이지 분할 방지 */}
-      <div className="break-inside-avoid rounded-xl border-2 border-primary-electric/40 bg-primary-electric/5 p-6 print:border print:border-black print:bg-transparent print:p-3">
+      <div className="break-inside-avoid rounded-xl border-2 border-primary-electric/40 bg-primary-electric/5 p-6 print:rounded-none print:border-0 print:border-y print:border-y-gray-400 print:bg-transparent print:px-0 print:py-3">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="text-label-sm uppercase tracking-widest text-primary-electric print:text-black/70">
+            <p className="text-label-sm uppercase tracking-widest text-primary-electric print:text-gray-600">
               Net Pay · 실지급액
             </p>
-            <p className="mt-1 text-body-md text-on-surface-variant print:text-black/60">
+            <p className="mt-1 text-body-md text-on-surface-variant print:text-gray-600">
               지급 합계 - 공제 합계
             </p>
           </div>
