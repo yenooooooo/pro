@@ -2,10 +2,10 @@ import Link from "next/link";
 import {
   AlertTriangle,
   Building2,
-  CalendarCheck2,
   CalendarClock,
   Coins,
   Package,
+  Radar,
   TrendingUp,
   Users,
 } from "lucide-react";
@@ -294,14 +294,29 @@ export default async function DashboardPage({
     .filter((a) => a.exceededWeeks > 0)
     .slice(0, 5);
 
+  const syncTime = today.toLocaleTimeString("ko-KR", {
+    timeZone: "Asia/Seoul",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+
   return (
-    <div className="space-y-stack-lg">
+    <div className="hologram-grid relative -mx-4 -my-6 min-h-[calc(100vh-4rem)] overflow-hidden sm:-mx-6 lg:-mx-container-padding lg:-my-8 print:hidden">
+      {/* Ambient indigo glow */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed left-1/2 top-1/2 z-0 h-[800px] w-[800px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-indigo-600/10 blur-[120px]"
+      />
+
+      <div className="relative z-10 mx-auto max-w-[1600px] space-y-stack-lg px-4 py-6 sm:px-6 lg:px-container-padding lg:py-8">
       {/* Header */}
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="mb-1 inline-flex items-center gap-2 text-label-sm uppercase tracking-widest text-primary-electric">
-            <CalendarCheck2 aria-hidden className="h-4 w-4" />
-            {year}년 {month}월 운영 현황
+          <p className="mb-2 inline-flex items-center gap-2 text-label-sm uppercase tracking-widest text-indigo-400">
+            <Radar aria-hidden className="h-4 w-4" />
+            System Status: Nominal · {year}년 {month}월
           </p>
           <h1 className="text-headline-lg font-bold tracking-tight text-on-surface sm:text-display-xl">
             Strategic Dashboard
@@ -309,6 +324,16 @@ export default async function DashboardPage({
           <p className="mt-1 text-body-md text-on-surface-variant">
             Nexus ERP · 실시간 경영 지표 · 전월 대비 변화
           </p>
+        </div>
+        <div className="hidden items-center gap-3 rounded-lg border border-outline-variant/30 bg-surface-container-high/50 px-4 py-2 backdrop-blur-md lg:flex">
+          <span className="text-data-tabular text-slate-400">SYNC:</span>
+          <span className="text-data-tabular font-bold tabular-nums text-tertiary-sky">
+            {syncTime} KST
+          </span>
+          <span
+            aria-hidden
+            className="ml-2 h-2 w-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"
+          />
         </div>
       </div>
 
@@ -422,6 +447,7 @@ export default async function DashboardPage({
             />
           ))}
         </AlertPanel>
+      </div>
       </div>
     </div>
   );
@@ -564,17 +590,33 @@ function KPICard({
     tertiary: "text-tertiary-sky",
     secondary: "text-secondary-slate",
   }[tone];
+  const barClass = {
+    primary: "bg-primary-electric",
+    tertiary: "bg-tertiary-sky",
+    secondary: "bg-secondary-slate",
+  }[tone];
+  const barGlow = {
+    primary: "rgba(192,193,255,0.7)",
+    tertiary: "rgba(123,208,255,0.7)",
+    secondary: "rgba(185,200,222,0.5)",
+  }[tone];
 
   return (
-    <div className="glass-panel relative flex h-36 flex-col justify-between overflow-hidden rounded-xl p-stack-md">
-      <div className="flex items-start justify-between">
+    <div className="glass-panel group relative flex h-36 flex-col justify-between overflow-hidden rounded-xl p-stack-md transition-all hover:border-primary-electric/30 hover:shadow-[0_0_24px_-8px_rgba(192,193,255,0.4)]">
+      {/* Inner rim light gradient (호버 시 강조) */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/[0.04] to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+      />
+
+      <div className="relative z-10 flex items-start justify-between">
         <span className="text-label-sm uppercase tracking-wider text-on-surface-variant">
           {label}
         </span>
         <Icon aria-hidden className={cn("h-5 w-5 opacity-70", toneClass)} />
       </div>
 
-      <div className="space-y-1">
+      <div className="relative z-10 space-y-1">
         <span className="block text-[28px] font-bold tracking-tighter tabular-nums text-on-surface">
           {value}
         </span>
@@ -588,13 +630,16 @@ function KPICard({
         ) : null}
       </div>
 
-      {progressValue !== undefined ? (
-        <div
-          aria-hidden
-          className="absolute bottom-0 left-0 h-1 bg-primary-electric"
-          style={{ width: `${progressValue}%` }}
-        />
-      ) : null}
+      {/* 하단 액센트 바 (progress가 있으면 진행률, 없으면 항상 풀폭) */}
+      <div
+        aria-hidden
+        className={cn("absolute bottom-0 left-0 h-1 transition-all", barClass)}
+        style={{
+          width:
+            progressValue !== undefined ? `${progressValue}%` : "100%",
+          boxShadow: `0 0 8px ${barGlow}`,
+        }}
+      />
     </div>
   );
 }
