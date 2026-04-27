@@ -106,7 +106,7 @@ export default async function PayslipPage({
     : null;
 
   return (
-    <div className="space-y-stack-lg print:space-y-4">
+    <div className="space-y-stack-lg print:space-y-0">
       {/* 화면에서만 보이는 네비게이션 */}
       <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
         <Link
@@ -159,8 +159,8 @@ function Payslip({
 
   return (
     <div className="glass-panel rounded-xl p-8 print:rounded-none print:border-none print:bg-white print:p-0 print:text-black print:shadow-none">
-      {/* 헤더 */}
-      <div className="border-b border-outline-variant/30 pb-6 print:border-black/40">
+      {/* 헤더 — 페이지 분할 방지 */}
+      <div className="break-inside-avoid border-b border-outline-variant/30 pb-6 print:pb-3">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-label-sm uppercase tracking-widest text-on-surface-variant print:text-black/60">
@@ -181,8 +181,8 @@ function Payslip({
         </div>
       </div>
 
-      {/* 직원·지급정보 */}
-      <div className="grid grid-cols-1 gap-6 border-b border-outline-variant/30 py-6 md:grid-cols-2 print:border-black/30">
+      {/* 직원·지급정보 — 페이지 분할 방지 */}
+      <div className="grid break-inside-avoid grid-cols-1 gap-6 border-b border-outline-variant/30 py-6 md:grid-cols-2 print:gap-4 print:py-3">
         <InfoBlock title="직원 정보">
           <InfoRow label="이름" value={emp.name} />
           <InfoRow label="사번" value={emp.employee_no} mono />
@@ -218,20 +218,29 @@ function Payslip({
         </InfoBlock>
       </div>
 
-      {/* 지급/공제 표 */}
-      <div className="grid grid-cols-1 gap-6 py-6 lg:grid-cols-2">
-        <PayslipTable title="지급 항목" rows={earnings} totalLabel="지급 합계" total={payroll.gross_pay} />
-        <PayslipTable
-          title="공제 항목"
-          rows={deductions}
-          totalLabel="공제 합계"
-          total={payroll.total_deduction}
-          tone="error"
-        />
+      {/* 지급/공제 표 — 각 표 페이지 분할 방지 */}
+      <div className="grid grid-cols-1 gap-6 py-6 lg:grid-cols-2 print:gap-4 print:py-3">
+        <div className="break-inside-avoid">
+          <PayslipTable
+            title="지급 항목"
+            rows={earnings}
+            totalLabel="지급 합계"
+            total={payroll.gross_pay}
+          />
+        </div>
+        <div className="break-inside-avoid">
+          <PayslipTable
+            title="공제 항목"
+            rows={deductions}
+            totalLabel="공제 합계"
+            total={payroll.total_deduction}
+            tone="error"
+          />
+        </div>
       </div>
 
-      {/* 실지급액 */}
-      <div className="rounded-xl border-2 border-primary-electric/40 bg-primary-electric/5 p-6 print:border-black print:bg-transparent">
+      {/* 실지급액 — 페이지 분할 방지 */}
+      <div className="break-inside-avoid rounded-xl border-2 border-primary-electric/40 bg-primary-electric/5 p-6 print:border print:border-black print:bg-transparent print:p-3">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="text-label-sm uppercase tracking-widest text-primary-electric print:text-black/70">
@@ -247,13 +256,13 @@ function Payslip({
         </div>
       </div>
 
-      {/* 서명 영역 (인쇄 전용) */}
-      <div className="hidden grid-cols-2 gap-12 pt-12 print:grid">
+      {/* 서명 영역 (인쇄 전용) — 페이지 분할 방지 + 푸터와 묶기 */}
+      <div className="hidden break-inside-avoid grid-cols-2 gap-12 pt-12 print:grid print:pt-8">
         <SignatureBlock title="회사" />
         <SignatureBlock title="수령인" />
       </div>
 
-      <p className="mt-6 text-label-sm text-outline print:mt-4 print:text-black/50">
+      <p className="mt-6 break-inside-avoid text-label-sm text-outline print:mt-3 print:text-black/50">
         본 명세서는 근로기준법 제48조에 따라 임금의 구성항목·계산방법·공제내역을 명시합니다.
       </p>
     </div>
@@ -320,7 +329,7 @@ function PayslipTable({
             </tr>
           ) : (
             rows.map((r) => (
-              <tr key={r.label}>
+              <tr key={r.label} className="break-inside-avoid">
                 <td className="px-4 py-2.5 text-on-surface print:text-black">
                   {r.label}
                   {r.nonTaxable ? (

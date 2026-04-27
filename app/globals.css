@@ -227,3 +227,33 @@
     scrollbar-width: none;
   }
 }
+
+/* ============================================================
+ * Print stylesheet — 급여명세서 등 인쇄/PDF 출력용
+ * - A4 + 1cm 마진
+ * - 각 섹션 페이지 분할 방지
+ * - 다크 배경 → 흰 배경 강제
+ * ============================================================ */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+  html,
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  /* 그림자/배경 제거로 잉크 절약 + 가독성 */
+  .glass-panel {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+  }
+  /* 명세서 단일 페이지 압축: 외부 wrapper 여백 0 */
+  main {
+    padding: 0 !important;
+  }
+}
