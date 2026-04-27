@@ -4,9 +4,9 @@ type Size = "sm" | "md" | "lg";
 type Tone = "primary" | "secondary" | "error";
 
 const SIZE_CLASS: Record<Size, string> = {
-  sm: "h-8 w-8 text-xs",
-  md: "h-10 w-10 text-sm",
-  lg: "h-12 w-12 text-base",
+  sm: "h-8 w-8 text-sm",
+  md: "h-10 w-10 text-base",
+  lg: "h-12 w-12 text-lg",
 };
 
 const TONE_CLASS: Record<Tone, string> = {
@@ -24,7 +24,7 @@ type Props = {
 
 /**
  * 이니셜 원형 아바타.
- * - 한글 이름: 앞 두 글자(예: "김영호" → "김영")
+ * - 한글 이름: 성(姓) 한 글자(예: "김영호" → "김")
  * - 영문 이름: 각 단어 첫 글자(예: "Adrian Sterling" → "AS")
  */
 export function InitialsAvatar({ name, size = "sm", tone = "primary", className }: Props) {
@@ -47,9 +47,9 @@ export function InitialsAvatar({ name, size = "sm", tone = "primary", className 
 function getInitials(name: string): string {
   const trimmed = name.trim();
   if (!trimmed) return "?";
-  // 한글: 첫 두 글자
+  // 한글: 성씨 한 글자만 (좁은 아바타에서 깨짐 방지)
   if (/[가-힣]/.test(trimmed)) {
-    return trimmed.slice(0, 2);
+    return trimmed.slice(0, 1);
   }
   // 영문: 각 단어 첫 글자 최대 2개
   return trimmed

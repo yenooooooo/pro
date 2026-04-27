@@ -4,15 +4,15 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "총무PRO — Chongmu PRO Elite",
-    template: "%s · 총무PRO",
+    default: "Nexus ERP — 중소기업 총무 통합 플랫폼",
+    template: "%s · Nexus ERP",
   },
   description:
     "중소기업 총무 담당자를 위한 월간 반복 업무 통합 웹앱. 직원·근태·급여·연차·지출·자산·월말결산을 하나로.",
-  keywords: ["총무", "ERP", "중소기업", "급여계산", "연차", "근태", "월말결산"],
-  authors: [{ name: "Chongmu PRO" }],
+  keywords: ["Nexus ERP", "총무", "ERP", "중소기업", "급여계산", "연차", "근태", "월말결산"],
+  authors: [{ name: "Nexus ERP" }],
   openGraph: {
-    title: "총무PRO — Chongmu PRO Elite",
+    title: "Nexus ERP — 중소기업 총무 통합 플랫폼",
     description: "엑셀 10개 대신 웹앱 1개. 총무 업무의 완성형 미니 ERP.",
     locale: "ko_KR",
     type: "website",

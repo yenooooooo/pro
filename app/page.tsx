@@ -2,25 +2,143 @@ import Link from "next/link";
 import {
   ArrowRight,
   BarChart3,
+  CalendarDays,
   ClipboardCheck,
+  Clock,
   Cpu,
   Globe,
   Network,
+  Package,
+  Receipt,
   Terminal,
+  TrendingUp,
+  Users,
   Wallet,
 } from "lucide-react";
 
 const SECTION_LINKS = [
-  { label: "ARCHITECTURE", href: "#architecture", active: true },
-  { label: "MODULES", href: "#modules" },
-  { label: "METRICS", href: "#metrics" },
-  { label: "TERMINAL", href: "#terminal" },
+  { label: "구조", href: "#architecture", active: true },
+  { label: "모듈", href: "#modules" },
+  { label: "지표", href: "#metrics" },
 ];
 
 const FOOTER_LINKS = [
   "서비스 소개",
   "이용약관",
   "개인정보처리방침",
+];
+
+const FEATURE_MODULES = [
+  {
+    icon: BarChart3,
+    title: "대시보드",
+    desc: "이번달 핵심 지표·알림·리스크를 한 화면에 압축.",
+    accent: "indigo",
+  },
+  {
+    icon: Users,
+    title: "직원정보",
+    desc: "프로필·계약·부서·직급 마스터를 단일 소스로 관리.",
+    accent: "blue",
+  },
+  {
+    icon: Clock,
+    title: "근태 관리",
+    desc: "출근·연장·야간·휴일을 자동 분류, 주 52시간 한도 모니터링.",
+    accent: "cyan",
+  },
+  {
+    icon: Wallet,
+    title: "급여 계산",
+    desc: "4대보험·소득세·지방세를 법정 요율로 자동 공제.",
+    accent: "indigo",
+  },
+  {
+    icon: CalendarDays,
+    title: "연차 관리",
+    desc: "근로기준법 제60조 기반 자동 발생·차감·소멸.",
+    accent: "purple",
+  },
+  {
+    icon: Receipt,
+    title: "지출·거래처",
+    desc: "카테고리·거래처별 추적, 법인카드 한도 체크.",
+    accent: "blue",
+  },
+  {
+    icon: Package,
+    title: "자산 관리",
+    desc: "정액법 감가상각, 내용연수 만료 사전 경고.",
+    accent: "cyan",
+  },
+  {
+    icon: ClipboardCheck,
+    title: "월말결산",
+    desc: "체크리스트로 누락 제로, 월별 진행 이력 자동 보존.",
+    accent: "purple",
+  },
+];
+
+const ACCENT_MAP: Record<string, { bg: string; border: string; text: string; glow: string }> = {
+  indigo: {
+    bg: "bg-indigo-500/10",
+    border: "border-indigo-500/30",
+    text: "text-indigo-400",
+    glow: "group-hover:shadow-[0_0_24px_-6px_rgba(99,102,241,0.45)]",
+  },
+  blue: {
+    bg: "bg-blue-500/10",
+    border: "border-blue-500/30",
+    text: "text-blue-400",
+    glow: "group-hover:shadow-[0_0_24px_-6px_rgba(59,130,246,0.45)]",
+  },
+  cyan: {
+    bg: "bg-cyan-500/10",
+    border: "border-cyan-500/30",
+    text: "text-cyan-400",
+    glow: "group-hover:shadow-[0_0_24px_-6px_rgba(34,211,238,0.45)]",
+  },
+  purple: {
+    bg: "bg-purple-500/10",
+    border: "border-purple-500/30",
+    text: "text-purple-400",
+    glow: "group-hover:shadow-[0_0_24px_-6px_rgba(168,85,247,0.45)]",
+  },
+};
+
+const KPI_CARDS = [
+  {
+    label: "이번달 총급여",
+    value: "4,250만",
+    unit: "원",
+    delta: "+3.2%",
+    deltaTone: "up" as const,
+    sub: "전월 대비",
+  },
+  {
+    label: "연차 사용률",
+    value: "67",
+    unit: "%",
+    delta: "촉진 대상 2명",
+    deltaTone: "warn" as const,
+    sub: "올해 누계",
+  },
+  {
+    label: "월말결산 진행률",
+    value: "85",
+    unit: "%",
+    delta: "11/13 완료",
+    deltaTone: "up" as const,
+    sub: "이번달",
+  },
+  {
+    label: "자산 현황",
+    value: "142",
+    unit: "대",
+    delta: "만료 임박 3건",
+    deltaTone: "warn" as const,
+    sub: "사용중",
+  },
 ];
 
 export default function LandingPage() {
@@ -45,7 +163,7 @@ export default function LandingPage() {
       <nav className="sticky top-0 z-[100] flex items-center justify-between border-b border-white/10 px-6 py-4 glass-panel-deep md:px-8">
         <Link href="/" className="flex items-center gap-3">
           <span className="text-2xl font-black uppercase tracking-tighter text-white drop-shadow-[0_0_15px_rgba(99,102,241,0.8)]">
-            Chongmu PRO Elite
+            Nexus ERP
           </span>
         </Link>
 
@@ -118,6 +236,11 @@ export default function LandingPage() {
           aria-hidden
           className="absolute inset-0 z-10 bg-gradient-to-b from-[#02040a]/80 via-transparent to-[#02040a]"
         />
+        {/* === [REVERTABLE: 히어로 카피 가독성용 vignette — 제거하려면 이 div 통째로 삭제] === */}
+        <div
+          aria-hidden
+          className="absolute inset-x-0 top-1/2 z-10 h-[45%] -translate-y-1/2 bg-[radial-gradient(ellipse_60%_50%_at_center,rgba(2,4,10,0.85)_0%,rgba(2,4,10,0.5)_50%,transparent_85%)]"
+        />
 
         <div className="relative z-20 mt-[-10vh] flex w-full max-w-7xl flex-col items-center px-container-padding text-center">
           <div className="mb-stack-lg inline-flex items-center gap-3 rounded-sm border border-indigo-500/40 px-5 py-2 text-label-sm uppercase tracking-widest text-indigo-300 glass-panel-deep tech-border animate-reveal-up opacity-0 [animation-delay:0.05s]">
@@ -134,8 +257,13 @@ export default function LandingPage() {
             ULTIMATE 시스템
           </h1>
 
-          <p className="mb-stack-lg max-w-3xl text-body-lg font-light text-slate-400 animate-reveal-up opacity-0 [animation-delay:0.25s]">
-            차세대 데이터 구조와 무한한 확장성. 인사·재무·운영을 통합하는 단 하나의 마스터 컨트롤 프로토콜.
+          {/* === [REVERTABLE] 원본 className: "mb-stack-lg max-w-3xl text-body-lg font-light leading-relaxed text-slate-300 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)] animate-reveal-up opacity-0 [animation-delay:0.25s]" === */}
+          <p className="mb-stack-lg max-w-3xl text-body-lg font-light leading-relaxed text-slate-200 [text-shadow:0_0_16px_rgba(2,4,10,0.95),0_2px_4px_rgba(2,4,10,0.8)] animate-reveal-up opacity-0 [animation-delay:0.25s]">
+            차세대 데이터 구조와 무한한 확장성. 인사·재무·운영을 통합하는 단 하나의{" "}
+            <span className="whitespace-nowrap bg-gradient-to-r from-indigo-400 via-blue-300 to-cyan-400 bg-clip-text text-transparent">
+              마스터 컨트롤 프로토콜
+            </span>
+            .
           </p>
 
           <div className="flex flex-col items-center gap-4 animate-reveal-up opacity-0 [animation-delay:0.35s] sm:flex-row sm:gap-6">
@@ -254,10 +382,78 @@ export default function LandingPage() {
       </section>
 
       {/* ============================================================
+       * Modules — 8 feature modules grid
+       * ============================================================ */}
+      <section id="modules" className="relative z-20 bg-[#02040a] px-container-padding py-32">
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,rgba(99,102,241,0.05)_0%,transparent_55%)]"
+        />
+        <div className="relative mx-auto max-w-7xl">
+          <div className="mb-20 text-center">
+            <div className="mb-4 text-label-sm uppercase tracking-[0.2em] text-indigo-500">
+              Feature Modules
+            </div>
+            <h2 className="mb-4 text-4xl font-bold tracking-tight text-white">
+              통합 모듈 라인업
+            </h2>
+            <p className="mx-auto max-w-2xl text-body-md text-slate-400">
+              총무 업무 전 영역을 커버하는 8개 모듈. 데이터는 모듈 간 자동으로 연결됩니다.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {FEATURE_MODULES.map((m) => (
+              <FeatureCard key={m.title} {...m} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================
+       * Metrics — KPI dashboard preview
+       * ============================================================ */}
+      <section id="metrics" className="relative z-20 bg-[#02040a] px-container-padding py-32">
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.05)_0%,transparent_55%)]"
+        />
+        <div className="relative mx-auto max-w-7xl">
+          <div className="mb-20 text-center">
+            <div className="mb-4 text-label-sm uppercase tracking-[0.2em] text-indigo-500">
+              Live Metrics Preview
+            </div>
+            <h2 className="mb-4 text-4xl font-bold tracking-tight text-white">
+              대시보드 미리보기
+            </h2>
+            <p className="mx-auto max-w-2xl text-body-md text-slate-400">
+              실제 대시보드에서 확인하는 핵심 KPI. 직원·근태·급여·지출에서 자동 집계됩니다.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {KPI_CARDS.map((k) => (
+              <KpiCard key={k.label} {...k} />
+            ))}
+          </div>
+
+          <div className="mt-12 flex justify-center">
+            <Link
+              href="/login"
+              className="group inline-flex items-center gap-2 rounded-sm border border-white/20 px-8 py-4 text-label-sm font-bold uppercase tracking-widest text-white glass-panel-deep tech-border transition-all duration-300 hover:border-white/60 hover:bg-white/10"
+            >
+              실제 대시보드 살펴보기
+              <ArrowRight aria-hidden className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================
        * Footer — minimal terminal
        * ============================================================ */}
       <footer className="border-t border-white/5 bg-[#010205] py-8 text-center text-label-sm uppercase tracking-widest text-slate-600">
-        <p>© 2026 Chongmu PRO Elite · 중소기업 총무 업무의 완성형 미니 ERP</p>
+        <p>© 2026 Nexus ERP · 중소기업 총무 업무의 완성형 미니 ERP</p>
         <div className="mt-3 flex flex-wrap justify-center gap-6">
           {FOOTER_LINKS.map((label) => (
             <a
@@ -338,6 +534,68 @@ function ModuleCard({
         <p className="max-w-xl text-body-md leading-relaxed text-slate-400">
           {description}
         </p>
+      </div>
+    </div>
+  );
+}
+
+type FeatureCardProps = {
+  icon: typeof BarChart3;
+  title: string;
+  desc: string;
+  accent: string;
+};
+
+function FeatureCard({ icon: Icon, title, desc, accent }: FeatureCardProps) {
+  const a = ACCENT_MAP[accent] ?? ACCENT_MAP.indigo;
+  return (
+    <div
+      className={`group relative overflow-hidden rounded-sm p-6 transition-all duration-500 glass-panel-deep tech-border hover:bg-surface-container-high/40 ${a.glow}`}
+    >
+      <div
+        className={`mb-5 inline-flex h-11 w-11 items-center justify-center rounded-sm border ${a.bg} ${a.border} ${a.text} transition-transform duration-500 group-hover:scale-110`}
+      >
+        <Icon aria-hidden className="h-5 w-5" />
+      </div>
+      <h3 className="mb-2 text-lg font-semibold tracking-tight text-white">{title}</h3>
+      <p className="text-body-md leading-relaxed text-slate-400">{desc}</p>
+    </div>
+  );
+}
+
+type KpiCardProps = {
+  label: string;
+  value: string;
+  unit: string;
+  delta: string;
+  deltaTone: "up" | "warn";
+  sub: string;
+};
+
+function KpiCard({ label, value, unit, delta, deltaTone, sub }: KpiCardProps) {
+  const deltaClass =
+    deltaTone === "up"
+      ? "text-emerald-400 border-emerald-500/30 bg-emerald-500/10"
+      : "text-amber-400 border-amber-500/30 bg-amber-500/10";
+  return (
+    <div className="group relative overflow-hidden rounded-sm p-6 glass-panel-deep tech-border transition-all duration-500 hover:shadow-[0_0_28px_-8px_rgba(99,102,241,0.4)]">
+      <div className="mb-3 flex items-center justify-between">
+        <span className="text-label-sm uppercase tracking-widest text-slate-500">{label}</span>
+        <TrendingUp aria-hidden className="h-4 w-4 text-indigo-400/70" />
+      </div>
+      <div className="mb-4 flex items-baseline gap-1.5">
+        <span className="text-display-xl font-black tabular-nums tracking-tight text-white">
+          {value}
+        </span>
+        <span className="text-body-md font-medium text-slate-400">{unit}</span>
+      </div>
+      <div className="flex items-center justify-between">
+        <span
+          className={`inline-flex items-center rounded-sm border px-2 py-0.5 text-[11px] font-semibold ${deltaClass}`}
+        >
+          {delta}
+        </span>
+        <span className="text-label-sm uppercase tracking-widest text-slate-600">{sub}</span>
       </div>
     </div>
   );

@@ -1,10 +1,14 @@
 import {
   AlertTriangle,
   Building2,
+  CheckCircle2,
+  Clock,
   Download,
+  FileSignature,
   Handshake,
   Mail,
   Phone,
+  Plus,
   Search,
   User,
 } from "lucide-react";
@@ -109,72 +113,119 @@ const FILTERS: { label: string; active: boolean }[] = [
 const EXPIRING_SOON = VENDORS.filter((v) => v.daysToExpiry <= 30).sort(
   (a, b) => a.daysToExpiry - b.daysToExpiry,
 );
+const ACTIVE_COUNT = VENDORS.filter((v) => v.daysToExpiry > 0).length;
 
 const CATEGORY_COLOR: Record<Vendor["category"], string> = {
-  파트너: "border-primary-container/30 bg-primary-container/10 text-primary-electric",
-  공급사: "border-tertiary-container/30 bg-tertiary-container/20 text-tertiary-sky",
-  고객사: "border-secondary-container/50 bg-secondary-container/30 text-secondary-slate",
+  파트너: "border-primary-electric/30 bg-primary-electric/10 text-primary-electric",
+  공급사: "border-tertiary-sky/30 bg-tertiary-sky/10 text-tertiary-sky",
+  고객사: "border-secondary-slate/30 bg-secondary-slate/10 text-secondary-slate",
 };
 
 export default function VendorsPage() {
   return (
     <div className="space-y-stack-lg">
-      {/* Page header */}
+      {/* Header */}
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <h2 className="mb-2 text-headline-lg font-semibold tracking-tight text-on-surface">
-            Vendor Network
+          <h2 className="text-headline-lg font-semibold tracking-tight text-on-surface">
+            거래처 관리
           </h2>
-          <p className="text-body-md text-on-surface-variant">
-            거래처 마스터 · 계약 갱신 알림
+          <p className="mt-1 text-body-md text-on-surface-variant">
+            거래처 마스터 · 계약 갱신 알림 · 카테고리별 분류
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
           <button
             type="button"
-            className="inline-flex min-h-11 items-center gap-2 rounded border border-outline-variant/50 bg-surface-container-high px-4 py-2 text-label-sm text-on-surface transition-colors hover:bg-surface-container-highest"
+            disabled
+            className="inline-flex min-h-11 cursor-not-allowed items-center gap-2 rounded-lg border border-outline-variant/50 bg-surface-container px-4 py-2 text-label-sm text-on-surface-variant opacity-60"
           >
             <Download aria-hidden className="h-[18px] w-[18px]" />
             내보내기
           </button>
           <button
             type="button"
-            className="inline-flex min-h-11 items-center gap-2 rounded bg-inverse-primary px-6 py-3 text-label-sm font-semibold text-on-primary shadow-[0_0_20px_rgba(73,75,214,0.3)] transition-colors hover:bg-primary-container"
+            disabled
+            className="inline-flex min-h-11 cursor-not-allowed items-center gap-2 rounded-lg bg-primary-electric px-4 py-2 text-label-sm font-semibold text-on-primary opacity-60"
           >
-            <Handshake aria-hidden className="h-[18px] w-[18px]" />
+            <Plus aria-hidden className="h-[18px] w-[18px]" />
             거래처 추가
           </button>
         </div>
       </div>
 
-      {/* 계약 만료 임박 배너 */}
+      {/* Top KPI Row */}
+      <div className="grid grid-cols-1 gap-gutter md:grid-cols-3">
+        <KPICard
+          label="총 거래처"
+          value={String(VENDORS.length)}
+          unit="개"
+          icon={Handshake}
+          iconTone="text-primary-electric"
+          barTone="bg-primary-electric"
+          barWidth="100%"
+        />
+        <KPICard
+          label="활성 계약"
+          value={String(ACTIVE_COUNT)}
+          unit="개"
+          icon={CheckCircle2}
+          iconTone="text-tertiary-sky"
+          barTone="bg-tertiary-sky"
+          barWidth={`${(ACTIVE_COUNT / VENDORS.length) * 100}%`}
+        />
+        <KPICard
+          label="만료 임박 (30일)"
+          labelTone={EXPIRING_SOON.length > 0 ? "text-error-soft" : undefined}
+          value={String(EXPIRING_SOON.length)}
+          unit="건"
+          valueTone={EXPIRING_SOON.length > 0 ? "text-error-soft" : undefined}
+          icon={Clock}
+          iconTone={
+            EXPIRING_SOON.length > 0 ? "text-error-soft" : "text-on-surface-variant"
+          }
+          barTone={
+            EXPIRING_SOON.length > 0 ? "bg-error-soft animate-pulse" : "bg-outline"
+          }
+          barWidth={EXPIRING_SOON.length > 0 ? "20%" : "0%"}
+          glowText={EXPIRING_SOON.length > 0}
+        />
+      </div>
+
+      {/* 만료 임박 배너 */}
       {EXPIRING_SOON.length > 0 ? (
-        <div className="glass-panel flex items-center gap-4 rounded-xl border-l-4 border-l-error-soft bg-error-soft/5 p-4">
-          <AlertTriangle aria-hidden className="h-6 w-6 flex-shrink-0 text-error-soft" />
-          <div className="flex-1">
-            <p className="text-body-md font-medium text-on-surface">
-              계약 만료 임박 거래처 {EXPIRING_SOON.length}건
-            </p>
-            <p className="mt-0.5 text-label-sm text-on-surface-variant">
-              30일 이내 만료 예정 · 갱신 여부 확인이 필요합니다
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {EXPIRING_SOON.map((v) => (
-              <span
-                key={v.id}
-                className="inline-flex items-center gap-1.5 rounded-full border border-error-container/50 bg-error-container/20 px-3 py-1 text-[11px] font-semibold text-error-soft"
-              >
-                {v.name} · D-{v.daysToExpiry}
-              </span>
-            ))}
+        <div className="glass-panel relative overflow-hidden rounded-xl border-l-4 border-l-error-soft p-stack-md">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-gradient-to-r from-error-soft/10 to-transparent"
+          />
+          <div className="relative flex flex-wrap items-center gap-4">
+            <AlertTriangle aria-hidden className="h-6 w-6 flex-shrink-0 text-error-soft" />
+            <div className="flex-1">
+              <p className="text-body-md font-medium text-on-surface">
+                계약 만료 임박 거래처 {EXPIRING_SOON.length}건
+              </p>
+              <p className="mt-0.5 text-label-sm text-on-surface-variant">
+                30일 이내 만료 예정 · 갱신 검토 필요
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {EXPIRING_SOON.map((v) => (
+                <span
+                  key={v.id}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-error-soft/30 bg-error-soft/10 px-3 py-1 text-label-sm font-semibold text-error-soft"
+                >
+                  {v.name} · D-{v.daysToExpiry}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
       ) : null}
 
-      {/* 필터 */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative w-full max-w-sm">
+      {/* Filter Bar */}
+      <div className="glass-panel flex flex-wrap items-center gap-3 rounded-xl p-stack-md">
+        <div className="relative w-full max-w-sm flex-1">
           <Search
             aria-hidden
             className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-outline"
@@ -182,26 +233,28 @@ export default function VendorsPage() {
           <input
             type="search"
             placeholder="거래처·담당자·사업자번호 검색"
-            className="min-h-11 w-full rounded-lg border border-outline-variant/50 bg-surface-container-low py-2 pl-10 pr-4 text-body-md text-on-surface shadow-inner placeholder:text-outline focus:border-inverse-primary focus:outline-none focus:ring-1 focus:ring-inverse-primary"
+            className="min-h-11 w-full rounded-lg border border-outline-variant/40 bg-surface-container-low py-2 pl-10 pr-4 text-data-tabular text-on-surface shadow-inner placeholder:text-outline focus:border-primary-electric focus:outline-none focus:ring-1 focus:ring-primary-electric"
           />
         </div>
-        {FILTERS.map((f) => (
-          <button
-            key={f.label}
-            type="button"
-            className={cn(
-              "min-h-11 rounded-full px-4 text-label-sm transition-colors",
-              f.active
-                ? "border border-outline-variant bg-surface-container-highest text-on-surface"
-                : "border border-outline-variant/50 bg-surface-container text-on-surface-variant hover:border-outline-variant",
-            )}
-          >
-            {f.label}
-          </button>
-        ))}
+        <div className="flex flex-wrap gap-2">
+          {FILTERS.map((f) => (
+            <button
+              key={f.label}
+              type="button"
+              className={cn(
+                "min-h-11 rounded-full px-4 text-label-sm transition-colors",
+                f.active
+                  ? "border border-primary-electric/40 bg-primary-electric/10 text-primary-electric"
+                  : "border border-outline-variant/50 bg-surface-container text-on-surface-variant hover:border-outline-variant",
+              )}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* 카드 그리드 */}
+      {/* Card grid */}
       <div className="grid grid-cols-1 gap-stack-md md:grid-cols-2 xl:grid-cols-3">
         {VENDORS.map((v) => (
           <VendorCard key={v.id} vendor={v} />
@@ -216,10 +269,10 @@ function VendorCard({ vendor }: { vendor: Vendor }) {
   return (
     <div
       className={cn(
-        "glass-panel group relative flex cursor-pointer flex-col gap-stack-sm overflow-hidden rounded-xl p-stack-md transition-colors",
+        "glass-panel group relative flex cursor-pointer flex-col gap-stack-sm overflow-hidden rounded-xl p-stack-md transition-all",
         isExpiringSoon
           ? "border-l-4 border-l-error-soft hover:bg-surface-container/80"
-          : "hover:bg-surface-container/80",
+          : "hover:border-primary-electric/30 hover:bg-surface-container/80",
       )}
     >
       <div
@@ -227,7 +280,7 @@ function VendorCard({ vendor }: { vendor: Vendor }) {
         className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 transition-opacity group-hover:opacity-100"
       />
 
-      <div className="flex items-start justify-between">
+      <div className="relative flex items-start justify-between">
         <div
           aria-hidden
           className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg border border-outline-variant/30 bg-surface-container-high text-primary-electric"
@@ -244,8 +297,8 @@ function VendorCard({ vendor }: { vendor: Vendor }) {
         </span>
       </div>
 
-      <div className="mt-2">
-        <h3 className="text-body-lg font-semibold text-on-surface transition-colors group-hover:text-inverse-primary">
+      <div className="relative mt-2">
+        <h3 className="text-body-lg font-semibold text-on-surface transition-colors group-hover:text-primary-electric">
           {vendor.name}
         </h3>
         <p className="text-label-sm tabular-nums text-on-surface-variant">
@@ -253,7 +306,7 @@ function VendorCard({ vendor }: { vendor: Vendor }) {
         </p>
       </div>
 
-      <div className="mt-2 space-y-1.5 text-data-tabular text-on-surface-variant">
+      <div className="relative mt-2 space-y-1.5 text-data-tabular text-on-surface-variant">
         <div className="flex items-center gap-2">
           <User aria-hidden className="h-[14px] w-[14px] text-outline" />
           {vendor.contact}
@@ -268,22 +321,84 @@ function VendorCard({ vendor }: { vendor: Vendor }) {
         </div>
       </div>
 
-      <div className="mt-auto flex items-center justify-between border-t border-outline-variant/20 pt-4">
-        <div className="text-label-sm tabular-nums text-outline">
-          {vendor.contractStart} ~ {vendor.contractEnd}
+      <div className="relative mt-auto flex items-center justify-between border-t border-outline-variant/20 pt-4">
+        <div className="flex items-center gap-1.5 text-label-sm tabular-nums text-outline">
+          <FileSignature aria-hidden className="h-3.5 w-3.5" />
+          <span className="truncate">
+            {vendor.contractStart} ~ {vendor.contractEnd}
+          </span>
         </div>
         {isExpiringSoon ? (
-          <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-error-container/50 bg-error-container/20 px-2.5 py-1 text-[11px] font-semibold text-error-soft">
-            <AlertTriangle aria-hidden className="h-3 w-3 flex-shrink-0" />
+          <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border border-error-soft/30 bg-error-soft/10 px-2 py-1 text-[11px] font-semibold text-error-soft">
+            <AlertTriangle aria-hidden className="h-3 w-3" />
             D-{vendor.daysToExpiry}
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-primary-container/50 bg-primary-container/20 px-2.5 py-1 text-[11px] font-semibold text-primary-container">
-            <span aria-hidden className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-primary-container" />
+          <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border border-tertiary-sky/30 bg-tertiary-sky/10 px-2 py-1 text-[11px] font-semibold text-tertiary-sky">
+            <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-tertiary-sky" />
             유효
           </span>
         )}
       </div>
+    </div>
+  );
+}
+
+function KPICard({
+  label,
+  labelTone,
+  value,
+  valueTone,
+  unit,
+  icon: Icon,
+  iconTone,
+  barTone,
+  barWidth,
+  glowText,
+}: {
+  label: string;
+  labelTone?: string;
+  value: string;
+  valueTone?: string;
+  unit?: string;
+  icon: typeof Handshake;
+  iconTone: string;
+  barTone: string;
+  barWidth: string;
+  glowText?: boolean;
+}) {
+  return (
+    <div className="glass-panel relative flex h-32 flex-col justify-between overflow-hidden rounded-lg p-stack-md">
+      <div className="flex items-start justify-between">
+        <span
+          className={cn(
+            "text-label-sm uppercase tracking-wider",
+            labelTone ?? "text-on-surface-variant",
+          )}
+        >
+          {label}
+        </span>
+        <Icon aria-hidden className={cn("h-5 w-5 opacity-70", iconTone)} />
+      </div>
+      <div className="flex items-baseline gap-2">
+        <span
+          className={cn(
+            "text-display-xl font-bold tracking-tighter tabular-nums",
+            valueTone ?? "text-on-surface",
+            glowText && "drop-shadow-[0_0_10px_rgba(255,180,171,0.5)]",
+          )}
+        >
+          {value}
+        </span>
+        {unit ? (
+          <span className="text-data-tabular text-on-surface-variant">{unit}</span>
+        ) : null}
+      </div>
+      <div
+        aria-hidden
+        className={cn("absolute bottom-0 left-0 h-1", barTone)}
+        style={{ width: barWidth }}
+      />
     </div>
   );
 }

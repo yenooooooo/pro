@@ -25,7 +25,7 @@ export function Sidebar() {
         />
         <div className="hidden lg:block">
           <h1 className="text-headline-md font-semibold tracking-tight text-white">
-            Chongmu PRO
+            Nexus ERP
           </h1>
           <p className="mt-1 text-label-sm uppercase tracking-widest text-on-surface-variant">
             Enterprise Edition

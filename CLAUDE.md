@@ -1,4 +1,4 @@
-# CLAUDE.md — 총무PRO 프로젝트 지침서
+# CLAUDE.md — Nexus ERP 프로젝트 지침서
 
 > Cursor CLI / Claude Code가 이 프로젝트를 작업할 때 반드시 따라야 하는 원칙과 규칙.
 > **매 세션 시작 시 반드시 이 파일을 먼저 읽는다.**
@@ -7,7 +7,7 @@
 
 ## 📌 1. 프로젝트 정체성
 
-- **프로젝트명**: 총무PRO (임시. 최종 네이밍 변경 가능)
+- **프로젝트명**: Nexus ERP (구 임시명: 총무PRO)
 - **한 줄 정의**: 중소기업(~50인 규모) 총무 담당자의 월간 반복 업무를 하나의 웹앱으로 통합한 미니 ERP
 - **목적**: **프로덕션 완성형 제품** (포트폴리오 겸용 — 총무 직무 + 풀스택/AX 포지션 지원)
 - **완성도 목표**: **"완벽한 사이트"** — 2주 MVP가 아니라 실제 고객에게 판매/운영 가능한 품질까지.
@@ -374,7 +374,7 @@ docs: CLAUDE.md 공제 로직 업데이트
   4. `04_closing/` → **Monthly Closing Center** (월말결산 체크리스트)
   5. `05_landing/` → **Landing Page** (히어로 + 기능 카드)
 - 각 폴더는 `DESIGN.md` / `screen.png` / `code.html` 3파일로 구성. `code.html`은 그대로 복붙하지 말고 **레이아웃 아이디어만** 참조해 Next.js 서버 컴포넌트 + shadcn/ui로 재작성한다.
-- 브랜드 네이밍: **"Chongmu PRO Elite"** / 서브 — Enterprise Edition.
+- 브랜드 네이밍: **"Nexus ERP"** / 서브 — Enterprise Edition.
 - 에토스: **"Executive Command"** — 미니멀리즘 + 글래스모피즘. 소비자 앱의 둥글둥글함 금지, 고급 SaaS 터미널 느낌.
 
 ### 14.2 컬러 토큰 (다크 테마 전용)
@@ -442,7 +442,7 @@ docs: CLAUDE.md 공제 로직 업데이트
 
 | 영역 | 언어 | 예시 |
 |---|---|---|
-| 브랜드·로고 | **영어 고정** | `Chongmu PRO Elite`, `Enterprise Edition` |
+| 브랜드·로고 | **영어 고정** | `Nexus ERP`, `Enterprise Edition` |
 | 랜딩 hero 타이틀·태그 | **영어 유지**(브랜딩) + 한글 서브카피 | `THE FUTURE OF ENTERPRISE MANAGEMENT` + 서브 한글 설명 |
 | 랜딩 Bento 카드 타이틀 | **영어 유지**(디자인 의도) + 한글 본문 | `Strategic Dashboard` / "실시간 경영 지표를…" |
 | 상태 뱃지(기술) | **영어 유지** | `System Online`, `Last updated: Just now` |
