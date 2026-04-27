@@ -3,91 +3,125 @@ import {
   Check,
   ExternalLink,
   Lock,
-  Play,
   ShieldCheck,
-  User,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { formatKRW } from "@/lib/utils/format";
+import { createClient } from "@/lib/supabase/server";
+import { PeriodFilter } from "./_components/period-filter";
+import { TaskToggle } from "./_components/task-toggle";
 
-type TaskStatus = "done" | "active" | "pending";
+const DEFAULT_YEAR = 2026;
+const DEFAULT_MONTH = 4;
 
 type ClosingTask = {
   id: string;
   title: string;
-  description: string;
-  status: TaskStatus;
-  assignee?: string;
-  completedAt?: string;
-  actionLabel?: string;
+  description: string | null;
+  order_no: number;
 };
 
-// Phase 6에서 Supabase closing_history 조회로 교체.
-const TASKS: ClosingTask[] = [
-  {
-    id: "1",
-    title: "근태 마감",
-    description: "월별 출퇴근·연장근로 기록을 부서장이 승인하여 잠금 처리.",
-    status: "done",
-    assignee: "이서연",
-    completedAt: "04.28 14:30",
-  },
-  {
-    id: "2",
-    title: "연차 현황 확인",
-    description: "연차·병가 발생·사용 내역이 정책과 일치하는지 대조.",
-    status: "done",
-  },
-  {
-    id: "3",
-    title: "급여 계산",
-    description: "급여 엔진을 실행해 이상치를 검토하고 계산을 확정.",
-    status: "active",
-    actionLabel: "엔진 실행",
-  },
-  {
-    id: "4",
-    title: "4대보험 신고",
-    description: "국민연금·건강보험·고용보험·산재 공제 파일을 생성·제출.",
-    status: "pending",
-  },
-  {
-    id: "5",
-    title: "지출 정산",
-    description: "승인된 법인카드·경비 지출을 환급 대기열로 이관.",
-    status: "done",
-  },
-  {
-    id: "6",
-    title: "원천세 확인",
-    description: "간이세액표·지방소득세 계산이 국세청 기준과 일치하는지 대조.",
-    status: "done",
-  },
-  {
-    id: "7",
-    title: "복리후생 정산",
-    description: "건강·연금 부담금이 보험사 청구서와 일치하는지 확인.",
-    status: "done",
-  },
-  {
-    id: "8",
-    title: "회계 장부 내보내기",
-    description: "급여 항목을 회계 계정과목에 매핑하여 전표 생성.",
-    status: "done",
-  },
-];
+type ClosingHistoryRow = {
+  task_id: string;
+  is_done: boolean;
+  completed_at: string | null;
+};
 
-const DONE_COUNT = TASKS.filter((t) => t.status === "done").length;
-const PENDING_COUNT = TASKS.filter((t) => t.status !== "done").length;
-const TOTAL = TASKS.length;
-const PROGRESS_PCT = Math.round((DONE_COUNT / TOTAL) * 100);
+type PayrollAggRow = {
+  gross_pay: number;
+};
 
-// SVG radial — r=44 → circumference ≈ 276.46
-const RADIUS = 44;
-const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
-const DASH_OFFSET = CIRCUMFERENCE * (1 - PROGRESS_PCT / 100);
+type AttendanceAggRow = {
+  overtime_hours: number;
+};
 
-export default function ClosingPage() {
+type EmployeeJoinRow = {
+  hire_date: string;
+};
+
+export default async function ClosingPage({
+  searchParams,
+}: {
+  searchParams?: { year?: string; month?: string };
+}) {
+  const year = parseIntInRange(searchParams?.year, 2000, 2100, DEFAULT_YEAR);
+  const month = parseIntInRange(searchParams?.month, 1, 12, DEFAULT_MONTH);
+
+  const supabase = createClient();
+
+  const monthStart = `${year}-${String(month).padStart(2, "0")}-01`;
+  const monthEnd = lastDayOfMonth(year, month);
+
+  const [
+    { data: tasksRaw },
+    { data: historyRaw },
+    { data: payrollAgg },
+    { data: attendanceAgg },
+    { data: newHires },
+  ] = await Promise.all([
+    supabase
+      .from("closing_tasks")
+      .select("id, title, description, order_no")
+      .order("order_no")
+      .returns<ClosingTask[]>(),
+    supabase
+      .from("closing_history")
+      .select("task_id, is_done, completed_at")
+      .eq("year", year)
+      .eq("month", month)
+      .returns<ClosingHistoryRow[]>(),
+    supabase
+      .from("payroll")
+      .select("gross_pay")
+      .eq("pay_year", year)
+      .eq("pay_month", month)
+      .returns<PayrollAggRow[]>(),
+    supabase
+      .from("attendance")
+      .select("overtime_hours")
+      .gte("work_date", monthStart)
+      .lte("work_date", monthEnd)
+      .returns<AttendanceAggRow[]>(),
+    supabase
+      .from("employees")
+      .select("hire_date")
+      .gte("hire_date", monthStart)
+      .lte("hire_date", monthEnd)
+      .is("deleted_at", null)
+      .returns<EmployeeJoinRow[]>(),
+  ]);
+
+  const tasks = tasksRaw ?? [];
+  const historyMap = new Map(
+    (historyRaw ?? []).map((h) => [h.task_id, h]),
+  );
+
+  const decoratedTasks = tasks.map((t) => {
+    const h = historyMap.get(t.id);
+    return {
+      ...t,
+      isDone: h?.is_done ?? false,
+      completedAt: h?.completed_at ?? null,
+    };
+  });
+
+  const total = decoratedTasks.length;
+  const doneCount = decoratedTasks.filter((t) => t.isDone).length;
+  const pendingCount = total - doneCount;
+  const progressPct = total > 0 ? Math.round((doneCount / total) * 100) : 0;
+  const isFullyDone = total > 0 && doneCount === total;
+
+  const totalGross = (payrollAgg ?? []).reduce((s, r) => s + r.gross_pay, 0);
+  const totalOvertime = (attendanceAgg ?? []).reduce(
+    (s, r) => s + Number(r.overtime_hours),
+    0,
+  );
+  const newHiresCount = (newHires ?? []).length;
+
+  const RADIUS = 44;
+  const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+  const dashOffset = CIRCUMFERENCE * (1 - progressPct / 100);
+
   return (
     <div className="grid grid-cols-1 gap-gutter xl:grid-cols-12">
       {/* Header */}
@@ -97,21 +131,33 @@ export default function ClosingPage() {
             Monthly Closing Center
           </h1>
           <p className="max-w-2xl text-body-lg text-on-surface-variant">
-            2026년 4월 결산을 실행합니다. 최종 확정 전 모든 항목이 정합성을 갖추었는지 확인하세요.
+            {year}년 {month}월 결산 · 모든 항목 정합성 확인 후 마감 확정.
           </p>
         </div>
-        <div className="glass-panel flex items-center gap-3 rounded-lg px-6 py-3">
-          <span className="relative flex h-3 w-3" aria-hidden>
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-tertiary-sky opacity-75" />
-            <span className="relative inline-flex h-3 w-3 rounded-full bg-tertiary-sky" />
-          </span>
-          <span className="text-label-sm font-medium text-tertiary-sky">
-            실시간 기록 중
-          </span>
+        <div className="flex flex-wrap items-center gap-3">
+          <PeriodFilter year={year} month={month} />
+          {isFullyDone ? (
+            <span className="glass-panel flex items-center gap-3 rounded-lg px-4 py-2.5">
+              <Check aria-hidden className="h-4 w-4 text-tertiary-sky" />
+              <span className="text-label-sm font-medium text-tertiary-sky">
+                전 항목 완료
+              </span>
+            </span>
+          ) : (
+            <span className="glass-panel flex items-center gap-3 rounded-lg px-4 py-2.5">
+              <span className="relative flex h-2.5 w-2.5" aria-hidden>
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary-electric opacity-75" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-primary-electric" />
+              </span>
+              <span className="text-label-sm font-medium text-primary-electric">
+                진행 중 · {pendingCount}개 대기
+              </span>
+            </span>
+          )}
         </div>
       </div>
 
-      {/* LEFT: Progress + Report Preview */}
+      {/* LEFT */}
       <div className="flex flex-col gap-gutter xl:col-span-4">
         {/* Radial Gauge */}
         <div className="glass-panel group relative flex flex-col items-center justify-center overflow-hidden rounded-xl p-6">
@@ -123,7 +169,12 @@ export default function ClosingPage() {
             결산 현황
           </h2>
           <div className="relative mb-4 flex h-48 w-48 items-center justify-center">
-            <svg className="h-full w-full" viewBox="0 0 100 100" role="img" aria-label={`결산 ${PROGRESS_PCT}% 완료`}>
+            <svg
+              className="h-full w-full"
+              viewBox="0 0 100 100"
+              role="img"
+              aria-label={`결산 ${progressPct}% 완료`}
+            >
               <circle
                 cx="50"
                 cy="50"
@@ -140,26 +191,28 @@ export default function ClosingPage() {
                 strokeWidth="6"
                 strokeLinecap="round"
                 strokeDasharray={CIRCUMFERENCE}
-                strokeDashoffset={DASH_OFFSET}
+                strokeDashoffset={dashOffset}
                 className="stroke-primary-electric drop-shadow-[0_0_8px_rgba(192,193,255,0.6)] transition-[stroke-dashoffset] duration-500"
                 style={{ transform: "rotate(-90deg)", transformOrigin: "50% 50%" }}
               />
             </svg>
             <div className="absolute flex flex-col items-center">
               <span className="text-[40px] font-bold leading-none tabular-nums text-white">
-                {PROGRESS_PCT}%
+                {progressPct}%
               </span>
-              <span className="mt-1 text-label-sm text-on-surface-variant">
-                완료
-              </span>
+              <span className="mt-1 text-label-sm text-on-surface-variant">완료</span>
             </div>
           </div>
           <div className="mt-2 flex w-full items-center justify-between px-2">
-            <GaugeStat label="완료" value={DONE_COUNT} />
+            <GaugeStat label="완료" value={doneCount} />
             <div aria-hidden className="h-8 w-px bg-outline-variant" />
-            <GaugeStat label="대기" value={PENDING_COUNT} tone="tertiary" />
+            <GaugeStat
+              label="대기"
+              value={pendingCount}
+              tone={pendingCount > 0 ? "tertiary" : "default"}
+            />
             <div aria-hidden className="h-8 w-px bg-outline-variant" />
-            <GaugeStat label="전체" value={TOTAL} />
+            <GaugeStat label="전체" value={total} />
           </div>
         </div>
 
@@ -170,70 +223,181 @@ export default function ClosingPage() {
             <button
               type="button"
               aria-label="리포트 새 창으로 열기"
-              className="text-primary-electric transition-colors hover:text-primary-container"
+              className="text-primary-electric transition-colors hover:text-primary-container disabled:cursor-not-allowed disabled:opacity-50"
+              disabled
             >
               <ExternalLink className="h-5 w-5" />
             </button>
           </div>
           <div className="relative flex flex-1 flex-col overflow-hidden rounded-lg border border-outline-variant/30 bg-surface-container-low p-4">
             <div className="relative z-10 space-y-4">
-              <PreviewRow label="총 급여" value={formatKRW(214_580_000)} />
-              <PreviewRow label="연장근로 시간" value="1,420 시간" />
-              <PreviewRow label="신규 입사" value="3 명" />
+              <PreviewRow
+                label="총 급여 (지급)"
+                value={totalGross > 0 ? formatKRW(totalGross) : "—"}
+              />
+              <PreviewRow
+                label="연장근로 시간"
+                value={
+                  totalOvertime > 0
+                    ? `${totalOvertime.toLocaleString("ko-KR", {
+                        maximumFractionDigits: 1,
+                      })} 시간`
+                    : "—"
+                }
+              />
+              <PreviewRow label="신규 입사" value={`${newHiresCount} 명`} />
             </div>
-            <div className="mt-auto pt-6">
-              <div className="flex items-center gap-2 text-sm font-medium text-error-soft">
-                <AlertTriangle aria-hidden className="h-4 w-4" />
-                미리보기 불완전 · 남은 체크리스트를 완료하세요
+            {!isFullyDone ? (
+              <div className="mt-auto pt-6">
+                <div className="flex items-center gap-2 text-sm font-medium text-error-soft">
+                  <AlertTriangle aria-hidden className="h-4 w-4" />
+                  미리보기 불완전 · 남은 체크리스트를 완료하세요
+                </div>
               </div>
-            </div>
+            ) : null}
           </div>
         </div>
       </div>
 
-      {/* RIGHT: Interactive Checklist */}
+      {/* RIGHT */}
       <div className="flex flex-col gap-4 xl:col-span-8">
         <div className="flex items-center justify-between border-b border-outline-variant/30 pb-2">
           <h3 className="text-[18px] font-semibold text-white">운영 체크리스트</h3>
-          <button
-            type="button"
-            className="rounded bg-primary-electric/10 px-3 py-1 text-label-sm text-primary-electric transition-colors hover:text-primary-container"
-          >
-            대기 항목만
-          </button>
+          <span className="text-label-sm text-on-surface-variant">
+            {doneCount} / {total} 완료
+          </span>
         </div>
 
-        <ul className="mt-2 space-y-3">
-          {TASKS.map((t) => (
-            <ClosingTaskCard key={t.id} task={t} />
-          ))}
-        </ul>
+        {decoratedTasks.length === 0 ? (
+          <div className="glass-panel rounded-xl p-12 text-center">
+            <p className="text-body-md text-on-surface-variant">
+              체크리스트 템플릿이 없습니다. seed 데이터를 확인하세요.
+            </p>
+          </div>
+        ) : (
+          <ul className="mt-2 space-y-3">
+            {decoratedTasks.map((t) => (
+              <ClosingTaskCard key={t.id} task={t} year={year} month={month} />
+            ))}
+          </ul>
+        )}
 
         {/* Final action */}
         <div className="mt-8 flex flex-col items-center justify-between gap-6 border-t border-outline-variant/30 pt-6 md:flex-row">
           <div className="flex max-w-md items-start gap-2 text-sm text-on-surface-variant">
             <Lock aria-hidden className="mt-1 h-4 w-4 flex-shrink-0 text-tertiary-sky" />
             <span>
-              확정 시 2026년 4월의 모든 기록이 잠기며 규정 준수 문서가 생성됩니다. 경영진 인증이
-              필요합니다.
+              모든 항목 완료 시 마감 확정 가능. 잠금 후 데이터는 감사 로그에 기록되며,
+              수정은 별도 권한이 필요합니다.
             </span>
           </div>
           <button
             type="button"
-            disabled
-            className="group relative cursor-not-allowed overflow-hidden rounded-lg border border-outline-variant/50 bg-surface-container-high px-8 py-4 opacity-50"
+            disabled={!isFullyDone}
+            className={cn(
+              "group relative overflow-hidden rounded-lg px-8 py-4 transition-all",
+              isFullyDone
+                ? "border border-primary-electric bg-gradient-to-r from-primary-electric to-primary-container shadow-[0_0_24px_rgba(192,193,255,0.4)] hover:opacity-90"
+                : "cursor-not-allowed border border-outline-variant/50 bg-surface-container-high opacity-50",
+            )}
           >
-            <div
-              aria-hidden
-              className="absolute inset-0 bg-gradient-to-r from-primary-electric to-inverse-primary opacity-0 transition-opacity duration-300"
-            />
             <div className="relative z-10 flex items-center gap-3">
-              <span className="text-[18px] font-semibold text-white">월말 마감 확정</span>
-              <ShieldCheck className="h-5 w-5 text-white" />
+              <span
+                className={cn(
+                  "text-[18px] font-semibold",
+                  isFullyDone ? "text-on-primary" : "text-white",
+                )}
+              >
+                월말 마감 확정
+              </span>
+              <ShieldCheck
+                className={cn(
+                  "h-5 w-5",
+                  isFullyDone ? "text-on-primary" : "text-white",
+                )}
+              />
             </div>
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+type DecoratedTask = ClosingTask & { isDone: boolean; completedAt: string | null };
+
+function ClosingTaskCard({
+  task,
+  year,
+  month,
+}: {
+  task: DecoratedTask;
+  year: number;
+  month: number;
+}) {
+  const isDone = task.isDone;
+  return (
+    <li
+      className={cn(
+        "glass-panel relative flex items-center justify-between overflow-hidden rounded-lg p-4 transition-colors",
+        isDone
+          ? "opacity-70 hover:opacity-100"
+          : "border-l-4 border-l-tertiary-sky bg-surface-container-highest/20 shadow-[0_4px_20px_rgba(123,208,255,0.05)]",
+      )}
+    >
+      {!isDone ? (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-0 top-0 h-full w-full bg-gradient-to-r from-tertiary-sky/5 to-transparent"
+        />
+      ) : null}
+
+      <div className="relative z-10 flex flex-1 items-start gap-4">
+        <TaskStatusIcon isDone={isDone} />
+        <div className="min-w-0 flex-1">
+          <h4
+            className={cn(
+              "text-[16px] font-medium tabular-nums text-white",
+              isDone && "line-through decoration-outline-variant",
+            )}
+          >
+            {task.title}
+          </h4>
+          {task.description ? (
+            <p className="mt-1 text-[13px] text-on-surface-variant">
+              {task.description}
+            </p>
+          ) : null}
+          {task.completedAt ? (
+            <div className="mt-2 flex flex-wrap gap-3 text-[11px] font-semibold text-outline">
+              <span>완료 {formatTimestamp(task.completedAt)}</span>
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+      <TaskToggle
+        year={year}
+        month={month}
+        taskId={task.id}
+        taskTitle={task.title}
+        isDone={isDone}
+      />
+    </li>
+  );
+}
+
+function TaskStatusIcon({ isDone }: { isDone: boolean }) {
+  if (isDone) {
+    return (
+      <div className="mt-1 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border border-primary-electric bg-primary-electric/20 text-primary-electric">
+        <Check aria-hidden className="h-[14px] w-[14px]" strokeWidth={3} />
+      </div>
+    );
+  }
+  return (
+    <div className="mt-1 flex h-6 w-6 flex-shrink-0 animate-pulse items-center justify-center rounded-full border-2 border-tertiary-sky">
+      <div aria-hidden className="h-2 w-2 rounded-full bg-tertiary-sky" />
     </div>
   );
 }
@@ -271,117 +435,25 @@ function PreviewRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ClosingTaskCard({ task }: { task: ClosingTask }) {
-  const isDone = task.status === "done";
-  const isActive = task.status === "active";
-
-  return (
-    <li
-      className={cn(
-        "glass-panel relative flex items-center justify-between overflow-hidden rounded-lg p-4 transition-colors",
-        isDone && "opacity-60 hover:bg-surface-container-highest/50",
-        isActive &&
-          "border-l-4 border-l-tertiary-sky bg-surface-container-highest/20 shadow-[0_4px_20px_rgba(123,208,255,0.05)]",
-        task.status === "pending" &&
-          "border-l-4 border-l-transparent hover:bg-surface-container-highest/30",
-      )}
-    >
-      {isActive ? (
-        <div
-          aria-hidden
-          className="pointer-events-none absolute left-0 top-0 h-full w-full bg-gradient-to-r from-tertiary-sky/5 to-transparent"
-        />
-      ) : null}
-
-      <div className="relative z-10 flex flex-1 items-start gap-4">
-        <TaskStatusIcon status={task.status} />
-        <div className="min-w-0 flex-1">
-          <h4
-            className={cn(
-              "text-[16px] font-medium tabular-nums text-white",
-              isDone && "text-white line-through decoration-outline-variant",
-              isActive && "font-semibold",
-            )}
-          >
-            {task.title}
-          </h4>
-          <p className="mt-1 text-[13px] text-on-surface-variant">{task.description}</p>
-
-          {(task.assignee || task.completedAt) && (
-            <div className="mt-2 flex flex-wrap gap-3 text-[11px] font-semibold text-outline">
-              {task.assignee ? (
-                <span className="flex items-center gap-1">
-                  <User aria-hidden className="h-3 w-3" />
-                  {task.assignee}
-                </span>
-              ) : null}
-              {task.completedAt ? <span>{task.completedAt}</span> : null}
-            </div>
-          )}
-
-          {task.actionLabel ? (
-            <div className="mt-3 flex gap-2">
-              <button
-                type="button"
-                className="flex min-h-11 items-center gap-1 rounded border border-outline-variant bg-surface-container-low px-3 py-1.5 text-[12px] font-medium text-white transition-colors hover:bg-surface-variant"
-              >
-                <Play aria-hidden className="h-[14px] w-[14px]" />
-                {task.actionLabel}
-              </button>
-            </div>
-          ) : null}
-        </div>
-      </div>
-
-      <TaskToggle status={task.status} />
-    </li>
-  );
+function parseIntInRange(
+  v: string | undefined,
+  min: number,
+  max: number,
+  fallback: number,
+): number {
+  if (!v) return fallback;
+  const n = Number.parseInt(v, 10);
+  if (!Number.isFinite(n) || n < min || n > max) return fallback;
+  return n;
 }
 
-function TaskStatusIcon({ status }: { status: TaskStatus }) {
-  if (status === "done") {
-    return (
-      <div className="mt-1 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border border-primary-electric bg-primary-electric/20 text-primary-electric">
-        <Check aria-hidden className="h-[14px] w-[14px]" strokeWidth={3} />
-      </div>
-    );
-  }
-  if (status === "active") {
-    return (
-      <div className="mt-1 flex h-6 w-6 flex-shrink-0 animate-pulse items-center justify-center rounded-full border-2 border-tertiary-sky">
-        <div aria-hidden className="h-2 w-2 rounded-full bg-tertiary-sky" />
-      </div>
-    );
-  }
-  return (
-    <div
-      aria-hidden
-      className="mt-1 h-6 w-6 flex-shrink-0 rounded-full border-2 border-outline-variant"
-    />
-  );
+function lastDayOfMonth(year: number, month: number): string {
+  const d = new Date(Date.UTC(year, month, 0));
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
 }
 
-function TaskToggle({ status }: { status: TaskStatus }) {
-  const isChecked = status === "done";
-  return (
-    <div aria-hidden className="relative z-10 ml-4">
-      <div
-        className={cn(
-          "relative h-6 w-11 rounded-full border transition-colors",
-          isChecked
-            ? "border-transparent bg-primary-electric/50"
-            : "border-outline-variant bg-surface-container-highest",
-        )}
-      >
-        <div
-          className={cn(
-            "absolute top-[2px] h-5 w-5 rounded-full border transition-all",
-            isChecked
-              ? "left-[calc(100%-1.375rem)] border-white bg-primary-electric"
-              : "left-[2px] border-on-surface-variant bg-on-surface-variant",
-          )}
-        />
-      </div>
-    </div>
-  );
+function formatTimestamp(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return `${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
