@@ -12,7 +12,7 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 hidden h-screen flex-col border-r border-slate-800/40 bg-[#020617]/80 shadow-[4px_0_24px_rgba(0,0,0,0.5)] backdrop-blur-2xl md:flex",
+        "fixed left-0 top-0 z-40 hidden h-screen flex-col border-r border-slate-800/40 bg-[#020617]/80 shadow-[4px_0_24px_rgba(0,0,0,0.5)] backdrop-blur-2xl md:flex print:hidden",
         "w-16 lg:w-72",
       )}
       aria-label="사이드바"

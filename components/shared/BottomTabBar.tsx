@@ -13,7 +13,7 @@ export function BottomTabBar() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 border-t border-outline-variant/40 bg-[#020617]/90 pb-safe backdrop-blur-2xl md:hidden"
+      className="fixed bottom-0 left-0 right-0 z-40 border-t border-outline-variant/40 bg-[#020617]/90 pb-safe backdrop-blur-2xl md:hidden print:hidden"
       aria-label="모바일 내비게이션"
     >
       <ul className="mx-auto grid max-w-md grid-cols-5">

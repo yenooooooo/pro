@@ -11,12 +11,12 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   } = await supabase.auth.getUser();
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen print:min-h-0">
       <Sidebar />
-      <div className="md:ml-16 lg:ml-72">
+      <div className="md:ml-16 lg:ml-72 print:ml-0">
         <TopBar userEmail={user?.email ?? null} />
-        <main className="min-h-[calc(100vh-4rem)] pb-24 md:pb-8">
-          <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-container-padding lg:py-8">
+        <main className="min-h-[calc(100vh-4rem)] pb-24 md:pb-8 print:min-h-0 print:pb-0">
+          <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-container-padding lg:py-8 print:max-w-none print:p-0">
             {children}
           </div>
         </main>

@@ -29,7 +29,7 @@ export function TopBar({ userEmail }: TopBarProps) {
   }, [open]);
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-slate-800/50 bg-slate-950/80 px-4 shadow-2xl backdrop-blur-md md:px-8">
+    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-slate-800/50 bg-slate-950/80 px-4 shadow-2xl backdrop-blur-md md:px-8 print:hidden">
       <div className="flex items-center">
         <span className="text-lg font-bold uppercase tracking-tight text-white">
           Nexus ERP

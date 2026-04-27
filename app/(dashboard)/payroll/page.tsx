@@ -1,10 +1,11 @@
+import Link from "next/link";
 import {
   AlertTriangle,
   CalendarRange,
   CheckCircle2,
   ChevronDown,
   Download,
-  MoreVertical,
+  FileText,
   Wallet,
 } from "lucide-react";
 import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
@@ -199,7 +200,7 @@ export default async function PayrollPage({
                 </thead>
                 <tbody className="divide-y divide-outline-variant/10 text-data-tabular text-on-surface">
                   {rows.map((row) => (
-                    <PayrollTableRow key={row.id} row={row} />
+                    <PayrollTableRow key={row.id} row={row} year={year} month={month} />
                   ))}
                 </tbody>
               </table>
@@ -381,8 +382,17 @@ function EmptyState({
   );
 }
 
-function PayrollTableRow({ row }: { row: PayrollRow }) {
+function PayrollTableRow({
+  row,
+  year,
+  month,
+}: {
+  row: PayrollRow;
+  year: number;
+  month: number;
+}) {
   const isException = row.status === "review";
+  const payslipHref = `/payroll/${row.employeeId}?year=${year}&month=${month}`;
   return (
     <tr
       className={cn(
@@ -402,10 +412,15 @@ function PayrollTableRow({ row }: { row: PayrollRow }) {
             className="absolute left-0 top-0 h-full w-1 bg-error-soft opacity-70"
           />
         ) : null}
-        <div className="flex items-center gap-3">
+        <Link
+          href={payslipHref}
+          className="flex items-center gap-3 outline-none transition-colors hover:text-primary-electric focus-visible:text-primary-electric"
+        >
           <InitialsAvatar name={row.name} size="sm" tone={row.tone} />
           <div className="min-w-0">
-            <div className="truncate font-medium text-on-surface">{row.name}</div>
+            <div className="truncate font-medium text-on-surface group-hover:text-primary-electric">
+              {row.name}
+            </div>
             <div
               className={cn(
                 "truncate text-xs",
@@ -415,7 +430,7 @@ function PayrollTableRow({ row }: { row: PayrollRow }) {
               {isException ? row.alertMessage : row.employeeNo}
             </div>
           </div>
-        </div>
+        </Link>
       </td>
       <td className="whitespace-nowrap px-6 py-3 text-right tabular-nums">
         {formatKRW(row.base)}
@@ -438,14 +453,14 @@ function PayrollTableRow({ row }: { row: PayrollRow }) {
       <td className="whitespace-nowrap px-6 py-3 text-center">
         <StatusBadge status={row.status} />
       </td>
-      <td className="px-4 py-3 text-right opacity-0 transition-opacity group-hover:opacity-100">
-        <button
-          type="button"
-          aria-label="행 메뉴"
-          className="text-outline hover:text-primary-electric"
+      <td className="px-4 py-3 text-right">
+        <Link
+          href={payslipHref}
+          aria-label={`${row.name} 명세서 보기`}
+          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-outline opacity-0 transition-all hover:bg-primary-electric/10 hover:text-primary-electric focus-visible:opacity-100 group-hover:opacity-100"
         >
-          <MoreVertical className="h-[18px] w-[18px]" />
-        </button>
+          <FileText className="h-[18px] w-[18px]" />
+        </Link>
       </td>
     </tr>
   );
