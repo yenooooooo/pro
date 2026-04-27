@@ -1,379 +1,660 @@
+import Link from "next/link";
 import {
   AlertTriangle,
   CheckCircle2,
   ChevronRight,
-  FileScan,
-  Gavel,
+  CircleDollarSign,
   Hourglass,
-  Laptop,
-  MoreHorizontal,
-  Plane,
-  TrendingUp,
-  UtensilsCrossed,
+  Plus,
   Wallet,
-  ZoomIn,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
-import { formatKRW } from "@/lib/utils/format";
+import { formatKRW, formatKRWCompact } from "@/lib/utils/format";
+import { createClient } from "@/lib/supabase/server";
+import { checkBudgets, type BudgetCheck } from "@/lib/expenses/budget-check";
+import { ExpenseFilters } from "./_components/expense-filters";
+import { CsvExportButton } from "./_components/csv-export-button";
 
 type TxStatus = "approved" | "pending" | "flagged";
+
+type ExpenseDbRow = {
+  id: string;
+  expense_date: string;
+  amount: number;
+  vat: number;
+  payment_method: string;
+  description: string | null;
+  receipt_url: string | null;
+  category_id: string | null;
+  vendor_id: string | null;
+  category: { id: string; name: string; budget_monthly: number | null } | null;
+  vendor: { id: string; name: string } | null;
+};
 
 type ExpenseRow = {
   id: string;
   date: string;
   vendor: string;
   category: string;
+  categoryId: string | null;
   amount: number;
+  paymentMethod: string;
   status: TxStatus;
+  alertReason?: string;
 };
 
-// Phase 5.1에서 expenses 조회로 교체.
-const ROWS: ExpenseRow[] = [
-  {
-    id: "1",
-    date: "26.04.22",
-    vendor: "Samsung Electronics",
-    category: "IT 장비",
-    amount: 4_200_000,
-    status: "approved",
-  },
-  {
-    id: "2",
-    date: "26.04.21",
-    vendor: "Unknown Vendor X",
-    category: "기타",
-    amount: 1_550_000,
-    status: "flagged",
-  },
-  {
-    id: "3",
-    date: "26.04.18",
-    vendor: "Korean Air",
-    category: "출장비",
-    amount: 2_850_000,
-    status: "pending",
-  },
-  {
-    id: "4",
-    date: "26.04.15",
-    vendor: "Shilla Hotel",
-    category: "숙박비",
-    amount: 850_000,
-    status: "approved",
-  },
-];
+type Category = { id: string; name: string; budget_monthly: number | null };
+type Vendor = { id: string; name: string };
 
-type CategoryHighlight = {
-  name: string;
-  txCount: number;
-  amount: number;
-  icon: typeof Plane;
-  tone: "primary" | "tertiary" | "secondary" | "error";
+const DEFAULT_YEAR = 2026;
+const DEFAULT_MONTH = 4;
+const ANOMALY_AMOUNT_THRESHOLD = 1_000_000;
+
+const PAYMENT_LABEL: Record<string, string> = {
+  card: "카드",
+  cash: "현금",
+  transfer: "계좌이체",
+  other: "기타",
 };
 
-const HIGH_VALUE_CATEGORIES: CategoryHighlight[] = [
-  {
-    name: "해외 출장",
-    txCount: 12,
-    amount: 32_500_000,
-    icon: Plane,
-    tone: "primary",
-  },
-  {
-    name: "IT 장비 구매",
-    txCount: 5,
-    amount: 18_200_000,
-    icon: Laptop,
-    tone: "tertiary",
-  },
-  {
-    name: "법인 식대",
-    txCount: 142,
-    amount: 9_800_000,
-    icon: UtensilsCrossed,
-    tone: "secondary",
-  },
-  {
-    name: "법무 자문",
-    txCount: 2,
-    amount: 15_000_000,
-    icon: Gavel,
-    tone: "error",
-  },
-];
+export default async function ExpensesPage({
+  searchParams,
+}: {
+  searchParams?: {
+    year?: string;
+    month?: string;
+    category?: string;
+    vendor?: string;
+    payment?: string;
+  };
+}) {
+  const year = parseIntInRange(searchParams?.year, 2000, 2100, DEFAULT_YEAR);
+  const month =
+    searchParams?.month === undefined
+      ? DEFAULT_MONTH
+      : searchParams.month === "all"
+        ? null
+        : parseIntInRange(searchParams.month, 1, 12, DEFAULT_MONTH);
+  const categoryId = searchParams?.category ?? null;
+  const vendorId = searchParams?.vendor ?? null;
+  const paymentMethod = searchParams?.payment ?? null;
 
-const TONE_CLASS: Record<
-  CategoryHighlight["tone"],
-  { bg: string; border: string; text: string }
-> = {
-  primary: {
-    bg: "bg-primary-electric/10",
-    border: "border-primary-electric/20",
-    text: "text-primary-electric",
-  },
-  tertiary: {
-    bg: "bg-tertiary-sky/10",
-    border: "border-tertiary-sky/20",
-    text: "text-tertiary-sky",
-  },
-  secondary: {
-    bg: "bg-secondary-slate/10",
-    border: "border-secondary-slate/20",
-    text: "text-secondary-slate",
-  },
-  error: {
-    bg: "bg-error-soft/10",
-    border: "border-error-soft/20",
-    text: "text-error-soft",
-  },
-};
+  const supabase = createClient();
 
-// 도넛 차트 비율
-const DISTRIBUTION = [
-  { label: "운영비", pct: 45, color: "#c0c1ff", glow: "#c0c1ff" },
-  { label: "인건비", pct: 30, color: "#7bd0ff", glow: "#7bd0ff" },
-  { label: "기타", pct: 25, color: "#39485a", glow: null },
-];
+  const periodStart =
+    month === null
+      ? `${year}-01-01`
+      : `${year}-${String(month).padStart(2, "0")}-01`;
+  const periodEnd =
+    month === null ? `${year}-12-31` : lastDayOfMonth(year, month);
 
-const TOTAL_DISBURSED = 145_200_000;
-const PENDING_COUNT = 12;
-const ANOMALY_COUNT = ROWS.filter((r) => r.status === "flagged").length;
+  let expensesQuery = supabase
+    .from("expenses")
+    .select(
+      "id, expense_date, amount, vat, payment_method, description, receipt_url, category_id, vendor_id, category:expense_categories(id, name, budget_monthly), vendor:vendors(id, name)",
+    )
+    .gte("expense_date", periodStart)
+    .lte("expense_date", periodEnd)
+    .order("expense_date", { ascending: false });
+  if (categoryId) expensesQuery = expensesQuery.eq("category_id", categoryId);
+  if (vendorId) expensesQuery = expensesQuery.eq("vendor_id", vendorId);
+  if (paymentMethod) expensesQuery = expensesQuery.eq("payment_method", paymentMethod);
 
-// AI 분석에서 가장 최근 flagged 거래
-const FLAGGED = ROWS.find((r) => r.status === "flagged");
+  const [{ data: expensesRaw }, { data: categoriesRaw }, { data: vendorsRaw }] =
+    await Promise.all([
+      expensesQuery.returns<ExpenseDbRow[]>(),
+      supabase
+        .from("expense_categories")
+        .select("id, name, budget_monthly")
+        .order("name")
+        .returns<Category[]>(),
+      supabase
+        .from("vendors")
+        .select("id, name")
+        .order("name")
+        .returns<Vendor[]>(),
+    ]);
 
-export default function ExpensesPage() {
+  const categories = categoriesRaw ?? [];
+  const vendors = vendorsRaw ?? [];
+  const rows = (expensesRaw ?? []).map(toRow);
+
+  const totalDisbursed = rows.reduce((s, r) => s + r.amount, 0);
+  const anomalies = rows.filter((r) => r.status === "flagged");
+  const pendingCount = rows.filter((r) => r.status === "pending").length;
+
+  // 카테고리 월 한도 점검 — 월 단위 조회일 때만 의미 있음.
+  const budgetChecks =
+    month === null
+      ? []
+      : checkBudgets(
+          (expensesRaw ?? []).map((e) => ({
+            categoryId: e.category_id,
+            amount: e.amount,
+          })),
+          categories,
+        ).filter((c) => c.status !== "ok");
+
+  const byCategory = aggregateByCategory(rows);
+  const top4Categories = byCategory.slice(0, 4);
+  const top3Distribution = computeDistribution(byCategory);
+
+  const periodLabel =
+    month === null ? `${year}년 전체` : `${year}년 ${month}월`;
+
   return (
     <div className="space-y-stack-lg">
-      {/* ============================================================
-       * Top KPI Row
-       * ============================================================ */}
+      {/* Header */}
+      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
+        <div>
+          <h2 className="text-headline-lg font-semibold tracking-tight text-on-surface">
+            지출 관리
+          </h2>
+          <p className="mt-1 text-body-md text-on-surface-variant">
+            {periodLabel} · {rows.length}건
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <CsvExportButton
+            rows={rows.map((r) => ({
+              date: r.date,
+              vendor: r.vendor,
+              category: r.category,
+              paymentMethod: r.paymentMethod,
+              amount: r.amount,
+              status: r.status,
+            }))}
+            filename={`expenses_${month === null ? `${year}_all` : `${year}_${String(month).padStart(2, "0")}`}`}
+          />
+          <Link
+            href="/expenses/new"
+            className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary-electric px-4 py-2 text-label-sm font-semibold text-on-primary transition-opacity hover:opacity-90"
+          >
+            <Plus aria-hidden className="h-[18px] w-[18px]" />
+            지출 등록
+          </Link>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="glass-panel rounded-xl p-stack-md">
+        <ExpenseFilters
+          year={year}
+          month={month}
+          categoryId={categoryId}
+          vendorId={vendorId}
+          paymentMethod={paymentMethod}
+          categories={categories.map((c) => ({ value: c.id, label: c.name }))}
+          vendors={vendors.map((v) => ({ value: v.id, label: v.name }))}
+        />
+      </div>
+
+      {/* 카테고리 월 한도 경고 */}
+      {budgetChecks.length > 0 ? <BudgetAlertBanner checks={budgetChecks} /> : null}
+
+      {/* KPI Row */}
       <div className="grid grid-cols-1 gap-gutter md:grid-cols-3">
         <KPICard
-          label="Total Disbursed"
-          value={`₩${formatCompactKRW(TOTAL_DISBURSED)}`}
-          delta={{ icon: TrendingUp, text: "2.4%", tone: "tertiary" }}
+          label="총 지출액"
+          value={`₩${formatCompactKRW(totalDisbursed)}`}
           icon={Wallet}
           iconTone="text-tertiary-sky/60"
           barTone="bg-tertiary-sky"
           barGlow="rgba(123,208,255,0.8)"
-          barWidth="75%"
+          barWidth="100%"
         />
         <KPICard
-          label="Pending Approval"
-          value={String(PENDING_COUNT)}
+          label="확인 대기"
+          value={String(pendingCount)}
           unit="건"
           icon={Hourglass}
           iconTone="text-secondary-slate/60"
           barTone="bg-secondary-slate"
           barGlow="rgba(185,200,222,0.8)"
-          barWidth="25%"
+          barWidth={pendingCount > 0 ? "40%" : "0%"}
         />
         <KPICard
-          label="Anomalies Detected"
+          label="검토 필요"
           labelTone="text-error-soft"
-          value={String(ANOMALY_COUNT)}
+          value={String(anomalies.length)}
           valueTone="text-error-soft"
-          unit="요주의"
+          unit={anomalies.length > 0 ? "건" : ""}
           icon={AlertTriangle}
           iconTone="text-error-soft/80"
           barTone="bg-error-soft animate-pulse"
           barGlow="rgba(255,180,171,0.8)"
-          barWidth="8%"
-          glowText
+          barWidth={anomalies.length > 0 ? "8%" : "0%"}
+          glowText={anomalies.length > 0}
         />
       </div>
 
-      {/* ============================================================
-       * Main bento grid (12 cols)
-       * ============================================================ */}
+      {/* Bento */}
       <div className="grid grid-cols-1 gap-gutter lg:grid-cols-12">
-        {/* LEFT (8 cols) — distribution + categories + transactions */}
         <div className="flex flex-col gap-gutter lg:col-span-8">
-          {/* Row 1: distribution + high-value categories */}
+          {/* Distribution + High-Value */}
           <div className="grid grid-cols-1 gap-gutter md:grid-cols-2">
-            {/* Expense Distribution */}
-            <div className="glass-panel flex h-80 flex-col rounded-xl p-stack-md">
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-on-surface">
-                  Expense Distribution
-                </h3>
-                <button
-                  type="button"
-                  aria-label="more"
-                  className="text-on-surface-variant transition-colors hover:text-white"
-                >
-                  <MoreHorizontal aria-hidden className="h-4 w-4" />
-                </button>
-              </div>
-
-              <div className="relative flex flex-1 items-center justify-center">
-                <DonutChart segments={DISTRIBUTION} />
-
-                {/* Legend */}
-                <div className="absolute bottom-0 right-0 flex flex-col gap-2">
-                  {DISTRIBUTION.map((seg) => (
-                    <div key={seg.label} className="flex items-center gap-2">
-                      <span
-                        aria-hidden
-                        className="h-2 w-2 rounded-full"
-                        style={{
-                          background: seg.color,
-                          boxShadow: seg.glow ? `0 0 5px ${seg.glow}` : undefined,
-                        }}
-                      />
-                      <span className="text-label-sm text-on-surface-variant">
-                        {seg.label} ({seg.pct}%)
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* High-Value Categories */}
-            <div className="glass-panel flex h-80 flex-col rounded-xl p-stack-md">
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-on-surface">
-                  High-Value Categories
-                </h3>
-              </div>
-              <ul className="flex-1 space-y-3 overflow-y-auto pr-2">
-                {HIGH_VALUE_CATEGORIES.map((c) => {
-                  const t = TONE_CLASS[c.tone];
-                  return (
-                    <li
-                      key={c.name}
-                      className="flex items-center justify-between rounded-lg p-2 transition-colors hover:bg-surface-variant/50"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={cn(
-                            "flex h-8 w-8 items-center justify-center rounded border",
-                            t.bg,
-                            t.border,
-                          )}
-                        >
-                          <c.icon aria-hidden className={cn("h-4 w-4", t.text)} />
-                        </div>
-                        <div>
-                          <div className="text-data-tabular text-on-surface">
-                            {c.name}
-                          </div>
-                          <div className="text-label-sm text-on-surface-variant">
-                            {c.txCount} Transactions
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-data-tabular font-semibold tabular-nums text-on-surface">
-                        ₩{formatCompactKRW(c.amount)}
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
+            <DistributionCard segments={top3Distribution} total={totalDisbursed} />
+            <HighValueCategoriesCard items={top4Categories} />
           </div>
 
-          {/* Row 2: Recent Transactions */}
+          {/* Transactions */}
           <div className="glass-panel flex-1 rounded-xl p-stack-md">
             <div className="mb-6 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-on-surface">
-                Recent Transactions
-              </h3>
-              <button
-                type="button"
-                className="text-label-sm text-primary-electric transition-colors hover:text-primary-fixed-dim"
-              >
-                View All
-              </button>
+              <h3 className="text-sm font-semibold text-on-surface">최근 거래</h3>
+              <span className="text-label-sm text-on-surface-variant">
+                {rows.length}건 · 최신 10건 표시
+              </span>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[640px] border-collapse text-left">
-                <thead>
-                  <tr className="border-b border-surface-container-high">
-                    <th className="px-4 py-3 text-label-sm font-medium text-on-surface-variant">
-                      Date
-                    </th>
-                    <th className="px-4 py-3 text-label-sm font-medium text-on-surface-variant">
-                      Merchant
-                    </th>
-                    <th className="px-4 py-3 text-label-sm font-medium text-on-surface-variant">
-                      Category
-                    </th>
-                    <th className="px-4 py-3 text-right text-label-sm font-medium text-on-surface-variant">
-                      Amount
-                    </th>
-                    <th className="px-4 py-3 text-center text-label-sm font-medium text-on-surface-variant">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="text-data-tabular">
-                  {ROWS.map((row) => (
-                    <TxRow key={row.id} row={row} />
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            {rows.length === 0 ? (
+              <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
+                <CircleDollarSign aria-hidden className="h-8 w-8 text-outline-variant" />
+                <p className="text-body-md text-on-surface-variant">
+                  해당 기간에 등록된 지출이 없습니다.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[640px] border-collapse text-left">
+                  <thead>
+                    <tr className="border-b border-surface-container-high">
+                      <th className="whitespace-nowrap px-4 py-3 text-label-sm font-medium text-on-surface-variant">
+                        일자
+                      </th>
+                      <th className="whitespace-nowrap px-4 py-3 text-label-sm font-medium text-on-surface-variant">
+                        거래처
+                      </th>
+                      <th className="whitespace-nowrap px-4 py-3 text-label-sm font-medium text-on-surface-variant">
+                        카테고리
+                      </th>
+                      <th className="whitespace-nowrap px-4 py-3 text-right text-label-sm font-medium text-on-surface-variant">
+                        금액
+                      </th>
+                      <th className="whitespace-nowrap px-4 py-3 text-center text-label-sm font-medium text-on-surface-variant">
+                        결제
+                      </th>
+                      <th className="whitespace-nowrap px-4 py-3 text-center text-label-sm font-medium text-on-surface-variant">
+                        상태
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-data-tabular">
+                    {rows.slice(0, 10).map((row) => (
+                      <TxRow key={row.id} row={row} />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* RIGHT (4 cols) — Document AI Analysis */}
+        {/* RIGHT — 검토 필요 거래 */}
         <div className="lg:col-span-4">
-          <DocumentAIPanel flagged={FLAGGED} />
+          <FlaggedListPanel rows={anomalies.slice(0, 5)} />
         </div>
       </div>
     </div>
   );
 }
 
+function toRow(r: ExpenseDbRow): ExpenseRow {
+  const status = deriveStatus(r);
+  const alertReason =
+    status === "flagged"
+      ? r.vendor_id === null
+        ? "거래처 누락"
+        : !hasReceipt(r)
+          ? "영수증 누락"
+          : "확인 필요"
+      : undefined;
+  return {
+    id: r.id,
+    date: formatDate(r.expense_date),
+    vendor: r.vendor?.name ?? "(거래처 미지정)",
+    category: r.category?.name ?? "(카테고리 미지정)",
+    categoryId: r.category_id,
+    amount: r.amount,
+    paymentMethod: r.payment_method,
+    status,
+    alertReason,
+  };
+}
+
+function deriveStatus(r: ExpenseDbRow): TxStatus {
+  const hasVendor = r.vendor_id !== null;
+  const hasCategory = r.category_id !== null;
+  const isLargeAmount = r.amount >= ANOMALY_AMOUNT_THRESHOLD;
+  if (isLargeAmount && (!hasVendor || !hasReceipt(r))) return "flagged";
+  if (hasVendor && hasCategory && hasReceipt(r)) return "approved";
+  return "pending";
+}
+
+function hasReceipt(r: ExpenseDbRow): boolean {
+  return r.receipt_url !== null || r.payment_method === "card";
+}
+
+function aggregateByCategory(rows: ExpenseRow[]): Array<{
+  name: string;
+  txCount: number;
+  amount: number;
+}> {
+  const map = new Map<string, { name: string; txCount: number; amount: number }>();
+  for (const r of rows) {
+    const key = r.categoryId ?? "_uncat";
+    const cur = map.get(key) ?? { name: r.category, txCount: 0, amount: 0 };
+    cur.txCount += 1;
+    cur.amount += r.amount;
+    map.set(key, cur);
+  }
+  return [...map.values()].sort((a, b) => b.amount - a.amount);
+}
+
+function computeDistribution(
+  byCategory: Array<{ name: string; amount: number }>,
+): Array<{ label: string; pct: number; color: string }> {
+  const total = byCategory.reduce((s, c) => s + c.amount, 0);
+  if (total === 0) return [];
+  const palette = ["#c0c1ff", "#7bd0ff", "#39485a"];
+  const top = byCategory.slice(0, 2);
+  const rest = byCategory.slice(2).reduce((s, c) => s + c.amount, 0);
+  const segments: Array<{ label: string; pct: number; color: string }> = top.map(
+    (c, i) => ({
+      label: c.name,
+      pct: Math.round((c.amount / total) * 100),
+      color: palette[i],
+    }),
+  );
+  if (rest > 0) {
+    segments.push({
+      label: "기타",
+      pct: Math.round((rest / total) * 100),
+      color: palette[2],
+    });
+  }
+  return segments;
+}
+
+function lastDayOfMonth(year: number, month: number): string {
+  const d = new Date(Date.UTC(year, month, 0));
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+}
+
+function parseIntInRange(
+  v: string | undefined,
+  min: number,
+  max: number,
+  fallback: number,
+): number {
+  if (!v) return fallback;
+  const n = Number.parseInt(v, 10);
+  if (!Number.isFinite(n) || n < min || n > max) return fallback;
+  return n;
+}
+
+function formatDate(iso: string): string {
+  // YYYY-MM-DD → YY.MM.DD
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso;
+  return `${iso.slice(2, 4)}.${iso.slice(5, 7)}.${iso.slice(8, 10)}`;
+}
+
+function formatCompactKRW(n: number): string {
+  const { value, unit } = formatKRWCompact(n);
+  return `${value}${unit}`;
+}
+
+/* ============================================================
+ * Bento sub-components
+ * ============================================================ */
+
+function DistributionCard({
+  segments,
+  total,
+}: {
+  segments: Array<{ label: string; pct: number; color: string }>;
+  total: number;
+}) {
+  return (
+    <div className="glass-panel flex h-80 flex-col rounded-xl p-stack-md">
+      <h3 className="mb-4 text-sm font-semibold text-on-surface">카테고리 분포</h3>
+      {segments.length === 0 ? (
+        <div className="flex flex-1 items-center justify-center text-body-md text-on-surface-variant">
+          데이터 없음
+        </div>
+      ) : (
+        <div className="relative flex flex-1 items-center justify-center">
+          <DonutChart segments={segments} />
+          <div className="absolute bottom-0 right-0 flex flex-col gap-2">
+            {segments.map((seg) => (
+              <div key={seg.label} className="flex items-center gap-2">
+                <span
+                  aria-hidden
+                  className="h-2 w-2 rounded-full"
+                  style={{ background: seg.color }}
+                />
+                <span className="text-label-sm text-on-surface-variant">
+                  {seg.label} ({seg.pct}%)
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {total > 0 ? (
+        <div className="mt-2 text-label-sm text-on-surface-variant">
+          총 {formatKRW(total)}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function HighValueCategoriesCard({
+  items,
+}: {
+  items: Array<{ name: string; txCount: number; amount: number }>;
+}) {
+  return (
+    <div className="glass-panel flex h-80 flex-col rounded-xl p-stack-md">
+      <h3 className="mb-4 text-sm font-semibold text-on-surface">상위 카테고리</h3>
+      {items.length === 0 ? (
+        <div className="flex flex-1 items-center justify-center text-body-md text-on-surface-variant">
+          데이터 없음
+        </div>
+      ) : (
+        <ul className="flex-1 space-y-3 overflow-y-auto pr-2">
+          {items.map((c, i) => {
+            const tone = TONE_PALETTE[i % TONE_PALETTE.length];
+            return (
+              <li
+                key={c.name}
+                className="flex items-center justify-between rounded-lg p-2 transition-colors hover:bg-surface-variant/50"
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className={cn(
+                      "flex h-8 w-8 items-center justify-center rounded border",
+                      tone.bg,
+                      tone.border,
+                    )}
+                  >
+                    <CircleDollarSign aria-hidden className={cn("h-4 w-4", tone.text)} />
+                  </div>
+                  <div>
+                    <div className="text-data-tabular text-on-surface">{c.name}</div>
+                    <div className="text-label-sm text-on-surface-variant">
+                      {c.txCount}건
+                    </div>
+                  </div>
+                </div>
+                <div className="text-data-tabular font-semibold tabular-nums text-on-surface">
+                  ₩{formatCompactKRW(c.amount)}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function BudgetAlertBanner({ checks }: { checks: BudgetCheck[] }) {
+  const hasOver = checks.some((c) => c.status === "over");
+  return (
+    <div
+      role="alert"
+      className={cn(
+        "glass-panel flex flex-col gap-3 rounded-xl border-l-4 p-stack-md",
+        hasOver ? "border-l-error-soft" : "border-l-yellow-400/70",
+      )}
+    >
+      <div className="flex items-center gap-2">
+        <AlertTriangle
+          aria-hidden
+          className={cn(
+            "h-4 w-4",
+            hasOver ? "text-error-soft" : "text-yellow-400",
+          )}
+        />
+        <h3 className="text-label-sm font-semibold uppercase tracking-wider text-on-surface">
+          카테고리 월 한도 경고
+        </h3>
+      </div>
+      <ul className="space-y-2 text-data-tabular">
+        {checks.map((c) => (
+          <li
+            key={c.categoryId}
+            className="flex flex-wrap items-center justify-between gap-2"
+          >
+            <span className="font-medium text-on-surface">{c.name}</span>
+            <span className="flex items-center gap-2">
+              <span className="tabular-nums text-on-surface-variant">
+                {formatKRW(c.used)} / {formatKRW(c.budget)}
+              </span>
+              <span
+                className={cn(
+                  "inline-flex items-center rounded border px-1.5 py-0.5 text-[11px] font-semibold",
+                  c.status === "over"
+                    ? "border-error-soft/30 bg-error-soft/10 text-error-soft"
+                    : "border-yellow-400/30 bg-yellow-400/10 text-yellow-400",
+                )}
+              >
+                {Math.round(c.ratio * 100)}%
+                {c.status === "over" ? " · 초과" : " · 임박"}
+              </span>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function FlaggedListPanel({ rows }: { rows: ExpenseRow[] }) {
+  return (
+    <div className="glass-panel flex h-full flex-col overflow-hidden rounded-xl">
+      <div className="flex items-center gap-2 border-b border-surface-container-high bg-surface-container-lowest/50 p-4">
+        <AlertTriangle aria-hidden className="h-4 w-4 text-error-soft" />
+        <h3 className="text-sm font-semibold text-on-surface">검토 필요 거래</h3>
+      </div>
+      {rows.length === 0 ? (
+        <div className="flex flex-1 flex-col items-center justify-center gap-2 p-8 text-center">
+          <CheckCircle2 aria-hidden className="h-8 w-8 text-tertiary-sky" />
+          <p className="text-body-md text-on-surface-variant">
+            검토가 필요한 거래가 없습니다.
+          </p>
+        </div>
+      ) : (
+        <ul className="divide-y divide-outline-variant/15">
+          {rows.map((r) => (
+            <li key={r.id} className="p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium text-on-surface">{r.vendor}</p>
+                  <p className="text-label-sm text-on-surface-variant">
+                    {r.date} · {r.category}
+                  </p>
+                  {r.alertReason ? (
+                    <p className="mt-1 inline-flex items-center gap-1 rounded border border-error-soft/30 bg-error-soft/10 px-1.5 py-0.5 text-[10px] font-semibold text-error-soft">
+                      {r.alertReason}
+                    </p>
+                  ) : null}
+                </div>
+                <div className="text-right">
+                  <p className="text-data-tabular font-bold tabular-nums text-error-soft">
+                    {formatKRW(r.amount)}
+                  </p>
+                  <Link
+                    href={`/expenses/${r.id}/edit`}
+                    className="mt-1 inline-flex items-center gap-1 text-label-sm text-primary-electric transition-colors hover:text-primary-container"
+                  >
+                    검토 <ChevronRight aria-hidden className="h-3 w-3" />
+                  </Link>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+const TONE_PALETTE = [
+  {
+    bg: "bg-primary-electric/10",
+    border: "border-primary-electric/20",
+    text: "text-primary-electric",
+  },
+  {
+    bg: "bg-tertiary-sky/10",
+    border: "border-tertiary-sky/20",
+    text: "text-tertiary-sky",
+  },
+  {
+    bg: "bg-secondary-slate/10",
+    border: "border-secondary-slate/20",
+    text: "text-secondary-slate",
+  },
+  {
+    bg: "bg-error-soft/10",
+    border: "border-error-soft/20",
+    text: "text-error-soft",
+  },
+];
+
 /* ============================================================
  * KPI Card
  * ============================================================ */
-type KPICardProps = {
-  label: string;
-  labelTone?: string;
-  value: string;
-  valueTone?: string;
-  unit?: string;
-  delta?: { icon: typeof TrendingUp; text: string; tone: "tertiary" | "error" };
-  icon: typeof Wallet;
-  iconTone: string;
-  barTone: string;
-  barGlow: string;
-  barWidth: string;
-  glowText?: boolean;
-};
-
 function KPICard({
   label,
   labelTone = "text-on-surface-variant",
   value,
   valueTone = "text-on-surface",
   unit,
-  delta,
   icon: Icon,
   iconTone,
   barTone,
   barGlow,
   barWidth,
   glowText,
-}: KPICardProps) {
+}: {
+  label: string;
+  labelTone?: string;
+  value: string;
+  valueTone?: string;
+  unit?: string;
+  icon: typeof Wallet;
+  iconTone: string;
+  barTone: string;
+  barGlow: string;
+  barWidth: string;
+  glowText?: boolean;
+}) {
   return (
     <div className="glass-panel group relative flex h-32 flex-col justify-between overflow-hidden rounded-lg p-stack-md">
-      <div
-        aria-hidden
-        className="absolute inset-0 bg-gradient-to-b from-transparent to-primary-electric/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-      />
-
       <div className="relative z-10 flex items-start justify-between">
-        <span
-          className={cn(
-            "text-label-sm uppercase tracking-wider",
-            labelTone,
-          )}
-        >
+        <span className={cn("text-label-sm uppercase tracking-wider", labelTone)}>
           {label}
         </span>
         <Icon aria-hidden className={cn("h-5 w-5", iconTone)} />
@@ -384,19 +665,13 @@ function KPICard({
           className={cn(
             "text-display-xl font-bold tracking-tighter tabular-nums",
             valueTone,
-            glowText && "drop-shadow-[0_0_10px_rgba(128,131,255,0.5)]",
+            glowText && "drop-shadow-[0_0_10px_rgba(255,180,171,0.5)]",
           )}
         >
           {value}
         </span>
         {unit ? (
           <span className="text-data-tabular text-on-surface-variant">{unit}</span>
-        ) : null}
-        {delta ? (
-          <span className="flex items-center text-data-tabular text-tertiary-sky">
-            <delta.icon aria-hidden className="mr-1 h-4 w-4" />
-            {delta.text}
-          </span>
         ) : null}
       </div>
 
@@ -417,8 +692,9 @@ function DonutChart({
 }: {
   segments: { label: string; pct: number; color: string }[];
 }) {
+  if (segments.length === 0) return null;
   const stops = segments.reduce<string[]>((acc, seg, i) => {
-    const prev = acc.length === 0 ? 0 : segments.slice(0, i).reduce((s, x) => s + x.pct, 0);
+    const prev = i === 0 ? 0 : segments.slice(0, i).reduce((s, x) => s + x.pct, 0);
     const next = prev + seg.pct;
     acc.push(`${seg.color} ${prev}% ${next}%`);
     return acc;
@@ -435,7 +711,7 @@ function DonutChart({
     >
       <div className="absolute flex h-36 w-36 items-center justify-center rounded-full bg-surface-container-lowest shadow-[0_0_15px_rgba(0,0,0,0.8)]">
         <div className="text-center">
-          <div className="text-label-sm text-on-surface-variant">Total</div>
+          <div className="text-label-sm text-on-surface-variant">합계</div>
           <div className="text-body-lg font-bold text-primary-electric">100%</div>
         </div>
       </div>
@@ -451,7 +727,7 @@ function TxRow({ row }: { row: ExpenseRow }) {
   return (
     <tr
       className={cn(
-        "group cursor-pointer border-b border-surface-container/50 transition-colors",
+        "group border-b border-surface-container/50 transition-colors",
         isAnomaly
           ? "relative bg-error-soft/5 hover:bg-error-soft/10"
           : "hover:bg-primary-electric/5",
@@ -459,7 +735,7 @@ function TxRow({ row }: { row: ExpenseRow }) {
     >
       <td
         className={cn(
-          "px-4 py-3 text-on-surface-variant group-hover:text-on-surface",
+          "whitespace-nowrap px-4 py-3 text-on-surface-variant tabular-nums group-hover:text-on-surface",
           isAnomaly && "relative pl-5",
         )}
       >
@@ -473,17 +749,22 @@ function TxRow({ row }: { row: ExpenseRow }) {
       </td>
       <td
         className={cn(
-          "px-4 py-3",
+          "whitespace-nowrap px-4 py-3",
           isAnomaly ? "font-medium text-error-soft" : "text-on-surface",
         )}
       >
         {row.vendor}
       </td>
-      <td className="px-4 py-3 text-on-surface-variant">{row.category}</td>
-      <td className="px-4 py-3 text-right font-medium tabular-nums text-on-surface">
+      <td className="whitespace-nowrap px-4 py-3 text-on-surface-variant">
+        {row.category}
+      </td>
+      <td className="whitespace-nowrap px-4 py-3 text-right font-medium tabular-nums text-on-surface">
         {formatKRW(row.amount)}
       </td>
-      <td className="px-4 py-3 text-center">
+      <td className="whitespace-nowrap px-4 py-3 text-center text-label-sm text-on-surface-variant">
+        {PAYMENT_LABEL[row.paymentMethod] ?? row.paymentMethod}
+      </td>
+      <td className="whitespace-nowrap px-4 py-3 text-center">
         <StatusBadge status={row.status} />
       </td>
     </tr>
@@ -493,16 +774,16 @@ function TxRow({ row }: { row: ExpenseRow }) {
 function StatusBadge({ status }: { status: TxStatus }) {
   const map: Record<TxStatus, { label: string; className: string }> = {
     approved: {
-      label: "Approved",
+      label: "확인",
       className: "bg-tertiary-sky/10 text-tertiary-sky border-tertiary-sky/20",
     },
     pending: {
-      label: "Pending",
+      label: "대기",
       className:
         "bg-secondary-container/30 text-on-surface-variant border-outline-variant/30",
     },
     flagged: {
-      label: "Flagged",
+      label: "검토필요",
       className: "bg-error-soft/10 text-error-soft border-error-soft/20",
     },
   };
@@ -510,138 +791,11 @@ function StatusBadge({ status }: { status: TxStatus }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded border px-2 py-1 text-xs font-medium",
+        "inline-flex items-center whitespace-nowrap rounded border px-2 py-1 text-xs font-medium",
         className,
       )}
     >
       {label}
     </span>
   );
-}
-
-/* ============================================================
- * Document AI Analysis panel
- * ============================================================ */
-function DocumentAIPanel({ flagged }: { flagged: ExpenseRow | undefined }) {
-  return (
-    <div className="glass-panel flex flex-col overflow-hidden rounded-xl">
-      {/* Header */}
-      <div className="z-10 flex items-center justify-between border-b border-surface-container-high bg-surface-container-lowest/50 p-4">
-        <h3 className="flex items-center gap-2 text-sm font-semibold text-on-surface">
-          <FileScan aria-hidden className="h-4 w-4 text-primary-electric" />
-          Document AI Analysis
-        </h3>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            aria-label="확대"
-            className="flex h-6 w-6 items-center justify-center rounded bg-surface-variant transition-colors hover:bg-surface-bright"
-          >
-            <ZoomIn aria-hidden className="h-3 w-3 text-on-surface" />
-          </button>
-        </div>
-      </div>
-
-      {/* Scanner body */}
-      <div className="relative flex flex-1 flex-col gap-4 bg-surface-container-lowest p-4">
-        {/* Scan line overlay */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 z-20"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(128,131,255,0.1) 1px, transparent 1px)",
-            backgroundSize: "100% 4px",
-          }}
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 z-30 h-1 bg-primary-container/60 shadow-[0_0_15px_#8083ff] animate-scanline"
-        />
-
-        {/* Receipt placeholder (gradient block — Phase 5.2 영수증 업로드 시 실 이미지) */}
-        <div className="relative flex aspect-[3/4] items-center justify-center overflow-hidden rounded border border-outline-variant/30 bg-gradient-to-br from-slate-300 via-slate-200 to-slate-400">
-          <div className="px-4 text-center">
-            <div className="text-label-sm font-bold uppercase tracking-widest text-slate-700">
-              RECEIPT
-            </div>
-            <div className="mt-2 space-y-0.5 text-[10px] text-slate-600">
-              <div>━━━━━━━━━━━━━━━━━━</div>
-              <div>VENDOR · DATE</div>
-              <div>ITEM 1 ····· ₩XX,XXX</div>
-              <div>ITEM 2 ····· ₩XX,XXX</div>
-              <div>━━━━━━━━━━━━━━━━━━</div>
-              <div className="font-bold">TOTAL ····· ₩XX,XXX</div>
-            </div>
-          </div>
-
-          {/* AI bounding boxes */}
-          <div
-            aria-hidden
-            className="absolute left-[10%] top-[20%] h-[5%] w-[60%] rounded-sm border border-primary-electric bg-primary-electric/10"
-          />
-          <div
-            aria-hidden
-            className="absolute left-[60%] top-[35%] h-[5%] w-[30%] rounded-sm border border-tertiary-sky bg-tertiary-sky/10"
-          />
-          <div
-            aria-hidden
-            className="absolute bottom-[15%] left-[50%] z-10 h-[8%] w-[40%] rounded-sm border border-error-soft bg-error-soft/10"
-          >
-            <span className="absolute -right-2 -top-3 flex h-5 w-5 items-center justify-center rounded-full border border-error-soft bg-surface-container">
-              <AlertTriangle aria-hidden className="h-3 w-3 text-error-soft" />
-            </span>
-          </div>
-        </div>
-
-        {/* Extracted Data */}
-        <div className="z-10 rounded-lg border border-outline-variant/30 bg-surface-container/80 p-3">
-          <div className="mb-2 flex items-center text-label-sm text-primary-electric">
-            <CheckCircle2 aria-hidden className="mr-1 h-3.5 w-3.5" />
-            Extracted Data
-          </div>
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div>
-              <span className="block text-on-surface-variant">Vendor</span>
-              <span className="text-on-surface">
-                {flagged?.vendor ?? "—"}
-              </span>
-            </div>
-            <div>
-              <span className="block text-on-surface-variant">Date</span>
-              <span className="text-on-surface">
-                {flagged?.date ?? "—"}
-              </span>
-            </div>
-            <div className="col-span-2 mt-1 flex items-end justify-between border-t border-surface-container-high pt-1">
-              <div>
-                <span className="block text-error-soft">Amount Mismatch</span>
-                <span className="text-sm font-bold text-error-soft">
-                  {flagged ? formatKRW(flagged.amount) : "—"}
-                </span>
-              </div>
-              <button
-                type="button"
-                className="inline-flex items-center gap-1 rounded bg-primary-electric px-3 py-1 text-xs font-medium text-on-primary transition-colors hover:bg-primary-fixed-dim"
-              >
-                Review
-                <ChevronRight aria-hidden className="h-3 w-3" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ============================================================
- * Helpers
- * ============================================================ */
-// 디자인 라벨이 영문 M/B (백만/십억). Korean 억·만 표기는 별도 formatKRWCompact 사용.
-function formatCompactKRW(n: number): string {
-  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}B`;
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`;
-  return String(n);
 }
