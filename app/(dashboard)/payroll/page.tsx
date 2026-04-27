@@ -4,102 +4,100 @@ import {
   CheckCircle2,
   ChevronDown,
   Download,
-  LockOpen,
   MoreVertical,
-  Play,
-  RefreshCw,
   Wallet,
 } from "lucide-react";
 import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
 import { cn } from "@/lib/utils/cn";
 import { formatKRW } from "@/lib/utils/format";
+import { createClient } from "@/lib/supabase/server";
+import { BatchRunButtons } from "./_components/batch-run-buttons";
+import { ConfirmBatchButton } from "./_components/confirm-batch-button";
+import { PeriodFilter } from "./_components/period-filter";
 
 type RowStatus = "confirmed" | "draft" | "review";
 
 type PayrollRow = {
   id: string;
+  employeeId: string;
   name: string;
   employeeNo: string;
   base: number;
   allowance: number;
-  deduction: number | null;
-  netPay: number | null;
+  deduction: number;
+  netPay: number;
   status: RowStatus;
   tone: "primary" | "secondary" | "error";
   alertMessage?: string;
 };
 
-// Phase 4에서 Supabase 쿼리로 교체.
-const ROWS: PayrollRow[] = [
-  {
-    id: "1",
-    name: "김영호",
-    employeeNo: "DEV-1042",
-    base: 5_500_000,
-    allowance: 450_000,
-    deduction: 680_000,
-    netPay: 5_270_000,
-    status: "confirmed",
-    tone: "primary",
-  },
-  {
-    id: "2",
-    name: "이서연",
-    employeeNo: "MKT-2291",
-    base: 4_200_000,
-    allowance: 200_000,
-    deduction: 520_000,
-    netPay: 3_880_000,
-    status: "draft",
-    tone: "secondary",
-  },
-  {
-    id: "3",
-    name: "박민수",
-    employeeNo: "SAL-3188",
-    base: 6_000_000,
-    allowance: 0,
-    deduction: null,
-    netPay: null,
-    status: "review",
-    tone: "error",
-    alertMessage: "세금번호 누락",
-  },
-  {
-    id: "4",
-    name: "정지훈",
-    employeeNo: "DEV-1088",
-    base: 4_800_000,
-    allowance: 350_000,
-    deduction: 600_000,
-    netPay: 4_550_000,
-    status: "confirmed",
-    tone: "primary",
-  },
-  {
-    id: "5",
-    name: "최예진",
-    employeeNo: "SAL-3012",
-    base: 3_500_000,
-    allowance: 1_200_000,
-    deduction: 480_000,
-    netPay: 4_220_000,
-    status: "draft",
-    tone: "secondary",
-  },
-];
+type PayrollDbRow = {
+  id: string;
+  employee_id: string;
+  base_salary: number;
+  overtime_pay: number;
+  night_pay: number;
+  holiday_pay: number;
+  meal_allowance: number;
+  position_allowance: number;
+  other_allowance: number;
+  gross_pay: number;
+  income_tax: number;
+  total_deduction: number;
+  net_pay: number;
+  status: string;
+  employees: { name: string; employee_no: string } | null;
+};
 
-const TOTAL_EMPLOYEES = 50;
-const CALCULATED = 46;
-const PROGRESS_PCT = Math.round((CALCULATED / TOTAL_EMPLOYEES) * 100);
-const REVIEW_COUNT = ROWS.filter((r) => r.status === "review").length;
-const CONFIRMED_COUNT = ROWS.filter((r) => r.status === "confirmed").length;
+type EmployeeCountRow = { id: string };
 
-const AGG_TOTAL_GROSS = 214_580_000;
-const AGG_TOTAL_DEDUCT = 57_600_000;
-const AGG_NET = AGG_TOTAL_GROSS - AGG_TOTAL_DEDUCT;
+const DEFAULT_YEAR = 2026;
+const DEFAULT_MONTH = 4;
 
-export default function PayrollPage() {
+export default async function PayrollPage({
+  searchParams,
+}: {
+  searchParams?: { year?: string; month?: string };
+}) {
+  const year = parseIntInRange(searchParams?.year, 2000, 2100, DEFAULT_YEAR);
+  const month = parseIntInRange(searchParams?.month, 1, 12, DEFAULT_MONTH);
+
+  const supabase = createClient();
+
+  const [{ data: empCount }, { data: payrollRows }] = await Promise.all([
+    supabase
+      .from("employees")
+      .select("id")
+      .is("deleted_at", null)
+      .eq("status", "active")
+      .returns<EmployeeCountRow[]>(),
+    supabase
+      .from("payroll")
+      .select(
+        "id, employee_id, base_salary, overtime_pay, night_pay, holiday_pay, meal_allowance, position_allowance, other_allowance, gross_pay, income_tax, total_deduction, net_pay, status, employees(name, employee_no)",
+      )
+      .eq("pay_year", year)
+      .eq("pay_month", month)
+      .returns<PayrollDbRow[]>(),
+  ]);
+
+  const totalEmployees = empCount?.length ?? 0;
+  const dbRows = payrollRows ?? [];
+  const rows = dbRows
+    .map(toPayrollRow)
+    .sort((a, b) => a.name.localeCompare(b.name, "ko"));
+
+  const calculated = rows.length;
+  const progressPct = totalEmployees > 0 ? Math.round((calculated / totalEmployees) * 100) : 0;
+  const reviewCount = rows.filter((r) => r.status === "review").length;
+  const confirmedCount = rows.filter((r) => r.status === "confirmed").length;
+  // DB 기준 'draft'만 확정 대상 (UI상 'review'로 보여도 DB가 draft이면 확정 가능).
+  const draftDbCount = dbRows.filter((r) => r.status === "draft").length;
+
+  const aggTotalGross = rows.reduce((s, r) => s + r.base + r.allowance, 0);
+  const aggTotalDeduct = rows.reduce((s, r) => s + r.deduction, 0);
+  const aggNet = aggTotalGross - aggTotalDeduct;
+
   return (
     <div className="space-y-stack-lg">
       {/* Header */}
@@ -121,14 +119,7 @@ export default function PayrollPage() {
             <Download aria-hidden className="h-[18px] w-[18px]" />
             원장 내보내기
           </button>
-          <button
-            type="button"
-            disabled
-            className="inline-flex min-h-11 cursor-not-allowed items-center gap-2 rounded-lg bg-primary-electric px-4 py-2 text-label-sm font-semibold text-on-primary opacity-60"
-          >
-            <LockOpen aria-hidden className="h-[18px] w-[18px]" />
-            배치 확정
-          </button>
+          <ConfirmBatchButton year={year} month={month} draftCount={draftDbCount} />
         </div>
       </div>
 
@@ -136,7 +127,7 @@ export default function PayrollPage() {
       <div className="grid grid-cols-1 gap-gutter md:grid-cols-3">
         <KPICard
           label="대상 직원"
-          value={String(TOTAL_EMPLOYEES)}
+          value={String(totalEmployees)}
           unit="명"
           icon={Wallet}
           iconTone="text-primary-electric"
@@ -145,25 +136,25 @@ export default function PayrollPage() {
         />
         <KPICard
           label="계산 진행률"
-          value={`${PROGRESS_PCT}`}
+          value={`${progressPct}`}
           unit="%"
           icon={CheckCircle2}
           iconTone="text-tertiary-sky"
           barTone="bg-tertiary-sky"
-          barWidth={`${PROGRESS_PCT}%`}
-          subtext={`${CALCULATED}/${TOTAL_EMPLOYEES}`}
+          barWidth={`${progressPct}%`}
+          subtext={`${calculated}/${totalEmployees}`}
         />
         <KPICard
           label="검토 필요"
-          labelTone={REVIEW_COUNT > 0 ? "text-error-soft" : undefined}
-          value={String(REVIEW_COUNT)}
+          labelTone={reviewCount > 0 ? "text-error-soft" : undefined}
+          value={String(reviewCount)}
           unit="건"
-          valueTone={REVIEW_COUNT > 0 ? "text-error-soft" : undefined}
+          valueTone={reviewCount > 0 ? "text-error-soft" : undefined}
           icon={AlertTriangle}
-          iconTone={REVIEW_COUNT > 0 ? "text-error-soft" : "text-on-surface-variant"}
-          barTone={REVIEW_COUNT > 0 ? "bg-error-soft animate-pulse" : "bg-outline"}
-          barWidth={REVIEW_COUNT > 0 ? "20%" : "0%"}
-          glowText={REVIEW_COUNT > 0}
+          iconTone={reviewCount > 0 ? "text-error-soft" : "text-on-surface-variant"}
+          barTone={reviewCount > 0 ? "bg-error-soft animate-pulse" : "bg-outline"}
+          barWidth={reviewCount > 0 ? "20%" : "0%"}
+          glowText={reviewCount > 0}
         />
       </div>
 
@@ -174,10 +165,7 @@ export default function PayrollPage() {
           {/* Filter bar */}
           <div className="glass-panel flex flex-col items-start justify-between gap-3 rounded-xl p-stack-md sm:flex-row sm:items-center">
             <div className="flex flex-wrap gap-3">
-              <FilterSelect
-                label="2026년 4월"
-                options={["2026년 4월", "2026년 3월", "2026년 2월"]}
-              />
+              <PeriodFilter year={year} month={month} />
               <FilterSelect
                 label="전체 부서"
                 options={["전체 부서", "개발", "경영지원", "영업"]}
@@ -188,30 +176,34 @@ export default function PayrollPage() {
               />
             </div>
             <div className="text-label-sm text-on-surface-variant">
-              {ROWS.length}건 표시 · 확정 {CONFIRMED_COUNT}건
+              {rows.length}건 표시 · 확정 {confirmedCount}건
             </div>
           </div>
 
           {/* Table */}
           <div className="glass-panel overflow-x-auto rounded-xl">
-            <table className="w-full min-w-[860px] border-collapse text-left">
-              <thead className="border-b border-outline-variant/20 bg-surface-container/30 text-label-sm text-on-surface-variant">
-                <tr>
-                  <th className="min-w-[200px] px-6 py-4 font-semibold">직원</th>
-                  <th className="whitespace-nowrap px-6 py-4 text-right font-semibold">기본급</th>
-                  <th className="whitespace-nowrap px-6 py-4 text-right font-semibold">수당</th>
-                  <th className="whitespace-nowrap px-6 py-4 text-right font-semibold">공제</th>
-                  <th className="whitespace-nowrap px-6 py-4 text-right font-semibold">실지급</th>
-                  <th className="whitespace-nowrap px-6 py-4 text-center font-semibold">상태</th>
-                  <th className="w-10 px-4 py-4" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-outline-variant/10 text-data-tabular text-on-surface">
-                {ROWS.map((row) => (
-                  <PayrollTableRow key={row.id} row={row} />
-                ))}
-              </tbody>
-            </table>
+            {rows.length === 0 ? (
+              <EmptyState year={year} month={month} totalEmployees={totalEmployees} />
+            ) : (
+              <table className="w-full min-w-[860px] border-collapse text-left">
+                <thead className="border-b border-outline-variant/20 bg-surface-container/30 text-label-sm text-on-surface-variant">
+                  <tr>
+                    <th className="min-w-[200px] px-6 py-4 font-semibold">직원</th>
+                    <th className="whitespace-nowrap px-6 py-4 text-right font-semibold">기본급</th>
+                    <th className="whitespace-nowrap px-6 py-4 text-right font-semibold">수당</th>
+                    <th className="whitespace-nowrap px-6 py-4 text-right font-semibold">공제</th>
+                    <th className="whitespace-nowrap px-6 py-4 text-right font-semibold">실지급</th>
+                    <th className="whitespace-nowrap px-6 py-4 text-center font-semibold">상태</th>
+                    <th className="w-10 px-4 py-4" />
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-outline-variant/10 text-data-tabular text-on-surface">
+                  {rows.map((row) => (
+                    <PayrollTableRow key={row.id} row={row} />
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
 
@@ -228,54 +220,50 @@ export default function PayrollPage() {
               <div>
                 <div className="mb-1 text-label-sm text-on-surface-variant">대상 기간</div>
                 <div className="text-headline-md font-semibold text-primary-electric">
-                  2026년 4월
+                  {year}년 {month}월
                 </div>
               </div>
-              <span className="inline-flex items-center gap-1.5 rounded-md border border-tertiary-sky/30 bg-tertiary-sky/10 px-2 py-1 text-label-sm text-tertiary-sky">
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-label-sm",
+                  progressPct === 100
+                    ? "border-tertiary-sky/30 bg-tertiary-sky/10 text-tertiary-sky"
+                    : progressPct > 0
+                      ? "border-primary-electric/30 bg-primary-electric/10 text-primary-electric"
+                      : "border-outline-variant/40 bg-surface-container text-on-surface-variant",
+                )}
+              >
                 <span
                   aria-hidden
-                  className="h-1.5 w-1.5 animate-pulse rounded-full bg-tertiary-sky"
+                  className={cn(
+                    "h-1.5 w-1.5 rounded-full",
+                    progressPct === 100
+                      ? "bg-tertiary-sky"
+                      : progressPct > 0
+                        ? "animate-pulse bg-primary-electric"
+                        : "bg-outline",
+                  )}
                 />
-                처리 중
+                {progressPct === 100 ? "완료" : progressPct > 0 ? "처리 중" : "대기"}
               </span>
             </div>
 
             <div className="mb-stack-md mt-stack-md">
               <div className="mb-2 flex justify-between text-label-sm">
                 <span className="text-on-surface-variant">
-                  완료 {CALCULATED}/{TOTAL_EMPLOYEES}
+                  완료 {calculated}/{totalEmployees}
                 </span>
-                <span className="font-bold text-primary-electric">{PROGRESS_PCT}%</span>
+                <span className="font-bold text-primary-electric">{progressPct}%</span>
               </div>
               <div className="h-2 w-full overflow-hidden rounded-full border border-outline-variant/20 bg-surface-container-highest">
                 <div
                   className="relative h-full rounded-full bg-gradient-to-r from-primary-container to-primary-electric shadow-[0_0_10px_rgba(192,193,255,0.5)]"
-                  style={{ width: `${PROGRESS_PCT}%` }}
+                  style={{ width: `${progressPct}%` }}
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                disabled
-                className="group flex min-h-11 items-center justify-center gap-2 rounded-lg border border-outline-variant/30 bg-surface-container py-2.5 text-label-sm text-on-surface-variant transition-colors hover:bg-surface-bright disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <RefreshCw
-                  aria-hidden
-                  className="h-4 w-4 transition-transform duration-500 group-hover:rotate-180"
-                />
-                재계산
-              </button>
-              <button
-                type="button"
-                disabled
-                className="flex min-h-11 items-center justify-center gap-2 rounded-lg border border-primary-electric/40 bg-primary-electric/10 py-2.5 text-label-sm font-semibold text-primary-electric transition-colors hover:bg-primary-electric/20 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <Play aria-hidden className="h-4 w-4" />
-                실행
-              </button>
-            </div>
+            <BatchRunButtons year={year} month={month} hasExisting={calculated > 0} />
           </div>
 
           {/* Financial Aggregates */}
@@ -285,10 +273,10 @@ export default function PayrollPage() {
               재무 집계
             </h3>
             <div className="space-y-4">
-              <AggregateRow label="총 지급액" value={formatKRW(AGG_TOTAL_GROSS)} />
+              <AggregateRow label="총 지급액" value={formatKRW(aggTotalGross)} />
               <AggregateRow
                 label="총 공제액"
-                value={`-${formatKRW(AGG_TOTAL_DEDUCT)}`}
+                value={`-${formatKRW(aggTotalDeduct)}`}
                 tone="error"
               />
               <div className="my-2 h-px bg-outline-variant/30" />
@@ -297,15 +285,97 @@ export default function PayrollPage() {
                   실지급 총액
                 </div>
                 <div className="text-3xl font-bold tracking-tighter tabular-nums text-on-surface">
-                  {formatKRW(AGG_NET)}
+                  {formatKRW(aggNet)}
                 </div>
                 <div className="mt-1 text-label-sm text-on-surface-variant">
-                  2026년 4월 마감 예정
+                  {year}년 {month}월 마감 예정
                 </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function toPayrollRow(r: PayrollDbRow): PayrollRow {
+  const allowance =
+    r.overtime_pay +
+    r.night_pay +
+    r.holiday_pay +
+    r.meal_allowance +
+    r.position_allowance +
+    r.other_allowance;
+
+  // DB status('draft'|'confirmed'|'paid') → UI 3분류로 매핑.
+  // net_pay 음수 또는 income_tax=0 + 큰 과세소득은 '검토필요'.
+  const taxable = r.gross_pay - r.meal_allowance; // 과세소득 근사 (식대만 비과세 처리 가정)
+  const suspectTax = r.income_tax === 0 && taxable >= 1_000_000;
+  let status: RowStatus;
+  let tone: "primary" | "secondary" | "error";
+  let alertMessage: string | undefined;
+  if (r.net_pay < 0) {
+    status = "review";
+    tone = "error";
+    alertMessage = "실지급 음수";
+  } else if (suspectTax) {
+    status = "review";
+    tone = "error";
+    alertMessage = "세액 미산정";
+  } else if (r.status === "confirmed" || r.status === "paid") {
+    status = "confirmed";
+    tone = "primary";
+  } else {
+    status = "draft";
+    tone = "secondary";
+  }
+
+  return {
+    id: r.id,
+    employeeId: r.employee_id,
+    name: r.employees?.name ?? "(이름 없음)",
+    employeeNo: r.employees?.employee_no ?? "—",
+    base: r.base_salary,
+    allowance,
+    deduction: r.total_deduction,
+    netPay: r.net_pay,
+    status,
+    tone,
+    alertMessage,
+  };
+}
+
+function parseIntInRange(
+  v: string | undefined,
+  min: number,
+  max: number,
+  fallback: number,
+): number {
+  if (!v) return fallback;
+  const n = Number.parseInt(v, 10);
+  if (!Number.isFinite(n) || n < min || n > max) return fallback;
+  return n;
+}
+
+function EmptyState({
+  year,
+  month,
+  totalEmployees,
+}: {
+  year: number;
+  month: number;
+  totalEmployees: number;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-3 px-6 py-16 text-center">
+      <CalendarRange aria-hidden className="h-10 w-10 text-outline-variant" />
+      <div className="text-headline-md font-semibold text-on-surface">
+        {year}년 {month}월 급여 미계산
+      </div>
+      <div className="max-w-sm text-body-md text-on-surface-variant">
+        활성 직원 {totalEmployees}명에 대한 이번 달 급여가 아직 계산되지 않았습니다.
+        우측 「실행」 버튼을 눌러 일괄 계산하세요.
       </div>
     </div>
   );
@@ -354,18 +424,16 @@ function PayrollTableRow({ row }: { row: PayrollRow }) {
         {row.allowance > 0 ? `+${formatKRW(row.allowance)}` : formatKRW(0)}
       </td>
       <td className="whitespace-nowrap px-6 py-3 text-right tabular-nums">
-        {row.deduction !== null ? (
+        {row.deduction > 0 ? (
           <span className="text-error-soft">-{formatKRW(row.deduction)}</span>
         ) : (
           <span className="text-outline-variant">--</span>
         )}
       </td>
       <td className="whitespace-nowrap px-6 py-3 text-right font-semibold tabular-nums">
-        {row.netPay !== null ? (
-          <span className="text-on-surface">{formatKRW(row.netPay)}</span>
-        ) : (
-          <span className="text-outline-variant">미정</span>
-        )}
+        <span className={row.netPay < 0 ? "text-error-soft" : "text-on-surface"}>
+          {formatKRW(row.netPay)}
+        </span>
       </td>
       <td className="whitespace-nowrap px-6 py-3 text-center">
         <StatusBadge status={row.status} />
