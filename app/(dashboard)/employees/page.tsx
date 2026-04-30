@@ -2,6 +2,7 @@ import {
   Activity,
   Building2,
   CalendarPlus,
+  FileSpreadsheet,
   Search,
   Sparkles,
   UserPlus,
@@ -149,6 +150,13 @@ export default async function EmployeesPage({
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
+          <Link
+            href="/employees/import"
+            className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-outline-variant/50 bg-surface-container px-4 py-2 text-label-sm text-on-surface transition-colors hover:bg-surface-container-high"
+          >
+            <FileSpreadsheet aria-hidden className="h-[18px] w-[18px]" />
+            엑셀 가져오기
+          </Link>
           <Link
             href="/employees/new"
             className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary-electric px-4 py-2 text-label-sm font-semibold text-on-primary transition-colors hover:bg-primary-fixed-dim"

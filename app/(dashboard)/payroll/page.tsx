@@ -112,14 +112,20 @@ export default async function PayrollPage({
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
-          <button
-            type="button"
-            disabled
-            className="inline-flex min-h-11 cursor-not-allowed items-center gap-2 rounded-lg border border-outline-variant/50 bg-surface-container px-4 py-2 text-label-sm text-on-surface-variant opacity-60"
+          <a
+            href={`/api/payroll/export?year=${year}&month=${month}`}
+            download={`payroll_${year}_${String(month).padStart(2, "0")}.xlsx`}
+            className={cn(
+              "inline-flex min-h-11 items-center gap-2 rounded-lg border border-outline-variant/50 bg-surface-container px-4 py-2 text-label-sm transition-colors hover:bg-surface-container-high",
+              calculated === 0
+                ? "pointer-events-none cursor-not-allowed opacity-50"
+                : "text-on-surface",
+            )}
+            aria-disabled={calculated === 0}
           >
             <Download aria-hidden className="h-[18px] w-[18px]" />
-            원장 내보내기
-          </button>
+            엑셀 내보내기
+          </a>
           <ConfirmBatchButton year={year} month={month} draftCount={draftDbCount} />
         </div>
       </div>
