@@ -9,6 +9,7 @@ import { z } from "zod";
 import { AlertCircle, Loader2, Save } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils/cn";
+import { recordAudit } from "@/lib/audit/actions";
 
 type Option = { id: string; name: string };
 type PositionOption = Option & { level: number };
@@ -121,6 +122,16 @@ export function EmployeeForm({
         }
         return;
       }
+      void recordAudit({
+        action: "employee.created",
+        entityType: "employee",
+        entityId: data.id,
+        metadata: {
+          employee_no: payload.employee_no,
+          name: payload.name,
+          base_salary: payload.base_salary,
+        },
+      });
       router.push(`/employees?selected=${data.id}`);
       router.refresh();
     } else {
@@ -128,6 +139,8 @@ export function EmployeeForm({
         setServerError("employeeId가 누락됐습니다.");
         return;
       }
+      const bankChanged =
+        (initialValues?.bank_account ?? "") !== (payload.bank_account ?? "");
       const { error } = await supabase
         .schema("chongmu")
         .from("employees")
@@ -142,6 +155,19 @@ export function EmployeeForm({
         }
         return;
       }
+      void recordAudit({
+        action: bankChanged ? "employee.bank_changed" : "employee.updated",
+        entityType: "employee",
+        entityId: employeeId,
+        metadata: {
+          employee_no: payload.employee_no,
+          name: payload.name,
+          ...(bankChanged && {
+            bank_name: payload.bank_name,
+            bank_account_changed: true,
+          }),
+        },
+      });
       router.push(`/employees?selected=${employeeId}`);
       router.refresh();
     }

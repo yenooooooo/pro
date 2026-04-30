@@ -24,6 +24,7 @@ import { aggregateAttendance } from "@/lib/attendance/aggregate";
 import { calculateGrossPay } from "@/lib/calculators/payroll";
 import { calculateInsurance, type InsuranceRates } from "@/lib/calculators/insurance";
 import { calculateIncomeTax, type IncomeTaxRow } from "@/lib/calculators/income-tax";
+import { recordAudit } from "@/lib/audit/actions";
 import type { Database } from "@/types/database";
 
 type PayrollInsert = Database["chongmu"]["Tables"]["payroll"]["Insert"];
@@ -331,6 +332,19 @@ export async function POST(req: NextRequest) {
         { status: 500 },
       );
     }
+  }
+
+  if (processed.length > 0) {
+    await recordAudit({
+      action: "payroll.calculated",
+      entityType: "payroll",
+      metadata: {
+        year: input.year,
+        month: input.month,
+        processed: processed.length,
+        skipped: skipped.length,
+      },
+    });
   }
 
   return NextResponse.json({

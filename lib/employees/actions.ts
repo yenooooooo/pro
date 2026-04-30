@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { recordAudit } from "@/lib/audit/actions";
 
 /**
  * 직원 퇴사 처리 — soft delete.
@@ -12,6 +13,14 @@ import { createClient } from "@/lib/supabase/server";
 export async function resignEmployeeAction(employeeId: string) {
   const supabase = createClient();
   const today = new Date().toISOString().slice(0, 10);
+
+  const { data: prior } = await supabase
+    .schema("chongmu")
+    .from("employees")
+    .select("name, employee_no")
+    .eq("id", employeeId)
+    .maybeSingle<{ name: string; employee_no: string }>();
+
   const { error } = await supabase
     .schema("chongmu")
     .from("employees")
@@ -22,6 +31,18 @@ export async function resignEmployeeAction(employeeId: string) {
     })
     .eq("id", employeeId);
   if (error) throw new Error(`퇴사 처리 실패: ${error.message}`);
+
+  await recordAudit({
+    action: "employee.resigned",
+    entityType: "employee",
+    entityId: employeeId,
+    metadata: {
+      name: prior?.name ?? null,
+      employee_no: prior?.employee_no ?? null,
+      resign_date: today,
+    },
+  });
+
   revalidatePath("/employees");
   redirect("/employees");
 }

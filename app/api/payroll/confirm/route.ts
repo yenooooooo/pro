@@ -13,6 +13,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { recordAudit } from "@/lib/audit/actions";
 
 const BodySchema = z.object({
   year: z.number().int().min(2000).max(2100),
@@ -60,9 +61,23 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const confirmedCount = data?.length ?? 0;
+  if (confirmedCount > 0) {
+    await recordAudit({
+      action: "payroll.confirmed",
+      entityType: "payroll",
+      metadata: {
+        year: parsed.data.year,
+        month: parsed.data.month,
+        count: confirmedCount,
+        ids: (data ?? []).map((row) => row.id),
+      },
+    });
+  }
+
   return NextResponse.json({
     year: parsed.data.year,
     month: parsed.data.month,
-    confirmed: data?.length ?? 0,
+    confirmed: confirmedCount,
   });
 }
