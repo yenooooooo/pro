@@ -11,10 +11,10 @@
 
 | 항목 | 값 |
 |---|---|
-| URL | _배포 후 추가 (Vercel)_ |
-| 테스트 계정 | _배포 후 추가_ |
+| URL | **<https://pro-gules-beta.vercel.app/>** |
+| 테스트 계정 | _요청 시 별도 안내 (이력서·포트폴리오 링크 통해)_ |
 
-> 배포 절차는 [`docs/deployment.md`](./docs/deployment.md) 참조.
+> 배포 절차는 [`docs/deployment.md`](./docs/deployment.md) 참조. 자동 배포(main 푸시 시) 활성화됨.
 
 ---
 
