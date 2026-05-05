@@ -9,8 +9,9 @@
  * HSL 변수는 shadcn/ui 호환. HEX 값은 tailwind.config.ts 토큰 참조.
  * ============================================================ */
 @layer base {
-  :root {
-    /* Deep Midnight Navy 기반 다크 테마. light 모드는 v2로 미룸. */
+  :root,
+  html.dark {
+    /* Deep Midnight Navy 기반 다크 테마 (기본) */
     --background: 224 46% 10%; /* #0b1326 */
     --foreground: 225 93% 93%; /* #dae2fd */
 
@@ -41,6 +42,41 @@
     --ring: 239 100% 88%;
 
     --radius: 0.5rem;
+  }
+
+  /* Light theme (experimental) — 동일 토큰을 밝은 톤으로 매핑 */
+  html.light {
+    --background: 220 25% 98%; /* near-white slate-50 */
+    --foreground: 225 30% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 225 30% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 225 30% 15%;
+    --primary: 247 100% 67%; /* electric indigo deepened */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 14% 92%;
+    --secondary-foreground: 225 30% 20%;
+    --muted: 220 14% 95%;
+    --muted-foreground: 225 15% 40%;
+    --accent: 196 100% 45%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 75% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 85%;
+    --input: 220 14% 95%;
+    --ring: 247 100% 67%;
+    color-scheme: light;
+  }
+
+  html.light .glass-panel {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(15, 23, 42, 0.08);
+    border-top-color: rgba(255, 255, 255, 0.4);
+  }
+  html.light body {
+    background-image:
+      radial-gradient(ellipse 80% 60% at 50% -10%, rgba(99, 102, 241, 0.08), transparent 60%),
+      radial-gradient(ellipse 50% 40% at 95% 100%, rgba(123, 208, 255, 0.05), transparent 60%);
   }
 
   * {

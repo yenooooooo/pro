@@ -14,6 +14,93 @@ export type Database = {
   }
   chongmu: {
     Tables: {
+      approval_requests: {
+        Row: {
+          id: string
+          kind: string
+          title: string
+          description: string | null
+          amount: number | null
+          metadata: Json
+          requester_id: string | null
+          requester_email: string | null
+          status: string
+          current_step: number
+          created_at: string
+          updated_at: string
+          completed_at: string | null
+        }
+        Insert: {
+          id?: string
+          kind: string
+          title: string
+          description?: string | null
+          amount?: number | null
+          metadata?: Json
+          requester_id?: string | null
+          requester_email?: string | null
+          status?: string
+          current_step?: number
+          created_at?: string
+          updated_at?: string
+          completed_at?: string | null
+        }
+        Update: {
+          id?: string
+          kind?: string
+          title?: string
+          description?: string | null
+          amount?: number | null
+          metadata?: Json
+          requester_id?: string | null
+          requester_email?: string | null
+          status?: string
+          current_step?: number
+          created_at?: string
+          updated_at?: string
+          completed_at?: string | null
+        }
+        Relationships: []
+      }
+      approval_steps: {
+        Row: {
+          id: string
+          request_id: string
+          step_no: number
+          approver_id: string | null
+          approver_email: string
+          approver_role: string | null
+          status: string
+          comment: string | null
+          decided_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          request_id: string
+          step_no: number
+          approver_id?: string | null
+          approver_email: string
+          approver_role?: string | null
+          status?: string
+          comment?: string | null
+          decided_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          request_id?: string
+          step_no?: number
+          approver_id?: string | null
+          approver_email?: string
+          approver_role?: string | null
+          status?: string
+          comment?: string | null
+          decided_at?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string

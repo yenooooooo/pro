@@ -34,7 +34,11 @@ export type AuditAction =
   | "settings.closing_task_removed"
   | "report.exported"
   | "ai.ocr"
-  | "ai.query";
+  | "ai.query"
+  | "approval.created"
+  | "approval.approved"
+  | "approval.rejected"
+  | "approval.cancelled";
 
 export type AuditEntityType =
   | "payroll"
@@ -46,7 +50,8 @@ export type AuditEntityType =
   | "closing_history"
   | "insurance_rate"
   | "closing_task"
-  | "report";
+  | "report"
+  | "approval_request";
 
 export type AuditMetadata = Record<string, unknown>;
 

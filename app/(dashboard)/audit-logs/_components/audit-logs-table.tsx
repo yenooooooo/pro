@@ -23,6 +23,10 @@ const ACTION_LABEL: Record<string, { label: string; tone: "primary" | "success" 
   "report.exported": { label: "리포트 다운로드", tone: "primary" },
   "ai.ocr": { label: "AI 영수증 OCR", tone: "primary" },
   "ai.query": { label: "AI 자연어 질의", tone: "primary" },
+  "approval.created": { label: "결재 발의", tone: "neutral" },
+  "approval.approved": { label: "결재 승인", tone: "success" },
+  "approval.rejected": { label: "결재 반려", tone: "warn" },
+  "approval.cancelled": { label: "결재 취소", tone: "neutral" },
 };
 
 const TONE_CLASS: Record<string, string> = {
