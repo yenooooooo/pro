@@ -22,7 +22,8 @@ export function ThemeToggle() {
   const [mode, setMode] = useState<Mode>("dark");
 
   useEffect(() => {
-    const saved = (localStorage.getItem(STORAGE_KEY) as Mode | null) ?? "system";
+    // 기본값은 'dark'. 라이트는 experimental 이라 사용자가 명시적으로 골라야만 적용.
+    const saved = (localStorage.getItem(STORAGE_KEY) as Mode | null) ?? "dark";
     setMode(saved);
     apply(saved);
 
@@ -43,9 +44,9 @@ export function ThemeToggle() {
   return (
     <div
       role="group"
-      aria-label="테마 전환"
+      aria-label="테마 전환 (라이트는 experimental)"
       className="hidden items-center gap-0.5 rounded-full border border-outline-variant/30 bg-surface-container/50 p-0.5 md:inline-flex"
-      title="라이트 모드는 experimental 입니다"
+      title="라이트 모드는 experimental — 일부 색상이 어색할 수 있습니다 (v1.1에서 풀 디자인)"
     >
       <Btn current={mode} value="light" onClick={() => change("light")}>
         <Sun aria-hidden className="h-3.5 w-3.5" />
