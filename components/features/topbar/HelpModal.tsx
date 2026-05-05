@@ -44,6 +44,12 @@ const SECTIONS: HelpSection[] = [
   },
 ];
 
+function resetTour() {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem("tour-seen");
+  window.location.reload();
+}
+
 export function HelpModal({ open, onClose }: Props) {
   useEffect(() => {
     if (!open) return;
@@ -86,6 +92,13 @@ export function HelpModal({ open, onClose }: Props) {
         </div>
 
         <div className="max-h-[70vh] space-y-5 overflow-y-auto p-5">
+          <button
+            type="button"
+            onClick={resetTour}
+            className="inline-flex items-center gap-2 rounded-lg border border-primary-electric/40 bg-primary-electric/10 px-3 py-2 text-label-sm font-semibold text-primary-electric transition-colors hover:bg-primary-electric/20"
+          >
+            ✨ 사이트 투어 다시보기
+          </button>
           {SECTIONS.map((section) => {
             const SectionIcon = section.icon;
             return (

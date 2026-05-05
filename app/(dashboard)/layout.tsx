@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Sidebar } from "@/components/shared/Sidebar";
 import { TopBar } from "@/components/shared/TopBar";
 import { BottomTabBar } from "@/components/shared/BottomTabBar";
+import { OnboardingTour } from "@/components/shared/OnboardingTour";
 import { createClient } from "@/lib/supabase/server";
 import { getNotifications } from "@/lib/notifications/server";
 
@@ -24,6 +25,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         </main>
       </div>
       <BottomTabBar />
+      <OnboardingTour />
     </div>
   );
 }

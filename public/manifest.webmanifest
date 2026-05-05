@@ -1,0 +1,40 @@
+{
+  "name": "Nexus ERP — Enterprise Edition",
+  "short_name": "Nexus ERP",
+  "description": "중소기업 총무 담당자를 위한 통합 ERP. 급여·근태·결산·자산·AI 분석.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0b1326",
+  "theme_color": "#0b1326",
+  "categories": ["business", "productivity", "finance"],
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "대시보드",
+      "url": "/dashboard",
+      "description": "운영 KPI 한눈에"
+    },
+    {
+      "name": "급여계산",
+      "url": "/payroll"
+    },
+    {
+      "name": "월말결산",
+      "url": "/closing"
+    },
+    {
+      "name": "법적 리스크",
+      "url": "/risks"
+    }
+  ]
+}
