@@ -8,9 +8,52 @@ import { cn } from "@/lib/utils/cn";
 import { DASHBOARD_NAV } from "@/constants/nav";
 import { ReportBuilderModal } from "@/components/features/reports/ReportBuilderModal";
 
-export function Sidebar() {
+type Role = "admin" | "hr" | "finance" | "employee";
+
+const ROLE_NAV_ACCESS: Record<Role, string[]> = {
+  admin: ["*"],
+  hr: [
+    "/dashboard",
+    "/employees",
+    "/attendance",
+    "/leave",
+    "/year-end",
+    "/risks",
+    "/simulator",
+    "/retirement",
+    "/approvals",
+  ],
+  finance: [
+    "/dashboard",
+    "/payroll",
+    "/expenses",
+    "/vendors",
+    "/assets",
+    "/closing",
+    "/risks",
+    "/simulator",
+    "/retirement",
+    "/approvals",
+  ],
+  employee: ["/dashboard", "/leave", "/payroll", "/approvals"],
+};
+
+function canSee(role: Role | undefined, href: string): boolean {
+  if (!role) return true;
+  const allowed = ROLE_NAV_ACCESS[role];
+  if (!allowed) return true;
+  if (allowed.includes("*")) return true;
+  return allowed.some((p) => href === p || href.startsWith(`${p}/`));
+}
+
+type Props = {
+  role?: Role;
+};
+
+export function Sidebar({ role }: Props = {}) {
   const pathname = usePathname();
   const [reportOpen, setReportOpen] = useState(false);
+  const visibleNav = DASHBOARD_NAV.filter((item) => canSee(role, item.href));
 
   return (
     <>
@@ -37,9 +80,9 @@ export function Sidebar() {
         </div>
       </div>
 
-      {/* 메인 네비게이션 */}
+      {/* 메인 네비게이션 — 역할별 필터링 */}
       <nav className="flex-1 space-y-2 overflow-y-auto px-2 py-2 lg:px-4">
-        {DASHBOARD_NAV.map((item) => {
+        {visibleNav.map((item) => {
           const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
             <Link

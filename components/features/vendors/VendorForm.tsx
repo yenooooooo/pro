@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils/cn";
+import { recordAudit } from "@/lib/audit/actions";
 
 const Schema = z.object({
   name: z.string().min(1, "거래처명을 입력하세요").max(100),
@@ -94,14 +95,22 @@ export function VendorForm({ mode, vendorId, initialValues }: Props) {
     }
 
     if (mode === "create") {
-      const { error } = await supabase
+      const { data: created, error } = await supabase
         .schema("chongmu")
         .from("vendors")
-        .insert(payload);
+        .insert(payload)
+        .select("id")
+        .single();
       if (error) {
         setServerError(error.message);
         return;
       }
+      void recordAudit({
+        action: "vendor.created",
+        entityType: "vendor",
+        entityId: created?.id ?? null,
+        metadata: { name: payload.name, business_no: payload.business_no },
+      });
     } else {
       if (!vendorId) {
         setServerError("vendorId가 누락됐습니다.");
@@ -116,6 +125,12 @@ export function VendorForm({ mode, vendorId, initialValues }: Props) {
         setServerError(error.message);
         return;
       }
+      void recordAudit({
+        action: "vendor.updated",
+        entityType: "vendor",
+        entityId: vendorId,
+        metadata: { name: payload.name },
+      });
     }
 
     router.push("/vendors");

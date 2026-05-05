@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { recordAudit } from "@/lib/audit/actions";
 import { z } from "zod";
 import { AlertCircle, Loader2, Save, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -103,14 +104,22 @@ export function AssetForm({ mode, assetId, initialValues, employees }: Props) {
     };
 
     if (mode === "create") {
-      const { error } = await supabase
+      const { data: created, error } = await supabase
         .schema("chongmu")
         .from("assets")
-        .insert(payload);
+        .insert(payload)
+        .select("id")
+        .single();
       if (error) {
         setServerError(error.message);
         return;
       }
+      void recordAudit({
+        action: "asset.created",
+        entityType: "asset",
+        entityId: created?.id ?? null,
+        metadata: { name: payload.name, asset_no: payload.asset_no },
+      });
     } else {
       if (!assetId) {
         setServerError("assetId가 누락됐습니다.");
@@ -125,6 +134,12 @@ export function AssetForm({ mode, assetId, initialValues, employees }: Props) {
         setServerError(error.message);
         return;
       }
+      void recordAudit({
+        action: "asset.updated",
+        entityType: "asset",
+        entityId: assetId,
+        metadata: { name: payload.name, status: payload.status },
+      });
     }
     router.push("/assets");
     router.refresh();

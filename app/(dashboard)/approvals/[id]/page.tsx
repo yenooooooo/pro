@@ -3,22 +3,20 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Check, X, Clock, FileSignature } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { DecideButtons } from "./_decide";
+import {
+  APPROVAL_KIND_LABEL,
+  APPROVAL_STATUS_LABEL,
+  label,
+} from "@/lib/labels";
 
 export const dynamic = "force-dynamic";
 
-const KIND_LABEL: Record<string, string> = {
-  expense: "지출",
-  purchase: "구매",
-  business_trip: "출장",
-  general: "일반",
-};
-
-const STATUS_LABEL: Record<string, { label: string; tone: string }> = {
-  draft: { label: "작성중", tone: "border-outline-variant/40 bg-surface-container-high text-on-surface-variant" },
-  pending: { label: "결재중", tone: "border-amber-500/40 bg-amber-500/10 text-amber-300" },
-  approved: { label: "승인", tone: "border-emerald-500/40 bg-emerald-500/10 text-emerald-300" },
-  rejected: { label: "반려", tone: "border-error-soft/40 bg-error-soft/10 text-error-soft" },
-  cancelled: { label: "취소", tone: "border-outline-variant/40 bg-surface-container-high text-on-surface-variant" },
+const STATUS_TONE: Record<string, string> = {
+  draft: "border-outline-variant/40 bg-surface-container-high text-on-surface-variant",
+  pending: "border-amber-500/40 bg-amber-500/10 text-amber-300",
+  approved: "border-emerald-500/40 bg-emerald-500/10 text-emerald-300",
+  rejected: "border-error-soft/40 bg-error-soft/10 text-error-soft",
+  cancelled: "border-outline-variant/40 bg-surface-container-high text-on-surface-variant",
 };
 
 type Request = {
@@ -69,7 +67,8 @@ export default async function ApprovalDetailPage({
     .order("step_no", { ascending: true })
     .returns<Step[]>();
 
-  const status = STATUS_LABEL[req.status] ?? STATUS_LABEL.draft;
+  const statusTone = STATUS_TONE[req.status] ?? STATUS_TONE.draft;
+  const statusLabel = label(APPROVAL_STATUS_LABEL, req.status);
 
   return (
     <div className="space-y-stack-lg">
@@ -86,12 +85,12 @@ export default async function ApprovalDetailPage({
           <div>
             <div className="mb-2 flex flex-wrap items-center gap-2">
               <span className="rounded bg-surface-container-high px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
-                {KIND_LABEL[req.kind] ?? req.kind}
+                {label(APPROVAL_KIND_LABEL, req.kind)}
               </span>
               <span
-                className={`inline-flex whitespace-nowrap rounded-md border px-2 py-0.5 text-[11px] font-semibold ${status.tone}`}
+                className={`inline-flex whitespace-nowrap rounded-md border px-2 py-0.5 text-[11px] font-semibold ${statusTone}`}
               >
-                {status.label}
+                {statusLabel}
               </span>
             </div>
             <h1 className="text-headline-lg font-semibold text-on-surface">

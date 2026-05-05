@@ -18,9 +18,18 @@ import {
   classifyLifecycle,
 } from "@/lib/assets/depreciation";
 import { differenceInDays } from "date-fns";
-import { DepartmentCostChart } from "./_components/department-cost-chart";
-import { ExpenseCategoryChart } from "./_components/expense-category-chart";
-import { TrendChart } from "./_components/trend-chart";
+import dynamic from "next/dynamic";
+
+// Recharts 는 약 30KB+ → dynamic import 로 First Load JS 절감
+const DepartmentCostChart = dynamic(() =>
+  import("./_components/department-cost-chart").then((m) => m.DepartmentCostChart),
+);
+const ExpenseCategoryChart = dynamic(() =>
+  import("./_components/expense-category-chart").then((m) => m.ExpenseCategoryChart),
+);
+const TrendChart = dynamic(() =>
+  import("./_components/trend-chart").then((m) => m.TrendChart),
+);
 
 const DEFAULT_YEAR = 2026;
 const DEFAULT_MONTH = 4;

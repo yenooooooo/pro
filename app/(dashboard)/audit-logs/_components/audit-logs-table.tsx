@@ -28,6 +28,12 @@ const ACTION_LABEL: Record<string, { label: string; tone: "primary" | "success" 
   "approval.rejected": { label: "결재 반려", tone: "warn" },
   "approval.cancelled": { label: "결재 취소", tone: "neutral" },
   "year_end.saved": { label: "연말정산 입력", tone: "primary" },
+  "vendor.created": { label: "거래처 등록", tone: "success" },
+  "vendor.updated": { label: "거래처 수정", tone: "neutral" },
+  "asset.created": { label: "자산 등록", tone: "success" },
+  "asset.updated": { label: "자산 수정", tone: "neutral" },
+  "expense.created": { label: "지출 등록", tone: "success" },
+  "expense.updated": { label: "지출 수정", tone: "neutral" },
 };
 
 const TONE_CLASS: Record<string, string> = {

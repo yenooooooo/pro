@@ -39,7 +39,14 @@ export type AuditAction =
   | "approval.approved"
   | "approval.rejected"
   | "approval.cancelled"
-  | "year_end.saved";
+  | "year_end.saved"
+  | "vendor.created"
+  | "vendor.updated"
+  | "vendor.deleted"
+  | "asset.created"
+  | "asset.updated"
+  | "expense.created"
+  | "expense.updated";
 
 export type AuditEntityType =
   | "payroll"

@@ -18,7 +18,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 
   return (
     <div className="min-h-screen print:min-h-0">
-      <Sidebar />
+      <Sidebar role={userRole} />
       <div className="md:ml-16 lg:ml-72 print:ml-0">
         <TopBar
           userEmail={user?.email ?? null}

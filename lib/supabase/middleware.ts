@@ -60,5 +60,71 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(target);
   }
 
+  // ── RBAC 가드 ────────────────────────────────────────────
+  // 인증된 사용자가 권한 없는 경로 진입 시 /dashboard 로 리다이렉트.
+  // user_roles 조회 실패 시 admin 폴백 (MVP 1인 운영 가정).
+  if (user) {
+    const path = request.nextUrl.pathname;
+    if (!path.startsWith("/api") && path !== "/dashboard") {
+      let role: "admin" | "hr" | "finance" | "employee" = "admin";
+      try {
+        const { data } = await supabase
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .from("user_roles" as any)
+          .select("role")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (data) {
+          role = (data as { role?: typeof role }).role ?? "admin";
+        }
+      } catch {
+        /* fail-soft */
+      }
+      if (!isPathAllowed(role, path)) {
+        const target = request.nextUrl.clone();
+        target.pathname = "/dashboard";
+        target.search = "";
+        return NextResponse.redirect(target);
+      }
+    }
+  }
+
   return response;
+}
+
+/** Edge Runtime 호환 권한 매트릭스 (lib/rbac.ts 와 동기) */
+const ROLE_ACCESS: Record<string, string[]> = {
+  admin: ["*"],
+  hr: [
+    "/employees",
+    "/attendance",
+    "/leave",
+    "/year-end",
+    "/audit-logs",
+    "/settings",
+    "/risks",
+    "/simulator",
+    "/retirement",
+    "/approvals",
+  ],
+  finance: [
+    "/payroll",
+    "/expenses",
+    "/vendors",
+    "/assets",
+    "/closing",
+    "/audit-logs",
+    "/risks",
+    "/simulator",
+    "/retirement",
+    "/approvals",
+  ],
+  employee: ["/leave", "/payroll", "/approvals"],
+};
+
+function isPathAllowed(role: string, path: string): boolean {
+  const allowed = ROLE_ACCESS[role];
+  if (!allowed) return true;
+  if (allowed.includes("*")) return true;
+  return allowed.some((p) => path === p || path.startsWith(`${p}/`));
 }

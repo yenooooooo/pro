@@ -19,6 +19,7 @@ import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils/cn";
 import { ReceiptOcrZone } from "./ReceiptOcrZone";
 import type { OcrParsedReceipt } from "@/lib/ai/types";
+import { recordAudit } from "@/lib/audit/actions";
 
 type Option = { id: string; name: string };
 
@@ -158,14 +159,26 @@ export function ExpenseForm({
     };
 
     if (mode === "create") {
-      const { error } = await supabase
+      const { data: created, error } = await supabase
         .schema("chongmu")
         .from("expenses")
-        .insert(payload);
+        .insert(payload)
+        .select("id")
+        .single();
       if (error) {
         setServerError(error.message);
         return;
       }
+      void recordAudit({
+        action: "expense.created",
+        entityType: "expense",
+        entityId: created?.id ?? null,
+        metadata: {
+          amount: payload.amount,
+          vat: payload.vat,
+          payment_method: payload.payment_method,
+        },
+      });
     } else {
       if (!expenseId) {
         setServerError("expenseId가 누락됐습니다.");
@@ -180,6 +193,12 @@ export function ExpenseForm({
         setServerError(error.message);
         return;
       }
+      void recordAudit({
+        action: "expense.updated",
+        entityType: "expense",
+        entityId: expenseId,
+        metadata: { amount: payload.amount },
+      });
     }
 
     router.push("/expenses");
