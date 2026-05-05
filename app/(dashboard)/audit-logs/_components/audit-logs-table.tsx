@@ -15,6 +15,9 @@ const ACTION_LABEL: Record<string, { label: string; tone: "primary" | "success" 
   "vendor.deleted": { label: "거래처 삭제", tone: "danger" },
   "asset.disposed": { label: "자산 폐기", tone: "danger" },
   "closing.task_toggled": { label: "결산 토글", tone: "neutral" },
+  "settings.rate_updated": { label: "요율 변경", tone: "warn" },
+  "settings.closing_task_added": { label: "결산항목 추가", tone: "success" },
+  "settings.closing_task_removed": { label: "결산항목 삭제", tone: "danger" },
 };
 
 const TONE_CLASS: Record<string, string> = {

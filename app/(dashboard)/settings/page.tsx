@@ -1,6 +1,28 @@
-import { Construction, Settings as SettingsIcon } from "lucide-react";
+import { Settings as SettingsIcon } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
+import { InsuranceRatesForm } from "./_components/insurance-rates-form";
+import { ClosingTasksManager } from "./_components/closing-tasks-manager";
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  const supabase = createClient();
+
+  const [{ data: rates }, { data: tasks }] = await Promise.all([
+    supabase
+      .schema("chongmu")
+      .from("insurance_rates")
+      .select("*")
+      .order("year", { ascending: false }),
+    supabase
+      .schema("chongmu")
+      .from("closing_tasks")
+      .select("*")
+      .order("order_no", { ascending: true }),
+  ]);
+
+  const currentYear = new Date().getFullYear();
+  const currentRate =
+    rates?.find((r) => r.year === currentYear) ?? rates?.[0] ?? null;
+
   return (
     <div className="space-y-stack-lg">
       <header className="space-y-2">
@@ -12,23 +34,38 @@ export default function SettingsPage() {
           시스템 설정
         </h1>
         <p className="text-body-md text-on-surface-variant">
-          요율·세액표 관리, 사용자·권한, 알림 설정, 백업/복원 등이 들어갈 영역입니다.
+          4대보험 요율과 월말결산 체크리스트를 관리합니다. 모든 변경은 감사 로그에 기록됩니다.
         </p>
       </header>
 
-      <div className="glass-panel flex flex-col items-center gap-4 p-12 text-center">
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
-          <Construction aria-hidden className="h-7 w-7 text-primary" />
-        </div>
-        <div className="space-y-1">
-          <p className="text-headline-md font-semibold text-on-surface">준비 중</p>
-          <p className="max-w-md text-body-md text-on-surface-variant">
-            v1.1에서 4대보험 요율·간이세액표·이메일 발송 설정이 추가됩니다. 그 전까지는
-            관리자가 직접 Supabase에서 <code className="rounded bg-surface-container-high px-1.5 py-0.5 text-label-sm">insurance_rates</code> /{" "}
-            <code className="rounded bg-surface-container-high px-1.5 py-0.5 text-label-sm">income_tax_table</code>을 수정합니다.
+      <section className="glass-panel space-y-6 p-6">
+        <div>
+          <h2 className="text-headline-md font-semibold text-on-surface">
+            4대보험 요율
+          </h2>
+          <p className="mt-1 text-body-md text-on-surface-variant">
+            보수월액 기준 근로자 본인 부담률(소수, 예: 4.75% → 0.0475). 매년 갱신.
           </p>
         </div>
-      </div>
+        <InsuranceRatesForm
+          rates={rates ?? []}
+          initialYear={currentRate?.year ?? currentYear}
+          initial={currentRate}
+        />
+      </section>
+
+      <section className="glass-panel space-y-6 p-6">
+        <div>
+          <h2 className="text-headline-md font-semibold text-on-surface">
+            월말결산 체크리스트 템플릿
+          </h2>
+          <p className="mt-1 text-body-md text-on-surface-variant">
+            모든 월의 결산 진행에 사용되는 항목 목록입니다. 추가·삭제 시 다음 달
+            결산부터 반영됩니다.
+          </p>
+        </div>
+        <ClosingTasksManager tasks={tasks ?? []} />
+      </section>
     </div>
   );
 }

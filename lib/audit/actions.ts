@@ -26,7 +26,10 @@ export type AuditAction =
   | "expense.deleted"
   | "vendor.deleted"
   | "asset.disposed"
-  | "closing.task_toggled";
+  | "closing.task_toggled"
+  | "settings.rate_updated"
+  | "settings.closing_task_added"
+  | "settings.closing_task_removed";
 
 export type AuditEntityType =
   | "payroll"
@@ -35,7 +38,9 @@ export type AuditEntityType =
   | "expense"
   | "vendor"
   | "asset"
-  | "closing_history";
+  | "closing_history"
+  | "insurance_rate"
+  | "closing_task";
 
 export type AuditMetadata = Record<string, unknown>;
 
