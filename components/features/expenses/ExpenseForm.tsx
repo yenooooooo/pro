@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils/cn";
+import { ReceiptOcrZone } from "./ReceiptOcrZone";
+import type { OcrParsedReceipt } from "@/lib/ai/types";
 
 type Option = { id: string; name: string };
 
@@ -187,8 +189,25 @@ export function ExpenseForm({
   const isSubmitting = form.formState.isSubmitting || uploading;
   const submitLabel = mode === "create" ? "지출 등록" : "변경 저장";
 
+  function applyOcrResult(data: OcrParsedReceipt) {
+    if (data.date) form.setValue("expense_date", data.date);
+    if (typeof data.amount === "number") form.setValue("amount", data.amount);
+    if (typeof data.vat === "number") form.setValue("vat", data.vat);
+    if (data.payment_method) form.setValue("payment_method", data.payment_method);
+    if (data.description) form.setValue("description", data.description);
+
+    // 거래처: 가맹점명이 vendor list 에 있으면 매칭
+    if (data.vendor_name) {
+      const matched = vendors.find(
+        (v) => v.name.replace(/\s/g, "") === data.vendor_name?.replace(/\s/g, ""),
+      );
+      if (matched) form.setValue("vendor_id", matched.id);
+    }
+  }
+
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-stack-lg" noValidate>
+      {mode === "create" ? <ReceiptOcrZone onResult={applyOcrResult} /> : null}
       <Section title="기본 정보">
         <Field label="지출 일자" required error={form.formState.errors.expense_date?.message}>
           <input

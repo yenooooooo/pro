@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Bell, HelpCircle, LogOut, Search, Settings } from "lucide-react";
+import { Bell, HelpCircle, LogOut, Search, Settings, Sparkles } from "lucide-react";
 import { logoutAction } from "@/lib/auth/actions";
 import { SearchModal } from "@/components/features/topbar/SearchModal";
 import { NotificationsPanel } from "@/components/features/topbar/NotificationsPanel";
 import { HelpModal } from "@/components/features/topbar/HelpModal";
+import { AskNexusModal } from "@/components/features/topbar/AskNexusModal";
 import type { NotificationItem } from "@/lib/notifications/server";
 import { cn } from "@/lib/utils/cn";
 
@@ -20,16 +21,21 @@ export function TopBar({ userEmail, notifications }: TopBarProps) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [bellOpen, setBellOpen] = useState(false);
+  const [askOpen, setAskOpen] = useState(false);
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const bellWrapRef = useRef<HTMLDivElement>(null);
 
-  // Cmd/Ctrl + K → 검색 열기
+  // Cmd/Ctrl + K → 검색, Cmd/Ctrl + J → Ask Nexus
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         setSearchOpen(true);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "j") {
+        e.preventDefault();
+        setAskOpen(true);
       }
     }
     document.addEventListener("keydown", onKey);
@@ -87,6 +93,17 @@ export function TopBar({ userEmail, notifications }: TopBarProps) {
 
         <div className="flex items-center gap-4 md:gap-6">
           <div className="flex items-center gap-1 md:gap-2">
+            {/* Ask Nexus (AI) */}
+            <button
+              type="button"
+              aria-label="Ask Nexus (Ctrl+J)"
+              onClick={() => setAskOpen(true)}
+              className="relative inline-flex min-h-11 min-w-11 items-center justify-center rounded-full p-2 text-primary-electric transition-all duration-200 hover:bg-primary-electric/10 active:scale-95"
+              title="Ask Nexus — AI 자연어 질의 (Ctrl+J)"
+            >
+              <Sparkles className="h-5 w-5" />
+            </button>
+
             {/* 검색 */}
             <button
               type="button"
@@ -196,6 +213,7 @@ export function TopBar({ userEmail, notifications }: TopBarProps) {
 
       <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
       <HelpModal open={helpOpen} onClose={() => setHelpOpen(false)} />
+      <AskNexusModal open={askOpen} onClose={() => setAskOpen(false)} />
     </>
   );
 }

@@ -32,7 +32,9 @@ export type AuditAction =
   | "settings.rate_updated"
   | "settings.closing_task_added"
   | "settings.closing_task_removed"
-  | "report.exported";
+  | "report.exported"
+  | "ai.ocr"
+  | "ai.query";
 
 export type AuditEntityType =
   | "payroll"

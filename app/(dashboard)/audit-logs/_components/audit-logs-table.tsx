@@ -21,6 +21,8 @@ const ACTION_LABEL: Record<string, { label: string; tone: "primary" | "success" 
   "settings.closing_task_added": { label: "결산항목 추가", tone: "success" },
   "settings.closing_task_removed": { label: "결산항목 삭제", tone: "danger" },
   "report.exported": { label: "리포트 다운로드", tone: "primary" },
+  "ai.ocr": { label: "AI 영수증 OCR", tone: "primary" },
+  "ai.query": { label: "AI 자연어 질의", tone: "primary" },
 };
 
 const TONE_CLASS: Record<string, string> = {
