@@ -6,13 +6,25 @@ import { ChevronDown } from "lucide-react";
 type Props = {
   year: number;
   month: number;
+  monthsAhead?: number;
   monthsBack?: number;
 };
 
-export function PeriodFilter({ year, month, monthsBack = 12 }: Props) {
+export function PeriodFilter({
+  year,
+  month,
+  monthsAhead = 2,
+  monthsBack = 12,
+}: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const options = generateOptions(year, month, monthsBack);
+  const today = new Date();
+  const options = generateOptions(
+    today.getFullYear(),
+    today.getMonth() + 1,
+    monthsAhead,
+    monthsBack,
+  );
   const currentValue = `${year}-${month}`;
 
   function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
@@ -46,14 +58,21 @@ export function PeriodFilter({ year, month, monthsBack = 12 }: Props) {
 }
 
 function generateOptions(
-  startYear: number,
-  startMonth: number,
-  count: number,
+  todayYear: number,
+  todayMonth: number,
+  monthsAhead: number,
+  monthsBack: number,
 ): Array<{ value: string; label: string }> {
+  // 오늘 기준 +monthsAhead 부터 -monthsBack 까지 (최신이 위)
   const options: Array<{ value: string; label: string }> = [];
-  let y = startYear;
-  let m = startMonth;
-  for (let i = 0; i < count; i++) {
+  let y = todayYear;
+  let m = todayMonth + monthsAhead;
+  while (m > 12) {
+    m -= 12;
+    y += 1;
+  }
+  const total = monthsAhead + monthsBack + 1;
+  for (let i = 0; i < total; i++) {
     options.push({ value: `${y}-${m}`, label: `${y}년 ${m}월` });
     m -= 1;
     if (m === 0) {
