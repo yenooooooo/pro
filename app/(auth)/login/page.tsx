@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { AlertCircle, ArrowRight, Loader2 } from "lucide-react";
+import { AlertCircle, ArrowRight, Loader2, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { demoLoginAction } from "@/lib/auth/actions";
 
 const LoginSchema = z.object({
   email: z.string().email("올바른 이메일을 입력하세요"),
@@ -19,6 +20,7 @@ type LoginInput = z.infer<typeof LoginSchema>;
 export default function LoginPage() {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [demoPending, startDemoTransition] = useTransition();
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(LoginSchema),
@@ -39,6 +41,19 @@ export default function LoginPage() {
     }
     router.replace("/dashboard");
     router.refresh();
+  }
+
+  function loginAsDemo() {
+    setServerError(null);
+    startDemoTransition(async () => {
+      const result = await demoLoginAction();
+      if (!result.ok) {
+        setServerError(result.error);
+        return;
+      }
+      router.replace("/dashboard");
+      router.refresh();
+    });
   }
 
   const isSubmitting = form.formState.isSubmitting;
@@ -128,6 +143,38 @@ export default function LoginPage() {
             )}
           </button>
         </form>
+
+        {/* 데모 로그인 — 가입·암호 입력 없이 둘러보기 */}
+        <div className="mt-6">
+          <div className="relative my-4 flex items-center">
+            <span className="flex-1 border-t border-outline-variant/30"></span>
+            <span className="px-3 text-label-sm uppercase tracking-widest text-on-surface-variant">
+              또는
+            </span>
+            <span className="flex-1 border-t border-outline-variant/30"></span>
+          </div>
+          <button
+            type="button"
+            onClick={loginAsDemo}
+            disabled={demoPending || isSubmitting}
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-primary-electric/40 bg-primary-electric/10 text-data-tabular font-semibold text-primary-electric transition-colors hover:bg-primary-electric/20 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {demoPending ? (
+              <>
+                <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
+                데모 계정 입장 중…
+              </>
+            ) : (
+              <>
+                <Sparkles aria-hidden className="h-4 w-4" />
+                데모 계정으로 둘러보기
+              </>
+            )}
+          </button>
+          <p className="mt-2 text-center text-label-sm text-on-surface-variant/70">
+            가입 없이 1년치 시나리오 데이터로 모든 기능 체험
+          </p>
+        </div>
 
         <Link
           href="/"
