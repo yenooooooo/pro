@@ -23,6 +23,8 @@ export type AuditAction =
   | "employee.resigned"
   | "leave.granted"
   | "leave.requested"
+  | "leave.approved"
+  | "leave.rejected"
   | "expense.deleted"
   | "vendor.deleted"
   | "asset.disposed"

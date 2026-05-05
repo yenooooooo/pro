@@ -11,6 +11,8 @@ import {
   FileText,
   Download,
   ExternalLink,
+  Clock,
+  CalendarCheck,
 } from "lucide-react";
 
 type Props = {
@@ -20,6 +22,8 @@ type Props = {
 
 type ReportKind =
   | "payroll"
+  | "attendance"
+  | "leave"
   | "employees"
   | "expenses"
   | "assets"
@@ -30,7 +34,8 @@ type ReportDef = {
   title: string;
   description: string;
   format: "xlsx" | "pdf";
-  needsPeriod: boolean;
+  /** "month" — 연/월, "year" — 연도만, "none" — 기간 없음 */
+  period: "month" | "year" | "none";
   icon: typeof Coins;
 };
 
@@ -40,15 +45,31 @@ const REPORTS: ReportDef[] = [
     title: "월별 급여 원장",
     description: "직원별 지급·공제 항목 전체 (xlsx)",
     format: "xlsx",
-    needsPeriod: true,
+    period: "month",
     icon: Coins,
+  },
+  {
+    kind: "attendance",
+    title: "월별 근태",
+    description: "직원별 합계 + 일별 상세 2시트 (xlsx)",
+    format: "xlsx",
+    period: "month",
+    icon: Clock,
+  },
+  {
+    kind: "leave",
+    title: "연차 현황",
+    description: "직원별 잔여 + 신청 이력 2시트 (xlsx)",
+    format: "xlsx",
+    period: "year",
+    icon: CalendarCheck,
   },
   {
     kind: "expenses",
     title: "월별 지출 내역",
     description: "카테고리·거래처·VAT 포함 (xlsx)",
     format: "xlsx",
-    needsPeriod: true,
+    period: "month",
     icon: Receipt,
   },
   {
@@ -56,7 +77,7 @@ const REPORTS: ReportDef[] = [
     title: "직원 전체 명부",
     description: "사번·부서·직급·계약 정보 (xlsx)",
     format: "xlsx",
-    needsPeriod: false,
+    period: "none",
     icon: Users,
   },
   {
@@ -64,7 +85,7 @@ const REPORTS: ReportDef[] = [
     title: "자산 현황",
     description: "취득가·잔존가·만료예정일 (xlsx)",
     format: "xlsx",
-    needsPeriod: false,
+    period: "none",
     icon: Package,
   },
   {
@@ -72,7 +93,7 @@ const REPORTS: ReportDef[] = [
     title: "월말결산 종합 리포트",
     description: "체크리스트 + KPI 한 장 요약 (PDF)",
     format: "pdf",
-    needsPeriod: true,
+    period: "month",
     icon: FileText,
   },
 ];
@@ -104,6 +125,10 @@ export function ReportBuilderModal({ open, onClose }: Props) {
     switch (def.kind) {
       case "payroll":
         return `/api/payroll/export?year=${year}&month=${month}`;
+      case "attendance":
+        return `/api/attendance/export?year=${year}&month=${month}`;
+      case "leave":
+        return `/api/leave/export?year=${year}`;
       case "expenses":
         return `/api/expenses/export?year=${year}&month=${month}`;
       case "employees":
@@ -221,7 +246,7 @@ export function ReportBuilderModal({ open, onClose }: Props) {
               </p>
             </div>
 
-            {def.needsPeriod ? (
+            {def.period !== "none" ? (
               <div className="space-y-3">
                 <div>
                   <label className="block text-label-sm font-semibold text-on-surface-variant">
@@ -239,22 +264,24 @@ export function ReportBuilderModal({ open, onClose }: Props) {
                     ))}
                   </select>
                 </div>
-                <div>
-                  <label className="block text-label-sm font-semibold text-on-surface-variant">
-                    월
-                  </label>
-                  <select
-                    value={month}
-                    onChange={(e) => setMonth(Number(e.target.value))}
-                    className="mt-1 min-h-11 w-full rounded-lg border border-outline-variant/40 bg-surface-container px-3 text-data-tabular text-on-surface outline-none focus:border-primary-electric focus:ring-1 focus:ring-primary-electric"
-                  >
-                    {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-                      <option key={m} value={m}>
-                        {m}월
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                {def.period === "month" ? (
+                  <div>
+                    <label className="block text-label-sm font-semibold text-on-surface-variant">
+                      월
+                    </label>
+                    <select
+                      value={month}
+                      onChange={(e) => setMonth(Number(e.target.value))}
+                      className="mt-1 min-h-11 w-full rounded-lg border border-outline-variant/40 bg-surface-container px-3 text-data-tabular text-on-surface outline-none focus:border-primary-electric focus:ring-1 focus:ring-primary-electric"
+                    >
+                      {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                        <option key={m} value={m}>
+                          {m}월
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : null}
               </div>
             ) : (
               <p className="rounded border border-outline-variant/20 bg-surface-container px-3 py-2 text-label-sm text-on-surface-variant">

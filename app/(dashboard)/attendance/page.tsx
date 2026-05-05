@@ -159,15 +159,14 @@ export default async function AttendancePage({
             <Upload aria-hidden className="h-[18px] w-[18px]" />
             CSV 가져오기
           </Link>
-          <button
-            type="button"
-            disabled
-            aria-label="내보내기 (Phase 5)"
-            className="inline-flex min-h-11 cursor-not-allowed items-center gap-2 rounded-lg border border-outline-variant/50 bg-surface-container px-4 py-2 text-label-sm text-on-surface-variant opacity-60"
+          <a
+            href={`/api/attendance/export?year=${month.isoMonth.slice(0, 4)}&month=${Number(month.isoMonth.slice(5, 7))}`}
+            aria-label="내보내기"
+            className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-outline-variant/50 bg-surface-container px-4 py-2 text-label-sm text-on-surface transition-colors hover:bg-surface-container-high"
           >
             <Download aria-hidden className="h-[18px] w-[18px]" />
             내보내기
-          </button>
+          </a>
           <Link
             href="/attendance/new"
             className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary-electric px-4 py-2 text-label-sm font-semibold text-on-primary transition-colors hover:bg-primary-fixed-dim"

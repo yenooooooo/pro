@@ -11,6 +11,8 @@ const ACTION_LABEL: Record<string, { label: string; tone: "primary" | "success" 
   "employee.resigned": { label: "퇴사 처리", tone: "danger" },
   "leave.granted": { label: "연차 부여", tone: "neutral" },
   "leave.requested": { label: "연차 신청", tone: "neutral" },
+  "leave.approved": { label: "휴가 승인", tone: "success" },
+  "leave.rejected": { label: "휴가 반려", tone: "warn" },
   "expense.deleted": { label: "지출 삭제", tone: "danger" },
   "vendor.deleted": { label: "거래처 삭제", tone: "danger" },
   "asset.disposed": { label: "자산 폐기", tone: "danger" },

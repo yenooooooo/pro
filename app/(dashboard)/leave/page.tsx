@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { createClient } from "@/lib/supabase/server";
+import { LeaveActions } from "./list/_components/leave-actions";
 
 type EmployeeRow = {
   id: string;
@@ -161,15 +162,14 @@ export default async function LeavePage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
-          <button
-            type="button"
-            disabled
-            aria-label="리포트 다운로드 (Phase 5)"
-            className="inline-flex min-h-11 cursor-not-allowed items-center gap-2 rounded-lg border border-outline bg-surface-container px-4 py-2 text-label-sm text-on-surface-variant opacity-60"
+          <a
+            href={`/api/leave/export?year=${currentYear}`}
+            aria-label="리포트 다운로드"
+            className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-outline bg-surface-container px-4 py-2 text-label-sm text-on-surface transition-colors hover:bg-surface-container-high"
           >
             <Download aria-hidden className="h-[18px] w-[18px]" />
             리포트 다운로드
-          </button>
+          </a>
           <Link
             href="/leave/new"
             className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary-electric px-4 py-2 text-label-sm font-semibold text-on-primary transition-colors hover:bg-primary-fixed-dim"
@@ -324,13 +324,12 @@ export default async function LeavePage() {
               <ClipboardList aria-hidden className="h-5 w-5 text-secondary-slate" />
               최근 휴가 신청 내역
             </h3>
-            <button
-              type="button"
-              disabled
-              className="cursor-not-allowed text-label-sm text-on-surface-variant opacity-60"
+            <Link
+              href={"/leave/list" as never}
+              className="text-label-sm text-primary-electric transition-colors hover:text-primary-container"
             >
-              모두 보기
-            </button>
+              모두 보기 →
+            </Link>
           </div>
 
           {(recent ?? []).length === 0 ? (
@@ -377,7 +376,7 @@ export default async function LeavePage() {
                           {r.reason ?? "—"}
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <ActionCell status={r.status} />
+                          <ActionCell status={r.status} requestId={r.id} />
                         </td>
                       </tr>
                     );
@@ -446,24 +445,12 @@ function LeaveTypeBadge({
   );
 }
 
-function ActionCell({ status }: { status: string }) {
-  // status='approved' default라 대부분 이미 처리됨. pending만 결재 액션 노출.
-  // 결재 실제 wire-up은 차후 (Phase 3.8 후보).
+function ActionCell({ status, requestId }: { status: string; requestId: string }) {
+  // pending 만 결재 액션 노출. /leave/list 의 LeaveActions 를 그대로 재사용.
   if (status === "pending") {
     return (
-      <div className="flex justify-end gap-2">
-        <button
-          type="button"
-          className="rounded border border-primary-electric/50 bg-primary-electric/20 px-3 py-1.5 text-label-sm text-primary-electric transition-colors hover:bg-primary-electric/30"
-        >
-          승인
-        </button>
-        <button
-          type="button"
-          className="rounded border border-error-soft/30 bg-error-container/20 px-3 py-1.5 text-label-sm text-error-soft transition-colors hover:bg-error-container/40"
-        >
-          반려
-        </button>
+      <div className="flex justify-end">
+        <LeaveActions requestId={requestId} />
       </div>
     );
   }

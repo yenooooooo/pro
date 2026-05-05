@@ -220,14 +220,15 @@ export default async function ClosingPage({
         <div className="glass-panel flex flex-1 flex-col rounded-xl p-6">
           <div className="mb-6 flex items-center justify-between">
             <h2 className="text-headline-md font-semibold text-white">리포트 미리보기</h2>
-            <button
-              type="button"
+            <a
+              href={`/closing/print?year=${year}&month=${month}`}
+              target="_blank"
+              rel="noopener noreferrer"
               aria-label="리포트 새 창으로 열기"
-              className="text-primary-electric transition-colors hover:text-primary-container disabled:cursor-not-allowed disabled:opacity-50"
-              disabled
+              className="text-primary-electric transition-colors hover:text-primary-container"
             >
               <ExternalLink className="h-5 w-5" />
-            </button>
+            </a>
           </div>
           <div className="relative flex flex-1 flex-col overflow-hidden rounded-lg border border-outline-variant/30 bg-surface-container-low p-4">
             <div className="relative z-10 space-y-4">
