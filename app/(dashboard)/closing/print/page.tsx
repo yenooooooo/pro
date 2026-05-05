@@ -162,7 +162,7 @@ export default async function ClosingPrintPage({
     <article className="print-report mx-auto max-w-[820px] bg-white text-slate-900 print:max-w-none">
       <PrintTrigger />
 
-      <header className="mb-8 border-b-2 border-slate-900 pb-4">
+      <header className="mb-5 border-b-2 border-slate-900 pb-3">
         <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
           Nexus ERP · Monthly Closing Report
         </p>
@@ -174,7 +174,7 @@ export default async function ClosingPrintPage({
         </p>
       </header>
 
-      <section className="mb-8">
+      <section className="mb-5">
         <h2 className="mb-3 text-lg font-semibold">1. 핵심 운영 지표</h2>
         <div className="grid grid-cols-2 gap-3">
           <KpiCell label="총 급여 (지급)" value={formatKRW(totalGross)} />
@@ -186,7 +186,7 @@ export default async function ClosingPrintPage({
         </div>
       </section>
 
-      <section className="mb-8">
+      <section className="mb-5">
         <h2 className="mb-3 text-lg font-semibold">2. 결산 체크리스트</h2>
         {decorated.length === 0 ? (
           <p className="text-sm text-slate-500">등록된 항목이 없습니다.</p>
@@ -235,7 +235,7 @@ export default async function ClosingPrintPage({
         )}
       </section>
 
-      <footer className="mt-12 border-t border-slate-300 pt-4 text-xs text-slate-500">
+      <footer className="report-footer mt-6 border-t border-slate-300 pt-3 text-xs text-slate-500">
         <p>본 리포트는 Nexus ERP 시스템에서 자동 생성되었습니다.</p>
         <p className="mt-1">
           데이터 기준: {monthStart} ~ {monthEnd} · 모든 금액은 KRW
@@ -243,10 +243,20 @@ export default async function ClosingPrintPage({
       </footer>
 
       <style>{`
-        @page { size: A4; margin: 18mm 16mm; }
+        @page { size: A4; margin: 12mm 14mm; }
         @media print {
           body { background: white !important; }
-          .print-report { color: #0f172a !important; }
+          .print-report { color: #0f172a !important; padding: 0 !important; }
+          .print-report table { page-break-inside: auto; }
+          .print-report tr { page-break-inside: avoid; page-break-after: auto; }
+          .print-report thead { display: table-header-group; }
+          .print-report .report-footer {
+            page-break-inside: avoid;
+            break-inside: avoid;
+            page-break-before: avoid;
+            break-before: avoid;
+          }
+          .print-report section { page-break-inside: auto; }
         }
         .print-report { font-family: 'Inter', system-ui, sans-serif; padding: 24px; }
       `}</style>
