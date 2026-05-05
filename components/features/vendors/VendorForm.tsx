@@ -165,13 +165,14 @@ export function VendorForm({ mode, vendorId, initialValues }: Props) {
         <Field label="사업자번호" error={form.formState.errors.business_no?.message}>
           <BusinessNoField form={form} inputClass={inputClass} />
         </Field>
-        <Field label="카테고리" hint="예: 파트너 / 공급사 / 고객사">
-          <input
-            type="text"
-            placeholder="파트너"
-            {...form.register("category")}
-            className={inputClass}
-          />
+        <Field label="카테고리">
+          <select {...form.register("category")} className={inputClass}>
+            <option value="">선택 안 함</option>
+            <option value="partner">협력사</option>
+            <option value="supplier">공급사</option>
+            <option value="customer">고객사</option>
+            <option value="other">기타</option>
+          </select>
         </Field>
       </Section>
 

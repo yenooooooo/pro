@@ -19,6 +19,11 @@ import {
   type DepreciationResult,
 } from "@/lib/assets/depreciation";
 import { AssetFilters } from "./_components/asset-filters";
+import {
+  ASSET_STATUS_LABEL,
+  ASSET_CATEGORY_LABEL,
+  label,
+} from "@/lib/labels";
 
 type AssetDbRow = {
   id: string;
@@ -34,17 +39,19 @@ type AssetDbRow = {
   assignee: { id: string; name: string } | null;
 };
 
+// DB enum 값 → 아이콘
 const DEFAULT_CATEGORY_ICON: Record<string, typeof Package> = {
-  IT기기: Laptop,
-  사무가구: Sofa,
-  차량: Car,
+  it_device: Laptop,
+  furniture: Sofa,
+  vehicle: Car,
 };
 
+// DB enum 값 → 색상
 const STATUS_COLOR: Record<string, string> = {
-  사용중: "border-tertiary-sky/30 bg-tertiary-sky/10 text-tertiary-sky",
-  수리중: "border-primary-electric/30 bg-primary-electric/10 text-primary-electric",
-  폐기: "border-error-soft/30 bg-error-soft/10 text-error-soft",
-  매각: "border-outline-variant/40 bg-surface-container text-on-surface-variant",
+  in_use: "border-tertiary-sky/30 bg-tertiary-sky/10 text-tertiary-sky",
+  repair: "border-primary-electric/30 bg-primary-electric/10 text-primary-electric",
+  disposed: "border-error-soft/30 bg-error-soft/10 text-error-soft",
+  sold: "border-outline-variant/40 bg-surface-container text-on-surface-variant",
 };
 
 const ASSIGNEE_TONES = ["primary", "secondary", "error"] as const;
@@ -280,7 +287,7 @@ export default async function AssetsPage({
                     <li key={g.name}>
                       <div className="mb-1 flex items-baseline justify-between">
                         <span className="text-label-sm font-medium text-on-surface">
-                          {g.name}
+                          {label(ASSET_CATEGORY_LABEL, g.name)}
                         </span>
                         <span className="text-label-sm tabular-nums text-on-surface-variant">
                           {g.count}개 · ₩{formatCompactKRW(g.cost)}
@@ -409,7 +416,7 @@ function AssetRow({ asset }: { asset: DecoratedAsset }) {
               {asset.assetNo}
             </div>
             <div className="text-xs text-on-surface-variant">
-              {asset.category ?? "—"}
+              {asset.category ? label(ASSET_CATEGORY_LABEL, asset.category) : "—"}
             </div>
           </div>
         </Link>
@@ -456,7 +463,7 @@ function AssetRow({ asset }: { asset: DecoratedAsset }) {
               "border-outline-variant/40 bg-surface-container text-on-surface-variant",
           )}
         >
-          {asset.status}
+          {label(ASSET_STATUS_LABEL, asset.status)}
         </span>
       </td>
     </tr>

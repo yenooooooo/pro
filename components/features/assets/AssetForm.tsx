@@ -44,10 +44,18 @@ const Schema = z.object({
 export type AssetFormValues = z.infer<typeof Schema>;
 
 const STATUS_OPTIONS: Array<{ value: AssetFormValues["status"]; label: string }> = [
-  { value: "in_use", label: "사용중" },
-  { value: "repair", label: "수리중" },
+  { value: "in_use", label: "사용 중" },
+  { value: "repair", label: "수리 중" },
   { value: "disposed", label: "폐기" },
   { value: "sold", label: "매각" },
+];
+
+const CATEGORY_OPTIONS: Array<{ value: string; label: string }> = [
+  { value: "it_device", label: "IT 기기" },
+  { value: "furniture", label: "사무가구" },
+  { value: "vehicle", label: "차량" },
+  { value: "equipment", label: "장비" },
+  { value: "other", label: "기타" },
 ];
 
 type Props = {
@@ -90,7 +98,7 @@ export function AssetForm({ mode, assetId, initialValues, employees }: Props) {
       useful_life: values.useful_life ?? null,
       assigned_to: values.assigned_to || null,
       location: values.location ? values.location.trim() : null,
-      status: STATUS_DB_VALUE[values.status],
+      status: values.status,
       memo: values.memo ? values.memo.trim() : null,
     };
 
@@ -159,13 +167,15 @@ export function AssetForm({ mode, assetId, initialValues, employees }: Props) {
             className={inputClass}
           />
         </Field>
-        <Field label="분류" hint="IT기기 / 사무가구 / 차량 / 기타">
-          <input
-            type="text"
-            placeholder="IT기기"
-            {...form.register("category")}
-            className={inputClass}
-          />
+        <Field label="분류" error={form.formState.errors.category?.message}>
+          <select {...form.register("category")} className={inputClass}>
+            <option value="">선택 안 함</option>
+            {CATEGORY_OPTIONS.map((c) => (
+              <option key={c.value} value={c.value}>
+                {c.label}
+              </option>
+            ))}
+          </select>
         </Field>
         <Field label="위치" error={form.formState.errors.location?.message}>
           <input
@@ -300,13 +310,6 @@ export function AssetForm({ mode, assetId, initialValues, employees }: Props) {
   );
 }
 
-const STATUS_DB_VALUE: Record<AssetFormValues["status"], string> = {
-  in_use: "사용중",
-  repair: "수리중",
-  disposed: "폐기",
-  sold: "매각",
-};
-
 const inputClass =
   "min-h-11 w-full rounded-lg border border-outline-variant/50 bg-surface-container-lowest px-3 py-2 text-body-md text-on-surface placeholder:text-outline focus:border-primary-electric focus:outline-none focus:ring-1 focus:ring-primary-electric";
 
@@ -348,7 +351,13 @@ function Field({
   );
 }
 
+/** 과거 한글 enum 으로 저장된 행 호환 */
 export const STATUS_DB_TO_FORM: Record<string, AssetFormValues["status"]> = {
+  in_use: "in_use",
+  repair: "repair",
+  disposed: "disposed",
+  sold: "sold",
+  // 레거시 한글 호환
   사용중: "in_use",
   수리중: "repair",
   폐기: "disposed",

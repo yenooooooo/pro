@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { Search } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { VENDOR_CATEGORY_LABEL, label as toLabel } from "@/lib/labels";
 
 type Props = {
   q: string;
@@ -52,7 +53,7 @@ export function VendorFilters({ q, category, categories }: Props) {
         {categories.map((c) => (
           <CategoryPill
             key={c}
-            label={c}
+            label={toLabel(VENDOR_CATEGORY_LABEL, c)}
             active={category === c}
             onClick={() => setParam("category", c)}
           />

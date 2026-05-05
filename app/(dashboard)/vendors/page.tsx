@@ -15,6 +15,7 @@ import { differenceInDays } from "date-fns";
 import { cn } from "@/lib/utils/cn";
 import { createClient } from "@/lib/supabase/server";
 import { VendorFilters } from "./_components/vendor-filters";
+import { VENDOR_CATEGORY_LABEL, label } from "@/lib/labels";
 
 type VendorRow = {
   id: string;
@@ -271,7 +272,7 @@ function VendorCard({ vendor }: { vendor: DecoratedVendor }) {
         </div>
         {vendor.category ? (
           <span className="inline-flex whitespace-nowrap rounded-md border border-primary-electric/30 bg-primary-electric/10 px-2.5 py-1 text-[11px] font-semibold text-primary-electric">
-            {vendor.category}
+            {label(VENDOR_CATEGORY_LABEL, vendor.category)}
           </span>
         ) : null}
       </div>

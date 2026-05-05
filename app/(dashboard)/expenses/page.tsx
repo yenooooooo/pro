@@ -14,6 +14,7 @@ import { createClient } from "@/lib/supabase/server";
 import { checkBudgets, type BudgetCheck } from "@/lib/expenses/budget-check";
 import { ExpenseFilters } from "./_components/expense-filters";
 import { CsvExportButton } from "./_components/csv-export-button";
+import { PAYMENT_METHOD_LABEL as PAYMENT_LABEL } from "@/lib/labels";
 
 type TxStatus = "approved" | "pending" | "flagged";
 
@@ -50,12 +51,6 @@ const DEFAULT_YEAR = 2026;
 const DEFAULT_MONTH = 4;
 const ANOMALY_AMOUNT_THRESHOLD = 1_000_000;
 
-const PAYMENT_LABEL: Record<string, string> = {
-  card: "카드",
-  cash: "현금",
-  transfer: "계좌이체",
-  other: "기타",
-};
 
 export default async function ExpensesPage({
   searchParams,

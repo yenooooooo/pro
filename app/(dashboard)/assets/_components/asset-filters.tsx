@@ -2,6 +2,11 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronDown, Search } from "lucide-react";
+import {
+  ASSET_CATEGORY_LABEL,
+  ASSET_STATUS_LABEL,
+  label,
+} from "@/lib/labels";
 
 type Option = { value: string; label: string };
 
@@ -52,7 +57,10 @@ export function AssetFilters({ q, category, status, categories, statuses }: Prop
         onChange={(v) => setParam("category", v || null)}
         options={[
           { value: "", label: "전체 분류" },
-          ...categories.map((c) => ({ value: c, label: c })),
+          ...categories.map((c) => ({
+            value: c,
+            label: label(ASSET_CATEGORY_LABEL, c),
+          })),
         ]}
       />
       <Select
@@ -61,7 +69,10 @@ export function AssetFilters({ q, category, status, categories, statuses }: Prop
         onChange={(v) => setParam("status", v || null)}
         options={[
           { value: "", label: "전체 상태" },
-          ...statuses.map((s) => ({ value: s, label: s })),
+          ...statuses.map((s) => ({
+            value: s,
+            label: label(ASSET_STATUS_LABEL, s),
+          })),
         ]}
       />
     </div>
