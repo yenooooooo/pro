@@ -1,12 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, type UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { AlertCircle, Loader2, Save, Trash2 } from "lucide-react";
+import {
+  AlertCircle,
+  Loader2,
+  Save,
+  Trash2,
+  CheckCircle2,
+  ShieldQuestion,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils/cn";
 
@@ -156,13 +163,7 @@ export function VendorForm({ mode, vendorId, initialValues }: Props) {
           />
         </Field>
         <Field label="사업자번호" error={form.formState.errors.business_no?.message}>
-          <input
-            type="text"
-            inputMode="numeric"
-            placeholder="123-45-67890"
-            {...form.register("business_no")}
-            className={cn(inputClass, "tabular-nums")}
-          />
+          <BusinessNoField form={form} inputClass={inputClass} />
         </Field>
         <Field label="카테고리" hint="예: 파트너 / 공급사 / 고객사">
           <input
@@ -297,6 +298,104 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       <h3 className="mb-4 text-headline-md font-semibold text-on-surface">{title}</h3>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">{children}</div>
     </section>
+  );
+}
+
+type VerifyResult =
+  | { ok: true; valid: boolean; status: string; source: string; note?: string }
+  | { ok: false; error: string };
+
+function BusinessNoField({
+  form,
+  inputClass,
+}: {
+  form: UseFormReturn<VendorFormValues>;
+  inputClass: string;
+}) {
+  const [pending, startTransition] = useTransition();
+  const [result, setResult] = useState<VerifyResult | null>(null);
+
+  function verify() {
+    const v = form.getValues("business_no");
+    if (!v) {
+      setResult({ ok: false, error: "사업자번호를 입력하세요." });
+      return;
+    }
+    setResult(null);
+    startTransition(async () => {
+      try {
+        const res = await fetch(
+          `/api/vendors/verify?b=${encodeURIComponent(v)}`,
+        );
+        const json = await res.json();
+        setResult(json);
+      } catch (err) {
+        setResult({
+          ok: false,
+          error: err instanceof Error ? err.message : "네트워크 오류",
+        });
+      }
+    });
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <input
+          type="text"
+          inputMode="numeric"
+          placeholder="123-45-67890"
+          {...form.register("business_no")}
+          className={cn(inputClass, "tabular-nums flex-1")}
+        />
+        <button
+          type="button"
+          onClick={verify}
+          disabled={pending}
+          className="inline-flex min-h-11 items-center gap-1 whitespace-nowrap rounded-lg border border-outline-variant/40 bg-surface-container px-3 text-label-sm text-on-surface transition-colors hover:bg-surface-container-high disabled:opacity-50"
+          title="사업자번호 진위 확인"
+        >
+          {pending ? (
+            <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
+          ) : (
+            <ShieldQuestion aria-hidden className="h-4 w-4" />
+          )}
+          진위 확인
+        </button>
+      </div>
+      {result ? (
+        result.ok ? (
+          <div
+            className={
+              "inline-flex items-start gap-2 rounded-lg border px-3 py-2 text-label-sm " +
+              (result.valid
+                ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300"
+                : "border-error-soft/40 bg-error-soft/10 text-error-soft")
+            }
+          >
+            {result.valid ? (
+              <CheckCircle2 aria-hidden className="mt-0.5 h-4 w-4" />
+            ) : (
+              <AlertCircle aria-hidden className="mt-0.5 h-4 w-4" />
+            )}
+            <div>
+              <p className="font-semibold">
+                {result.valid ? "유효" : "무효"} · {result.status}
+              </p>
+              <p className="mt-0.5 text-on-surface-variant">
+                출처: {result.source === "nts" ? "국세청 odcloud" : "형식 검증"}
+                {result.note ? ` · ${result.note}` : ""}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <p className="inline-flex items-center gap-1 text-label-sm text-error-soft">
+            <AlertCircle aria-hidden className="h-4 w-4" />
+            {result.error}
+          </p>
+        )
+      ) : null}
+    </div>
   );
 }
 
