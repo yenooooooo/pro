@@ -10,6 +10,11 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import {
+  chartTooltipContentStyle,
+  chartTooltipItemStyle,
+  chartTooltipLabelStyle,
+} from "./chart-tooltip-style";
 
 type Datum = { period: string; payroll: number; expense: number };
 
@@ -45,13 +50,9 @@ export function TrendChart({ data }: { data: Datum[] }) {
             }
           />
           <Tooltip
-            contentStyle={{
-              background: "#171f33",
-              border: "1px solid rgba(199,196,215,0.2)",
-              borderRadius: 8,
-              color: "#dae2fd",
-              fontSize: 12,
-            }}
+            contentStyle={chartTooltipContentStyle}
+            itemStyle={chartTooltipItemStyle}
+            labelStyle={chartTooltipLabelStyle}
             formatter={(v: number, name: string) => [
               v.toLocaleString("ko-KR", { maximumFractionDigits: 0 }) + "원",
               name === "payroll" ? "급여" : "지출",

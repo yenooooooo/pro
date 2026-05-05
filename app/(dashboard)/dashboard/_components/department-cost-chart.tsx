@@ -9,6 +9,11 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import {
+  chartTooltipContentStyle,
+  chartTooltipItemStyle,
+  chartTooltipLabelStyle,
+} from "./chart-tooltip-style";
 
 type Datum = { name: string; cost: number };
 
@@ -45,13 +50,9 @@ export function DepartmentCostChart({ data }: { data: Datum[] }) {
           />
           <Tooltip
             cursor={{ fill: "rgba(192,193,255,0.08)" }}
-            contentStyle={{
-              background: "#171f33",
-              border: "1px solid rgba(199,196,215,0.2)",
-              borderRadius: 8,
-              color: "#dae2fd",
-              fontSize: 12,
-            }}
+            contentStyle={chartTooltipContentStyle}
+            itemStyle={chartTooltipItemStyle}
+            labelStyle={chartTooltipLabelStyle}
             formatter={(v: number) =>
               v.toLocaleString("ko-KR", { maximumFractionDigits: 0 }) + "원"
             }

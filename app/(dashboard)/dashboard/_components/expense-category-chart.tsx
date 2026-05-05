@@ -1,6 +1,11 @@
 "use client";
 
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import {
+  chartTooltipContentStyle,
+  chartTooltipItemStyle,
+  chartTooltipLabelStyle,
+} from "./chart-tooltip-style";
 
 type Datum = { name: string; value: number };
 
@@ -34,13 +39,9 @@ export function ExpenseCategoryChart({ data }: { data: Datum[] }) {
               ))}
             </Pie>
             <Tooltip
-              contentStyle={{
-                background: "#171f33",
-                border: "1px solid rgba(199,196,215,0.2)",
-                borderRadius: 8,
-                color: "#dae2fd",
-                fontSize: 12,
-              }}
+              contentStyle={chartTooltipContentStyle}
+              itemStyle={chartTooltipItemStyle}
+              labelStyle={chartTooltipLabelStyle}
               formatter={(v: number) =>
                 v.toLocaleString("ko-KR", { maximumFractionDigits: 0 }) + "원"
               }
