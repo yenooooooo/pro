@@ -29,7 +29,8 @@ export type AuditAction =
   | "closing.task_toggled"
   | "settings.rate_updated"
   | "settings.closing_task_added"
-  | "settings.closing_task_removed";
+  | "settings.closing_task_removed"
+  | "report.exported";
 
 export type AuditEntityType =
   | "payroll"
@@ -40,7 +41,8 @@ export type AuditEntityType =
   | "asset"
   | "closing_history"
   | "insurance_rate"
-  | "closing_task";
+  | "closing_task"
+  | "report";
 
 export type AuditMetadata = Record<string, unknown>;
 

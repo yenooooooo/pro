@@ -18,6 +18,7 @@ const ACTION_LABEL: Record<string, { label: string; tone: "primary" | "success" 
   "settings.rate_updated": { label: "요율 변경", tone: "warn" },
   "settings.closing_task_added": { label: "결산항목 추가", tone: "success" },
   "settings.closing_task_removed": { label: "결산항목 삭제", tone: "danger" },
+  "report.exported": { label: "리포트 다운로드", tone: "primary" },
 };
 
 const TONE_CLASS: Record<string, string> = {

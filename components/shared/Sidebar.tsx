@@ -2,14 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import { FileSearch, Plus, Settings } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { DASHBOARD_NAV } from "@/constants/nav";
+import { ReportBuilderModal } from "@/components/features/reports/ReportBuilderModal";
 
 export function Sidebar() {
   const pathname = usePathname();
+  const [reportOpen, setReportOpen] = useState(false);
 
   return (
+    <>
     <aside
       className={cn(
         "fixed left-0 top-0 z-40 hidden h-screen flex-col border-r border-slate-800/40 bg-[#020617]/80 shadow-[4px_0_24px_rgba(0,0,0,0.5)] backdrop-blur-2xl md:flex print:hidden",
@@ -61,6 +65,8 @@ export function Sidebar() {
       <div className="mt-auto px-3 pb-4 lg:px-6">
         <button
           type="button"
+          onClick={() => setReportOpen(true)}
+          aria-label="리포트 생성"
           className="mb-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-b from-primary-electric to-primary-container px-3 py-2.5 text-body-md font-semibold text-on-primary transition-opacity hover:opacity-90 lg:mb-6 lg:px-4 lg:py-3"
         >
           <Plus className="h-5 w-5 flex-shrink-0" aria-hidden />
@@ -87,6 +93,8 @@ export function Sidebar() {
         </div>
       </div>
     </aside>
+    <ReportBuilderModal open={reportOpen} onClose={() => setReportOpen(false)} />
+    </>
   );
 }
 
