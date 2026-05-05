@@ -3,10 +3,17 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { FileSearch, Plus, Settings } from "lucide-react";
+import { FileSearch, Plus, Settings, Star } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { DASHBOARD_NAV } from "@/constants/nav";
 import { ReportBuilderModal } from "@/components/features/reports/ReportBuilderModal";
+
+export type BookmarkItem = {
+  id: string;
+  kind: "page" | "employee" | "vendor";
+  target: string;
+  label: string;
+};
 
 type Role = "admin" | "hr" | "finance" | "employee";
 
@@ -22,6 +29,7 @@ const ROLE_NAV_ACCESS: Record<Role, string[]> = {
     "/simulator",
     "/retirement",
     "/approvals",
+    "/calendar",
   ],
   finance: [
     "/dashboard",
@@ -34,6 +42,7 @@ const ROLE_NAV_ACCESS: Record<Role, string[]> = {
     "/simulator",
     "/retirement",
     "/approvals",
+    "/calendar",
   ],
   employee: ["/dashboard", "/leave", "/payroll", "/approvals"],
 };
@@ -48,9 +57,10 @@ function canSee(role: Role | undefined, href: string): boolean {
 
 type Props = {
   role?: Role;
+  bookmarks?: BookmarkItem[];
 };
 
-export function Sidebar({ role }: Props = {}) {
+export function Sidebar({ role, bookmarks = [] }: Props = {}) {
   const pathname = usePathname();
   const [reportOpen, setReportOpen] = useState(false);
   const visibleNav = DASHBOARD_NAV.filter((item) => canSee(role, item.href));
@@ -134,6 +144,35 @@ export function Sidebar({ role }: Props = {}) {
             <span className="hidden lg:inline">감사 로그</span>
           </Link>
         </div>
+
+        {/* 즐겨찾기 (lg 이상에서만) */}
+        {bookmarks.length > 0 && (
+          <div className="mt-4 hidden border-t border-slate-800/30 pt-4 lg:block">
+            <p className="mb-2 flex items-center gap-1 px-2 text-[10px] font-bold uppercase tracking-widest text-slate-600">
+              <Star aria-hidden className="h-3 w-3" />
+              즐겨찾기
+            </p>
+            <ul className="space-y-0.5">
+              {bookmarks.slice(0, 6).map((b) => (
+                <li key={b.id}>
+                  <Link
+                    href={
+                      (b.kind === "employee"
+                        ? `/employees/${b.target}`
+                        : b.kind === "vendor"
+                          ? `/vendors`
+                          : b.target) as never
+                    }
+                    title={b.label}
+                    className="flex min-h-9 items-center gap-2 rounded px-2 py-1 text-label-sm text-slate-500 transition-colors hover:bg-slate-800/20 hover:text-slate-200"
+                  >
+                    <span className="truncate">{b.label}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </aside>
     <ReportBuilderModal open={reportOpen} onClose={() => setReportOpen(false)} />

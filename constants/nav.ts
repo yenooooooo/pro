@@ -14,6 +14,7 @@ import {
   PiggyBank,
   FileSignature,
   Calendar,
+  CalendarDays,
 } from "lucide-react";
 
 export type NavItem = {
@@ -39,4 +40,5 @@ export const DASHBOARD_NAV: NavItem[] = [
   { label: "인건비 시뮬", href: "/simulator", icon: TrendingUp },
   { label: "퇴직급여", href: "/retirement", icon: PiggyBank },
   { label: "연말정산", href: "/year-end", icon: Calendar },
+  { label: "세무 캘린더", href: "/calendar", icon: CalendarDays },
 ];

@@ -31,7 +31,8 @@ type ReportKind =
   | "assets"
   | "retirement"
   | "insurance_edi"
-  | "closing_pdf";
+  | "closing_pdf"
+  | "annual_pdf";
 
 type ReportDef = {
   kind: ReportKind;
@@ -109,6 +110,14 @@ const REPORTS: ReportDef[] = [
     icon: FileBarChart,
   },
   {
+    kind: "annual_pdf",
+    title: "연간 운영 리포트",
+    description: "1년 KPI 추세 + 입퇴사 + 결산 완료율 (PDF)",
+    format: "pdf",
+    period: "year",
+    icon: FileText,
+  },
+  {
     kind: "closing_pdf",
     title: "월말결산 종합 리포트",
     description: "체크리스트 + KPI 한 장 요약 (PDF)",
@@ -161,6 +170,8 @@ export function ReportBuilderModal({ open, onClose }: Props) {
         return `/api/filing/insurance-edi?year=${year}&month=${month}`;
       case "closing_pdf":
         return `/closing/print?year=${year}&month=${month}`;
+      case "annual_pdf":
+        return `/reports/annual?year=${year}`;
     }
   }
 

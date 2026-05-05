@@ -16,9 +16,29 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const notifications = await getNotifications();
   const userRole = await getCurrentUserRole();
 
+  // 즐겨찾기 (UX3)
+  let bookmarks: { id: string; kind: "page" | "employee" | "vendor"; target: string; label: string }[] = [];
+  if (user) {
+    try {
+      const { data } = await supabase
+        .schema("chongmu")
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from("bookmarks" as any)
+        .select("id, kind, target, label")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (Array.isArray(data)) {
+        bookmarks = data as unknown as typeof bookmarks;
+      }
+    } catch {
+      /* fail-soft — 마이그레이션 미적용 시 */
+    }
+  }
+
   return (
     <div className="min-h-screen print:min-h-0">
-      <Sidebar role={userRole} />
+      <Sidebar role={userRole} bookmarks={bookmarks} />
       <div className="md:ml-16 lg:ml-72 print:ml-0">
         <TopBar
           userEmail={user?.email ?? null}
