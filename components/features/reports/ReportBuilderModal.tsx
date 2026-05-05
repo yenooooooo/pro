@@ -13,6 +13,8 @@ import {
   ExternalLink,
   Clock,
   CalendarCheck,
+  PiggyBank,
+  FileBarChart,
 } from "lucide-react";
 
 type Props = {
@@ -27,6 +29,8 @@ type ReportKind =
   | "employees"
   | "expenses"
   | "assets"
+  | "retirement"
+  | "insurance_edi"
   | "closing_pdf";
 
 type ReportDef = {
@@ -89,6 +93,22 @@ const REPORTS: ReportDef[] = [
     icon: Package,
   },
   {
+    kind: "retirement",
+    title: "퇴직급여 충당부채",
+    description: "직원별 누적 충당금 (xlsx)",
+    format: "xlsx",
+    period: "none",
+    icon: PiggyBank,
+  },
+  {
+    kind: "insurance_edi",
+    title: "4대보험 EDI 신고용",
+    description: "직원별 보수월액·공제·회사부담 CSV",
+    format: "xlsx",
+    period: "month",
+    icon: FileBarChart,
+  },
+  {
     kind: "closing_pdf",
     title: "월말결산 종합 리포트",
     description: "체크리스트 + KPI 한 장 요약 (PDF)",
@@ -135,6 +155,10 @@ export function ReportBuilderModal({ open, onClose }: Props) {
         return `/api/employees/export`;
       case "assets":
         return `/api/assets/export`;
+      case "retirement":
+        return `/api/retirement/export`;
+      case "insurance_edi":
+        return `/api/filing/insurance-edi?year=${year}&month=${month}`;
       case "closing_pdf":
         return `/closing/print?year=${year}&month=${month}`;
     }

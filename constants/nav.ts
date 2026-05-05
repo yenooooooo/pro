@@ -11,6 +11,7 @@ import {
   ClipboardCheck,
   ShieldAlert,
   TrendingUp,
+  PiggyBank,
 } from "lucide-react";
 
 export type NavItem = {
@@ -33,4 +34,5 @@ export const DASHBOARD_NAV: NavItem[] = [
   { label: "월말결산", href: "/closing", icon: ClipboardCheck },
   { label: "법적 리스크", href: "/risks", icon: ShieldAlert },
   { label: "인건비 시뮬", href: "/simulator", icon: TrendingUp },
+  { label: "퇴직급여", href: "/retirement", icon: PiggyBank },
 ];
