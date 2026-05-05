@@ -16,6 +16,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
 import { ResignButton } from "./_components/ResignButton";
+import { AttendanceHistoryTab } from "./_components/attendance-history-tab";
+import { PayrollHistoryTab } from "./_components/payroll-history-tab";
 import { cn } from "@/lib/utils/cn";
 import { maskBankAccount } from "@/lib/utils/mask";
 import { createClient } from "@/lib/supabase/server";
@@ -73,6 +75,26 @@ type LeaveBalance = {
   remaining: number;
 };
 
+type AttendanceHistoryRow = {
+  work_date: string;
+  regular_hours: number;
+  overtime_hours: number;
+  night_hours: number;
+  holiday_hours: number;
+};
+
+type PayrollHistoryRow = {
+  id: string;
+  employee_id: string;
+  pay_year: number;
+  pay_month: number;
+  base_salary: number;
+  gross_pay: number;
+  total_deduction: number;
+  net_pay: number;
+  status: string;
+};
+
 export default async function EmployeeDetailPage({
   params,
   searchParams,
@@ -105,6 +127,9 @@ export default async function EmployeeDetailPage({
   const isActive = emp.status === "active";
 
   let leaveBalance: LeaveBalance | null = null;
+  let attendanceRows: AttendanceHistoryRow[] = [];
+  let payrollRows: PayrollHistoryRow[] = [];
+
   if (tab === "leave") {
     const { data } = await supabase
       .from("leave_balances")
@@ -113,6 +138,34 @@ export default async function EmployeeDetailPage({
       .eq("year", 2026)
       .maybeSingle();
     leaveBalance = data;
+  } else if (tab === "attendance") {
+    // 최근 12개월
+    const today = new Date();
+    const since = new Date(today);
+    since.setMonth(since.getMonth() - 12);
+    const sinceStr = `${since.getFullYear()}-${String(since.getMonth() + 1).padStart(2, "0")}-01`;
+    const { data } = await supabase
+      .from("attendance")
+      .select(
+        "work_date, regular_hours, overtime_hours, night_hours, holiday_hours",
+      )
+      .eq("employee_id", emp.id)
+      .gte("work_date", sinceStr)
+      .order("work_date", { ascending: false })
+      .returns<AttendanceHistoryRow[]>();
+    attendanceRows = data ?? [];
+  } else if (tab === "payroll") {
+    const { data } = await supabase
+      .from("payroll")
+      .select(
+        "id, employee_id, pay_year, pay_month, base_salary, gross_pay, total_deduction, net_pay, status",
+      )
+      .eq("employee_id", emp.id)
+      .order("pay_year", { ascending: false })
+      .order("pay_month", { ascending: false })
+      .limit(12)
+      .returns<PayrollHistoryRow[]>();
+    payrollRows = data ?? [];
   }
 
   return (
@@ -195,15 +248,9 @@ export default async function EmployeeDetailPage({
       ) : tab === "leave" ? (
         <LeaveTab balance={leaveBalance} />
       ) : tab === "attendance" ? (
-        <PlaceholderTab
-          title="근태이력"
-          message="Phase 3에서 attendance 데이터와 연결되어 월별 근무·연장·야간·휴일 시간이 집계됩니다."
-        />
+        <AttendanceHistoryTab rows={attendanceRows} />
       ) : (
-        <PlaceholderTab
-          title="급여이력"
-          message="Phase 5에서 payroll 데이터와 연결되어 월별 명세서·공제 내역을 확인할 수 있습니다."
-        />
+        <PayrollHistoryTab rows={payrollRows} />
       )}
     </div>
   );
