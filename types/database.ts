@@ -14,6 +14,81 @@ export type Database = {
   }
   chongmu: {
     Tables: {
+      year_end_settlements: {
+        Row: {
+          id: string
+          employee_id: string
+          year: number
+          spouse: boolean
+          children_count: number
+          elder_count: number
+          disabled_count: number
+          insurance_premium: number
+          medical_expense: number
+          education_expense: number
+          donation: number
+          housing_loan: number
+          pension_account: number
+          credit_card: number
+          cash_receipt: number
+          total_income: number
+          determined_tax: number
+          prepaid_tax: number
+          refund_amount: number
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          employee_id: string
+          year: number
+          spouse?: boolean
+          children_count?: number
+          elder_count?: number
+          disabled_count?: number
+          insurance_premium?: number
+          medical_expense?: number
+          education_expense?: number
+          donation?: number
+          housing_loan?: number
+          pension_account?: number
+          credit_card?: number
+          cash_receipt?: number
+          total_income?: number
+          determined_tax?: number
+          prepaid_tax?: number
+          refund_amount?: number
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          employee_id?: string
+          year?: number
+          spouse?: boolean
+          children_count?: number
+          elder_count?: number
+          disabled_count?: number
+          insurance_premium?: number
+          medical_expense?: number
+          education_expense?: number
+          donation?: number
+          housing_loan?: number
+          pension_account?: number
+          credit_card?: number
+          cash_receipt?: number
+          total_income?: number
+          determined_tax?: number
+          prepaid_tax?: number
+          refund_amount?: number
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       approval_requests: {
         Row: {
           id: string

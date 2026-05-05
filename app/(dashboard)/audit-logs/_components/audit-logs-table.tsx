@@ -27,6 +27,7 @@ const ACTION_LABEL: Record<string, { label: string; tone: "primary" | "success" 
   "approval.approved": { label: "결재 승인", tone: "success" },
   "approval.rejected": { label: "결재 반려", tone: "warn" },
   "approval.cancelled": { label: "결재 취소", tone: "neutral" },
+  "year_end.saved": { label: "연말정산 입력", tone: "primary" },
 };
 
 const TONE_CLASS: Record<string, string> = {

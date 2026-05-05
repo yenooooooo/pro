@@ -13,6 +13,7 @@ import {
   TrendingUp,
   PiggyBank,
   FileSignature,
+  Calendar,
 } from "lucide-react";
 
 export type NavItem = {
@@ -37,4 +38,5 @@ export const DASHBOARD_NAV: NavItem[] = [
   { label: "법적 리스크", href: "/risks", icon: ShieldAlert },
   { label: "인건비 시뮬", href: "/simulator", icon: TrendingUp },
   { label: "퇴직급여", href: "/retirement", icon: PiggyBank },
+  { label: "연말정산", href: "/year-end", icon: Calendar },
 ];

@@ -38,7 +38,8 @@ export type AuditAction =
   | "approval.created"
   | "approval.approved"
   | "approval.rejected"
-  | "approval.cancelled";
+  | "approval.cancelled"
+  | "year_end.saved";
 
 export type AuditEntityType =
   | "payroll"
@@ -51,7 +52,8 @@ export type AuditEntityType =
   | "insurance_rate"
   | "closing_task"
   | "report"
-  | "approval_request";
+  | "approval_request"
+  | "year_end";
 
 export type AuditMetadata = Record<string, unknown>;
 

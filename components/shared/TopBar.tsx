@@ -16,9 +16,10 @@ import { cn } from "@/lib/utils/cn";
 type TopBarProps = {
   userEmail: string | null;
   notifications: NotificationItem[];
+  userRole?: string | null;
 };
 
-export function TopBar({ userEmail, notifications }: TopBarProps) {
+export function TopBar({ userEmail, notifications, userRole }: TopBarProps) {
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -198,6 +199,11 @@ export function TopBar({ userEmail, notifications }: TopBarProps) {
                   <p className="mt-0.5 truncate text-body-md font-medium text-on-surface">
                     {userEmail ?? "—"}
                   </p>
+                  {userRole ? (
+                    <p className="mt-1 inline-flex items-center gap-1 rounded bg-primary-electric/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary-electric">
+                      {userRole}
+                    </p>
+                  ) : null}
                 </div>
                 <form action={logoutAction}>
                   <button
