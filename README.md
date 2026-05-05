@@ -1,255 +1,305 @@
-# Nexus ERP
+# Nexus ERP — Enterprise Edition
 
-> 중소기업(~50인) 1인 총무 담당자의 월간 반복 업무를 **하나의 웹앱으로 통합**한 미니 ERP.
-> **엑셀 파일 10개 → 웹앱 1개.**
+> **중소기업 1인 총무 담당자를 위한 통합 미니 ERP.**
+> 직원·근태·급여·연차·지출·자산·결산을 하나로. 근로기준법 자동 준수 + AI 분석.
 
-근로기준법·소득세법·국세청 간이세액표를 코드로 옮긴 **법적 정확성**, 직원→근태→급여→대시보드로 이어지는 **데이터 연결성**, 월말결산 체크리스트와 연차 촉진 알림 같은 **실무 디테일**에 초점을 맞춘 프로덕션 완성형 사이드 프로젝트.
+[![CI](https://github.com/yenooooooo/pro/actions/workflows/ci.yml/badge.svg)](https://github.com/yenooooooo/pro/actions/workflows/ci.yml)
+[![Live Demo](https://img.shields.io/badge/Live-pro--gules--beta.vercel.app-c0c1ff?style=flat&logo=vercel&logoColor=white)](https://pro-gules-beta.vercel.app/)
+[![Tech](https://img.shields.io/badge/Next.js-14_App_Router-black?logo=nextdotjs)](https://nextjs.org/)
+[![Tech](https://img.shields.io/badge/Supabase-Postgres+RLS-3ECF8E?logo=supabase&logoColor=white)](https://supabase.com/)
+[![Tech](https://img.shields.io/badge/Gemini-Free_tier-7bd0ff?logo=google&logoColor=white)](https://aistudio.google.com/)
 
 ---
 
-## 🌐 라이브 데모
+## 🎯 라이브 데모
 
-| 항목 | 값 |
+**https://pro-gules-beta.vercel.app/** → 우측 **"데모 계정으로 둘러보기"** 클릭
+
+가입·암호 입력 없이 1년치 시나리오 데이터 (직원 15명 · 근태 2,700행 · 급여 135건 · 지출 150건+) 로 모든 기능 즉시 체험.
+
+---
+
+## 차별화 14종 (대기업 ERP 가 못 따라오는 부분)
+
+### 🤖 AI 기반 자동화 (Gemini 무료 tier + Tesseract.js fallback)
+
+| 기능 | 단축키/위치 | 동작 |
+|---|---|---|
+| **Ask Nexus — 자연어 질의** | 상단바 ✨ / `Ctrl+J` | "개발팀 평균 기본급은?" → SQL whitelist 검증 → 답변 + 인사이트 |
+| **영수증 OCR 듀얼모드** | 지출 등록 폼 | 사진 1장 → 일자·금액·VAT·거래처 자동 입력. Gemini 우선, 실패 시 Tesseract.js |
+
+### ⚖️ 한국 노무·세무 특화
+
+| 기능 | 근거 |
 |---|---|
-| URL | **<https://pro-gules-beta.vercel.app/>** |
-| 테스트 계정 | _요청 시 별도 안내 (이력서·포트폴리오 링크 통해)_ |
+| **법적 리스크 자동 점검** | 근기법 §53 (주 52h), §60 (연차 촉진), 최저임금법, 매월 10일 신고 마감 |
+| **인건비 시뮬레이터** | 채용·일괄 인상·최저임금 변동 시 월/연 비용 임팩트 실시간 계산 |
+| **연말정산 자동화** | 소득세법 §45 — 인적공제 + 특별공제 + 누진세율 7단계 자동 |
+| **퇴직급여 충당부채** | 근퇴법 §8 — 1년 이상 근속자 누적 충당금 자동 계산 |
+| **4대보험 EDI 신고용 CSV** | 직원별 보수월액·근로자/회사 부담 자동 |
+| **거래처 진위확인** | 국세청 odcloud API + 사업자번호 체크섬 |
 
-> 배포 절차는 [`docs/deployment.md`](./docs/deployment.md) 참조. 자동 배포(main 푸시 시) 활성화됨.
+### 🛡️ 운영급 인프라
 
----
-
-## 🖼️ 주요 화면
-
-| 대시보드 | 급여 일괄 계산 |
+| 기능 | 비고 |
 |---|---|
-| ![대시보드](./docs/screenshots/01_dashboard.png) | ![급여](./docs/screenshots/02_payroll.png) |
-
-| 급여명세서 (인쇄/PDF) | 월말결산 체크리스트 |
-|---|---|
-| ![명세서](./docs/screenshots/03_payslip.png) | ![결산](./docs/screenshots/04_closing.png) |
-
-> 스크린샷은 `docs/screenshots/`에 차례로 추가. 시연 GIF는 `docs/demo.gif`.
-
----
-
-## ✨ 기능 요약
-
-| 모듈 | 핵심 기능 |
-|---|---|
-| **직원** | CRUD, 부서·직급, 계좌번호 마스킹, 퇴사 처리(soft delete) |
-| **근태** | 일별 입력 + CSV 가져오기, 연장/야간/휴일/주52h 자동 집계, 위반 경고 |
-| **연차** | 입사일/회계연도 기준 자동 발생, 잔여 추적, 사용률 80% 미만 자동 감지 |
-| **급여 ★** | 통상시급(209h) → 수당(연장1.5/야간0.5/휴일1.5·2.0) → 4대보험(상하한 적용) → 간이세액표 조회 → 명세서 인쇄/PDF |
-| **지출** | 카테고리·거래처 연결, 영수증 업로드(Storage), 월 한도 80%/100% 알림, CSV 내보내기 |
-| **거래처** | 사업자번호 검증, 계약 만료 30일 전 배지 |
-| **자산** | 정액법 감가상각, 내용연수 만료 6개월 전 알림, 직원 배정 |
-| **결산** | 8개 항목 체크리스트 + 진행률, 월별 이력 |
-| **대시보드** | KPI 4종(급여/지출/연차촉진/결산) + 차트 3종(부서별·카테고리별·6개월 추세) + 알림 패널 |
+| **전자결재 다단 결재선** | 1~5단계 결재선 + 단계별 audit log + 이메일 알림 |
+| **RBAC 4단계** | admin / hr / finance / employee + 미들웨어 가드 + RLS |
+| **감사 로그** | 모든 민감 행위 자동 기록 (28종 액션) |
+| **이메일 알림** | Resend — 결재 발의/승인/반려 자동 발송 |
+| **PWA + 푸시 인프라** | manifest + service worker, 홈 화면 추가 |
+| **실시간 협업 presence** | 같은 페이지 사용자 아바타 (Supabase Realtime) |
+| **사이트 투어 + 데모 모드** | 첫 방문 5단계 안내 + 노란 배너 + 24시간 초기화 |
 
 ---
 
-## 🏗️ 기술 스택
+## 핵심 모듈 17종
 
-```
-Frontend   Next.js 14 (App Router) · TypeScript (strict) · Tailwind + shadcn/ui
-           React Hook Form + Zod · TanStack Table · Recharts · date-fns
-Backend    Supabase (Postgres + Auth + Storage + RLS) · Next Route Handlers
-Tests      Vitest (122 unit tests, 계산 로직 100%)
-Deploy     Vercel · GitHub
-```
+| 모듈 | 경로 | 비고 |
+|---|---|---|
+| 대시보드 | `/dashboard` | KPI 4종 + 부서별 인건비 + 카테고리별 지출 + 6개월 추세 |
+| 직원 정보 | `/employees` | CRUD + 엑셀 가져오기 + 근태/급여/연차 탭 |
+| 근태 | `/attendance` | 일별 입력 + CSV 가져오기 + 월별 직원 합계 |
+| 급여 | `/payroll` | 일괄 계산 + 명세서 PDF + 엑셀 원장 |
+| 연차 | `/leave` | 발생/사용/잔여 + 결재 워크플로우 + 전체 신청 이력 |
+| 지출 | `/expenses` | OCR 자동 등록 + 카테고리/거래처 + 월별 원장 |
+| 거래처 | `/vendors` | 사업자번호 진위확인 + 계약 만료 알림 |
+| 자산 | `/assets` | 정액법 감가상각 + 내용연수 추적 + 잔존가 |
+| 월말결산 | `/closing` | 8단계 체크리스트 + 종합 PDF 리포트 |
+| 전자결재 | `/approvals` | 다단 결재선 + 이메일 알림 |
+| 법적 리스크 | `/risks` | 5종 자동 점검 |
+| 인건비 시뮬 | `/simulator` | 슬라이더 4개로 What-if 분석 |
+| 퇴직급여 | `/retirement` | 충당부채 자동 계산 + 부서별 + 엑셀 export |
+| 연말정산 | `/year-end` | 직원별 공제 입력 + 결정세액 추정 |
+| 시스템 설정 | `/settings` | 4대보험 요율 편집 + 결산 체크리스트 관리 |
+| 감사 로그 | `/audit-logs` | 액션 필터 + 페이지네이션 |
+| 리포트 생성 | 사이드바 버튼 | xlsx 9종 + PDF 1종 |
 
 ---
 
-## 🧭 아키텍처
+## 기술 스택
+
+### Frontend
+- **Next.js 14** App Router · Server Components · Server Actions
+- **TypeScript** strict
+- **Tailwind CSS** + 자체 디자인 토큰 (Stitch "Executive Command")
+- **React Hook Form** + **Zod**
+- **Recharts** (dynamic import)
+- **lucide-react**
+
+### Backend & DB
+- **Supabase** PostgreSQL + Auth + Storage + Realtime
+- **Row Level Security** — 역할 기반 데이터 격리
+- **Server Actions** + Route Handlers
+
+### AI
+- **Google Gemini 2.5 Flash** (무료 tier — 자연어 + Vision OCR)
+- **Tesseract.js** (오프라인 fallback)
+
+### 외부 연동
+- **Resend** (이메일, 무료 100건/일)
+- **국세청 odcloud API** (사업자번호 진위)
+
+### 인프라
+- **Vercel** (배포 + Preview + Analytics)
+- **GitHub Actions** (lint · typecheck · test · build CI)
+- **ExcelJS** (xlsx 생성)
+- **PWA** (자체 SW + Manifest)
+
+---
+
+## 아키텍처
 
 ```mermaid
-flowchart LR
-    subgraph Client[Next.js App Router]
-        Page[Server Components]
-        Client[Client Components<br/>RHF + Zod]
-        Page --> Client
+graph TB
+    subgraph "Client"
+        UI[Next.js App<br/>Server + Client Components]
+    end
+    subgraph "Edge"
+        MW[middleware.ts<br/>Auth + RBAC Guard]
+    end
+    subgraph "Server"
+        SA[Server Actions<br/>+ Route Handlers]
+        CALC[lib/calculators<br/>급여 · 연차 · 퇴직금]
+    end
+    subgraph "External"
+        SB[(Supabase<br/>Postgres + Auth + Storage)]
+        GEMINI[Gemini API<br/>자연어 + Vision]
+        RESEND[Resend Email]
+        NTS[국세청 odcloud]
     end
 
-    subgraph Calc[lib/calculators<br/>순수 함수 + 122 tests]
-        Pay[payroll.ts]
-        Ins[insurance.ts]
-        Tax[income-tax.ts]
-        Leave[leave.ts]
-        Sev[severance.ts]
-    end
+    UI -->|Cookies + RLS| MW
+    MW -->|Allow / Redirect| UI
+    UI -->|Action invoke| SA
+    SA --> CALC
+    SA -->|RLS-aware query| SB
+    SA -->|Tool use + Whitelist| GEMINI
+    SA -->|Notify| RESEND
+    SA -->|Verify| NTS
+    UI -.->|Realtime presence| SB
+    UI -.->|Storage upload| SB
 
-    subgraph API[/app/api/*]
-        PayrollAPI[payroll/calculate]
-        ConfirmAPI[payroll/confirm]
-        AccrualAPI[leave/accrual]
-        KPIAPI[dashboard/kpi]
-    end
-
-    subgraph DB[Supabase Postgres / chongmu schema]
-        Emp[(employees)]
-        Att[(attendance)]
-        Payroll[(payroll)]
-        Rates[(insurance_rates<br/>income_tax_table)]
-        Storage[(storage: receipts)]
-    end
-
-    Page --> API
-    Client --> API
-    API --> Calc
-    API --> DB
-    Calc -. 순수 함수 .-> Calc
-    DB -. RLS .-> API
+    style GEMINI fill:#7bd0ff,color:#000
+    style RESEND fill:#fbbf24,color:#000
+    style NTS fill:#86efac,color:#000
+    style SB fill:#3ECF8E,color:#000
 ```
-
-핵심 설계 원칙:
-- **계산 로직은 순수 함수**(`lib/calculators/*`) — DB 의존 0, 테스트 가능.
-- **요율은 코드가 아닌 DB**(`insurance_rates`, `income_tax_table`) — 매년 갱신해도 코드 무수정.
-- **읽기는 Server Component, 쓰기는 Server Action / Route Handler**.
-- **RLS로 인증된 관리자만 CRUD** — 클라이언트 번들에 `service_role` 키 절대 미포함.
 
 ---
 
-## 💡 주요 비즈니스 로직 (코드 발췌)
-
-### 통상시급·수당 계산 — `lib/calculators/payroll.ts`
+## 비즈니스 로직 정확성
 
 ```ts
-const MONTHLY_REGULAR_HOURS = 209;          // 주 40h × 4.345주
-const OVERTIME_RATE = 1.5;                  // 근로기준법 제56조
-const NIGHT_RATE_PREMIUM = 0.5;             // 야간 가산분만 (연장과 별도 합산)
-const HOLIDAY_RATE_WITHIN_8H = 1.5;
-const HOLIDAY_RATE_OVER_8H = 2.0;
-
-// 비과세 한도 (2024 개정 반영)
-const MEAL_NON_TAXABLE_LIMIT = 200_000;     // 식대
-const CAR_ALLOWANCE_NON_TAXABLE_LIMIT = 200_000;  // 자가운전
-const CHILDCARE_NON_TAXABLE_LIMIT = 200_000;      // 6세 이하 양육수당
-
-const regularHourlyWage = baseSalary / MONTHLY_REGULAR_HOURS;
-
-// 포괄임금제: 기본급에 포함된 연장시간만큼 차감
-const overtimeHoursEffective = Math.max(
-  0,
-  overtimeHours - (inclusiveOvertimeHours ?? 0),
-);
-const overtimePay = Math.round(regularHourlyWage * overtimeHoursEffective * OVERTIME_RATE);
-
-const nonTaxableTotal =
-  Math.min(mealAllowance, MEAL_NON_TAXABLE_LIMIT) +
-  Math.min(carAllowance, CAR_ALLOWANCE_NON_TAXABLE_LIMIT) +
-  Math.min(childcareAllowance, CHILDCARE_NON_TAXABLE_LIMIT);
-
-const grossPay = baseSalary + overtimePay + nightPay + holidayPay + ...allowances;
-const taxableIncome = grossPay - nonTaxableTotal;  // 4대보험·소득세 산정 기준
+// lib/calculators/payroll.ts — 근기법 §56
+export const MONTHLY_REGULAR_HOURS = 209;        // 40h × 365/7/12 ≈ 4.345주
+export const OVERTIME_RATE = 1.5;
+export const NIGHT_RATE_PREMIUM = 0.5;           // 22~06시 가산분
+export const HOLIDAY_RATE_WITHIN_8H = 1.5;
+export const HOLIDAY_RATE_OVER_8H = 2.0;
+export const MEAL_TAX_FREE_LIMIT = 200_000;      // 월 20만원 비과세
 ```
-
-### 연차 발생 — `lib/calculators/leave.ts`
-
-```
-입사 1년 미만 : 1개월 개근당 1일 (최대 11일) — 근로기준법 제60조 ②항
-입사 1년     : 15일                            — 제60조 ①항
-3년차 이후   : 15 + floor((근속연수-1)/2)      — 제60조 ④항
-                                               (3년차 16, 5년차 17, ... 최대 25일)
-```
-
-### 4대보험 (요율은 DB 조회) — `lib/calculators/insurance.ts`
 
 ```ts
-// 국민연금: 과세소득 × pension_rate. 단 pension_min_base / pension_max_base로 클램프.
-const pensionBase = clamp(taxableIncome, rates.pension_min_base, rates.pension_max_base);
-const pensionDeduction = Math.round(pensionBase * rates.pension_rate);
-// 건강 / 장기요양 / 고용도 동일 방식. 모든 요율은 insurance_rates 테이블에서 연도별로 조회.
+// lib/calculators/leave.ts — 근기법 §60
+function calculateAnnualLeave(hireDate, baseDate): number {
+  if (years < 1) return Math.min(11, monthsServed);     // 1년 미만 월차
+  if (years < 3) return 15;                             // 1~2년차
+  return Math.min(25, 15 + Math.floor((years - 1) / 2)); // 3년차+ 가산
+}
 ```
 
-### 검증된 시나리오 — CLAUDE.md §6.4 카논 케이스
-
-> 월 기본급 300만원 + 연장 10시간 + 식대 20만원, 부양가족 1명 → **실지급 3,002,394원**
-> (`lib/calculators/integration.test.ts`)
+**4대보험 요율은 하드코딩 금지** — `chongmu.insurance_rates` 테이블에서 연도별 조회.
 
 ---
 
-## 🚀 로컬 실행
+## 보안
+
+- **RLS 정책 강화** (`supabase/migrations/0011_role_based_rls.sql`)
+  - `payroll`: admin/finance 전체, employee 본인만
+  - `employees`: admin/hr/finance SELECT, admin/hr 만 modify
+  - `audit_logs`: admin 전체, 그 외 본인 액션만
+- **계좌번호 마스킹** (`****5678`)
+- **주민번호 미저장** — 생년월일만
+- **service_role 키 차단** (`server-only` directive)
+- **AI 안전장치** — schema-context whitelist + isSafeQuery
+- **결재/급여/직원 변경 모두 감사 로그**
+
+---
+
+## 테스트 & CI
 
 ```bash
-# 1. 의존성
+npm test              # Vitest unit (lib/calculators 100% 커버)
+npm run typecheck     # TypeScript strict
+npm run lint          # ESLint
+npm run build         # 프로덕션 빌드
+```
+
+GitHub Actions 가 PR/push 마다 위 4개 자동 실행 → ✅ 체크 후 merge.
+
+---
+
+## 로컬 실행
+
+### 1. 의존성
+```bash
 npm install
-
-# 2. 환경변수 — Supabase 프로젝트의 URL/키 입력
-cp .env.example .env.local
-
-# 3. DB 마이그레이션 + 시드 (Supabase CLI)
-supabase db push
-supabase db execute --file supabase/seed.sql
-
-# 4. 개발 서버
-npm run dev          # http://localhost:3000
 ```
 
-| 명령 | 용도 |
-|---|---|
-| `npm run dev` | 개발 서버 |
-| `npm run build` | 프로덕션 빌드 |
-| `npm run typecheck` | TypeScript 검증 |
-| `npm run lint` | ESLint |
-| `npm test` | Vitest (122 tests) |
+### 2. 환경변수
+`.env.example` → `.env.local` 복사 후 채우기:
+```bash
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+SUPABASE_SERVICE_ROLE_KEY=...
+
+# AI 활성화 (선택)
+GEMINI_API_KEY=...
+
+# 이메일 알림 (선택)
+RESEND_API_KEY=...
+
+# 데모 계정 (선택)
+DEMO_EMAIL=demo@nexus-erp.app
+DEMO_PASSWORD=...
+```
+
+### 3. Supabase 마이그레이션
+SQL Editor 에 `supabase/migrations/0001_*.sql` ~ `0011_*.sql` 차례로 Run.
+완료 후 `seed.sql` + `0010_demo_year_data.sql` 으로 풍성한 데모 데이터.
+
+### 4. 개발 서버
+```bash
+npm run dev
+```
 
 ---
 
-## 📁 디렉토리
+## 디렉토리
 
 ```
-app/
-├── (dashboard)/             # 인증 후 라우트 그룹
-│   ├── dashboard/           # KPI·차트·알림
-│   ├── employees/           # 직원 CRUD
-│   ├── attendance/          # 근태 입력 + CSV 가져오기
-│   ├── payroll/             # 일괄 계산 + 명세서
-│   ├── leave/               # 연차 신청·잔여
-│   ├── expenses/            # 지출 + 영수증 업로드
-│   ├── vendors/             # 거래처 + 계약 만료
-│   ├── assets/              # 자산 + 감가상각
-│   └── closing/             # 월말결산 체크리스트
-├── api/                     # Route Handlers
-└── login/
-
-lib/
-├── calculators/             # 순수 함수 + Vitest (122 tests)
-├── supabase/                # 서버/클라 클라이언트
-└── ...
-
-supabase/
-├── migrations/              # 0001~0005
-└── seed.sql                 # 직원 15명 + 3개월치 더미 데이터
+.
+├── app/
+│   ├── (auth)/login/                # 로그인 + 데모 버튼
+│   ├── (dashboard)/                 # 인증 영역 (RBAC 가드)
+│   │   ├── dashboard/               # KPI + 차트
+│   │   ├── employees/[id]/          # 상세 + 근태/급여 탭
+│   │   ├── payroll/[employeeId]/    # 명세서
+│   │   ├── approvals/[id]/          # 결재 진행
+│   │   ├── year-end/[employeeId]/   # 연말정산 입력
+│   │   └── ...                      # 17개 모듈
+│   └── api/
+│       ├── ai/{ocr,query}/          # Gemini 라우트
+│       ├── payroll/{calculate,confirm,export}/
+│       ├── filing/insurance-edi/
+│       └── vendors/verify/
+├── components/
+│   ├── shared/                      # Sidebar, TopBar, Tour, DemoBanner, PWARegister
+│   └── features/                    # 도메인별 폼 + 모달
+├── lib/
+│   ├── ai/                          # gemini + tesseract-fallback + schema-context
+│   ├── audit/                       # recordAudit + 28종 액션
+│   ├── calculators/                 # payroll, leave, severance, insurance
+│   ├── compliance/                  # 법적 리스크
+│   ├── email/                       # Resend + 템플릿
+│   ├── labels.ts                    # enum 한글 단일 사전
+│   ├── rbac.ts                      # 권한 매트릭스
+│   └── supabase/                    # client/server/middleware
+├── supabase/
+│   ├── migrations/0001~0011         # 11개 마이그레이션
+│   └── seed.sql
+├── docs/
+│   ├── deployment.md
+│   ├── DEMO.md                      # 시연 스크립트
+│   └── screenshots/
+├── .github/workflows/ci.yml         # CI 파이프라인
+└── public/
+    ├── manifest.webmanifest
+    └── sw.js
 ```
-
-자세한 설계는 [`CLAUDE.md`](./CLAUDE.md), 단계별 진행은 [`PLAN.md`](./PLAN.md) 참조.
 
 ---
 
-## 🗺️ 로드맵
+## 시연 시나리오
 
-### v1 마무리 (현재 진행)
-- [x] Phase 0~6 — 인증·직원·근태·급여·지출·거래처·자산·결산·대시보드
-- [x] 비주얼 시스템 — stitch "Executive Command" 토큰 + 글래스모피즘
-- [ ] Phase 7 — Vercel 배포 + 3-viewport QA
-- [ ] Phase 8 — 스크린샷 + 데모 GIF
-
-### v1.1 — 프로덕션 완성도 (CLAUDE.md §1.1)
-- [ ] 감사 로그 (`audit_logs`)
-- [ ] 엑셀(.xlsx) 가져오기 — 직원·근태·지출
-- [ ] Resend 이메일 — 급여명세서 PDF 발송
-- [ ] Sentry + Vercel Analytics
-- [ ] Playwright E2E 6 시나리오
-- [ ] PWA — manifest + 오프라인 캐싱
-- [ ] CI/CD — GitHub Actions
-
-### v2 후보
-- [ ] 멀티테넌시 (회사별 격리)
-- [ ] i18n (영어)
-- [ ] 정률법 감가상각
+5분 시연 흐름은 [`docs/DEMO.md`](docs/DEMO.md) 참조.
 
 ---
 
-## 📝 라이선스
+## 로드맵
 
-포트폴리오 용도 개인 프로젝트. 회사·조직에서 실제 사용을 원하는 경우 별도 문의.
+- **v1.1** — 라이트 테마 풀, 영어 i18n (`next-intl`), 회계 분개/원장/시산표
+- **v1.2** — Playwright E2E (5플로우), Sentry 모니터링, Storage 확장 (계약서)
+- **v2** — 멀티테넌시 (회사 단위), 홈택스 실 API
+- **v2.x** — 모바일 네이티브 (Capacitor)
+
+---
+
+## 라이센스
+
+MIT
+
+---
+
+**Built with attention to:** 근로기준법 정확성 · RLS 데이터 격리 · AI 안전장치 · 한국 SMB 페인포인트.

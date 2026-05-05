@@ -2,9 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { recordAudit } from "@/lib/audit/actions";
+import { getResendClient, getFromEmail } from "@/lib/email/client";
+import {
+  approvalRequestedEmail,
+  approvalDecidedEmail,
+} from "@/lib/email/templates";
 
 const StepSchema = z.object({
   approver_email: z.string().email("이메일 형식 오류"),
@@ -98,8 +104,58 @@ export async function createApprovalAction(
     },
   });
 
+  // 첫 번째 결재자에게 이메일 발송 (Resend 키 있을 때만, 실패해도 본 작업 막지 않음)
+  void notifyFirstApprover({
+    requestId: req.id,
+    requesterEmail: user.email ?? "",
+    kind: parsed.data.kind,
+    title: parsed.data.title,
+    amount: parsed.data.amount ?? null,
+    firstApprover: parsed.data.steps[0],
+  });
+
   revalidatePath("/approvals");
   return { ok: true, id: req.id };
+}
+
+async function notifyFirstApprover(args: {
+  requestId: string;
+  requesterEmail: string;
+  kind: string;
+  title: string;
+  amount: number | null;
+  firstApprover: { approver_email: string; approver_role?: string };
+}) {
+  try {
+    const resend = getResendClient();
+    if (!resend) return;
+    const baseUrl = await getBaseUrl();
+    const { subject, html, text } = approvalRequestedEmail({
+      recipientEmail: args.firstApprover.approver_email,
+      approverRole: args.firstApprover.approver_role ?? null,
+      requesterEmail: args.requesterEmail,
+      kind: args.kind,
+      title: args.title,
+      amount: args.amount,
+      approvalUrl: `${baseUrl}/approvals/${args.requestId}`,
+    });
+    await resend.emails.send({
+      from: getFromEmail(),
+      to: args.firstApprover.approver_email,
+      subject,
+      html,
+      text,
+    });
+  } catch (err) {
+    console.error("[email] approval request notify failed:", err);
+  }
+}
+
+async function getBaseUrl(): Promise<string> {
+  const h = headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
+  const proto = h.get("x-forwarded-proto") ?? "https";
+  return `${proto}://${host}`;
 }
 
 const DecideSchema = z.object({
@@ -208,9 +264,97 @@ export async function decideApprovalAction(
     },
   });
 
+  // 이메일 알림 (Resend 키 있을 때만)
+  void notifyDecision({
+    requestId: parsed.data.requestId,
+    decision: parsed.data.decision,
+    approverEmail: user.email ?? "",
+    comment: parsed.data.comment ?? null,
+    nextPendingStepNo: nextPending?.step_no ?? null,
+  });
+
   revalidatePath("/approvals");
   revalidatePath(`/approvals/${parsed.data.requestId}`);
   return { ok: true };
+}
+
+async function notifyDecision(args: {
+  requestId: string;
+  decision: "approved" | "rejected";
+  approverEmail: string;
+  comment: string | null;
+  nextPendingStepNo: number | null;
+}) {
+  try {
+    const resend = getResendClient();
+    if (!resend) return;
+    const supabase = createClient();
+    const baseUrl = await getBaseUrl();
+
+    const { data: req } = await supabase
+      .schema("chongmu")
+      .from("approval_requests")
+      .select("title, requester_email")
+      .eq("id", args.requestId)
+      .maybeSingle();
+    if (!req?.requester_email) return;
+
+    // 1) 발의자에게 알림
+    const { subject, html, text } = approvalDecidedEmail({
+      recipientEmail: req.requester_email,
+      decision: args.decision,
+      approverEmail: args.approverEmail,
+      title: req.title,
+      approvalUrl: `${baseUrl}/approvals/${args.requestId}`,
+      comment: args.comment,
+    });
+    await resend.emails.send({
+      from: getFromEmail(),
+      to: req.requester_email,
+      subject,
+      html,
+      text,
+    });
+
+    // 2) 승인이고 다음 결재자 있으면 그쪽에도 알림
+    if (args.decision === "approved" && args.nextPendingStepNo) {
+      const { data: nextStep } = await supabase
+        .schema("chongmu")
+        .from("approval_steps")
+        .select("approver_email, approver_role")
+        .eq("request_id", args.requestId)
+        .eq("step_no", args.nextPendingStepNo)
+        .maybeSingle();
+      if (nextStep?.approver_email) {
+        const { data: detail } = await supabase
+          .schema("chongmu")
+          .from("approval_requests")
+          .select("kind, title, amount, requester_email")
+          .eq("id", args.requestId)
+          .maybeSingle();
+        if (detail) {
+          const m = approvalRequestedEmail({
+            recipientEmail: nextStep.approver_email,
+            approverRole: nextStep.approver_role ?? null,
+            requesterEmail: detail.requester_email ?? "",
+            kind: detail.kind,
+            title: detail.title,
+            amount: detail.amount ?? null,
+            approvalUrl: `${baseUrl}/approvals/${args.requestId}`,
+          });
+          await resend.emails.send({
+            from: getFromEmail(),
+            to: nextStep.approver_email,
+            subject: m.subject,
+            html: m.html,
+            text: m.text,
+          });
+        }
+      }
+    }
+  } catch (err) {
+    console.error("[email] approval decision notify failed:", err);
+  }
 }
 
 export async function createAndRedirect(input: CreateApprovalInput) {
