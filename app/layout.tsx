@@ -36,6 +36,18 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko" className="dark" suppressHydrationWarning>
+      <head>
+        {/* 이전 ThemeToggle 사용자의 localStorage 잔여 라이트 모드 클래스 즉시 제거 */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{
+              localStorage.removeItem('theme-mode');
+              document.documentElement.classList.remove('light');
+              document.documentElement.classList.add('dark');
+            }catch(e){}`,
+          }}
+        />
+      </head>
       <body className="min-h-screen bg-background text-foreground antialiased">
         {children}
         <PWARegister />
