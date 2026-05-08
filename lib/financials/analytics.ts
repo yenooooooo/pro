@@ -41,42 +41,54 @@ export async function calculateFinancialRatios(
   month: number,
 ): Promise<FinancialRatios> {
   const supabase = createClient();
-
-  // 1. 매출
-  const { data: revenue } = await supabase
-    .schema("chongmu")
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .from("revenue" as any)
-    .select("amount")
-    .eq("year", year)
-    .eq("month", month);
-  const totalRevenue = ((revenue as unknown as { amount: number }[] | null) ?? []).reduce(
-    (s, r) => s + r.amount,
-    0,
-  );
-
-  // 2. 비용 (인건비 + 지출)
-  const { data: payroll } = await supabase
-    .schema("chongmu")
-    .from("payroll")
-    .select("gross_pay")
-    .eq("pay_year", year)
-    .eq("pay_month", month);
-  const totalPayroll = (payroll ?? []).reduce(
-    (s, r) => s + (r.gross_pay || 0),
-    0,
-  );
-
   const monthStart = `${year}-${String(month).padStart(2, "0")}-01`;
   const lastDay = new Date(year, month, 0).getDate();
   const monthEnd = `${year}-${String(month).padStart(2, "0")}-${lastDay}`;
 
-  const { data: expenses } = await supabase
-    .schema("chongmu")
-    .from("expenses")
-    .select("amount, vat")
-    .gte("expense_date", monthStart)
-    .lte("expense_date", monthEnd);
+  // ★ 4쿼리 병렬화 — 직렬 4 round-trip → 1
+  const [
+    { data: revenue },
+    { data: payroll },
+    { data: expenses },
+    { data: facts },
+  ] = await Promise.all([
+    supabase
+      .schema("chongmu")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .from("revenue" as any)
+      .select("amount")
+      .eq("year", year)
+      .eq("month", month),
+    supabase
+      .schema("chongmu")
+      .from("payroll")
+      .select("gross_pay")
+      .eq("pay_year", year)
+      .eq("pay_month", month),
+    supabase
+      .schema("chongmu")
+      .from("expenses")
+      .select("amount, vat")
+      .gte("expense_date", monthStart)
+      .lte("expense_date", monthEnd),
+    supabase
+      .schema("chongmu")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .from("financial_facts" as any)
+      .select("*")
+      .eq("year", year)
+      .eq("month", month)
+      .maybeSingle(),
+  ]);
+
+  const totalRevenue = ((revenue as unknown as { amount: number }[] | null) ?? []).reduce(
+    (s, r) => s + r.amount,
+    0,
+  );
+  const totalPayroll = (payroll ?? []).reduce(
+    (s, r) => s + (r.gross_pay || 0),
+    0,
+  );
   const totalExpenses = (expenses ?? []).reduce(
     (s, r) => s + (r.amount || 0) + (r.vat || 0),
     0,
@@ -84,16 +96,6 @@ export async function calculateFinancialRatios(
 
   const totalCosts = totalPayroll + totalExpenses;
   const netProfit = totalRevenue - totalCosts;
-
-  // 3. financial_facts (수동 입력값)
-  const { data: facts } = await supabase
-    .schema("chongmu")
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .from("financial_facts" as any)
-    .select("*")
-    .eq("year", year)
-    .eq("month", month)
-    .maybeSingle();
 
   type Facts = {
     current_assets: number | null;
@@ -131,14 +133,24 @@ export async function calculateDepartmentROI(
 ): Promise<DepartmentROI[]> {
   const supabase = createClient();
 
-  // 매출 (부서별)
-  const { data: revRows } = await supabase
-    .schema("chongmu")
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .from("revenue" as any)
-    .select("amount, departments:department_id(name)")
-    .eq("year", year)
-    .eq("month", month);
+  // ★ 2쿼리 병렬화
+  const [{ data: revRows }, { data: payRows }] = await Promise.all([
+    supabase
+      .schema("chongmu")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .from("revenue" as any)
+      .select("amount, departments:department_id(name)")
+      .eq("year", year)
+      .eq("month", month),
+    supabase
+      .schema("chongmu")
+      .from("payroll")
+      .select(
+        "gross_pay, employees:employee_id(departments:department_id(name))",
+      )
+      .eq("pay_year", year)
+      .eq("pay_month", month),
+  ]);
 
   type RevRow = { amount: number; departments: { name: string } | null };
   const revByDept = new Map<string, number>();
@@ -146,16 +158,6 @@ export async function calculateDepartmentROI(
     const dept = r.departments?.name ?? "(미배정)";
     revByDept.set(dept, (revByDept.get(dept) ?? 0) + r.amount);
   }
-
-  // 인건비 (부서별)
-  const { data: payRows } = await supabase
-    .schema("chongmu")
-    .from("payroll")
-    .select(
-      "gross_pay, employees:employee_id(departments:department_id(name))",
-    )
-    .eq("pay_year", year)
-    .eq("pay_month", month);
 
   type PayRow = {
     gross_pay: number;
@@ -186,58 +188,63 @@ export async function getCashFlowHistory(
 ): Promise<CashFlowPoint[]> {
   const supabase = createClient();
   const today = new Date();
-  const points: CashFlowPoint[] = [];
 
-  for (let i = monthsBack - 1; i >= 0; i--) {
+  // ★ 12개월 × 3쿼리 = 36쿼리를 모두 병렬화 — 직렬 12 round-trip → 1
+  const monthMeta = Array.from({ length: monthsBack }, (_, idx) => {
+    const i = monthsBack - 1 - idx;
     const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
     const year = d.getFullYear();
     const month = d.getMonth() + 1;
-
     const monthStr = `${year}-${String(month).padStart(2, "0")}`;
     const monthStart = `${monthStr}-01`;
     const lastDay = new Date(year, month, 0).getDate();
     const monthEnd = `${monthStr}-${String(lastDay).padStart(2, "0")}`;
+    return { year, month, monthStr, monthStart, monthEnd };
+  });
 
-    const [{ data: rev }, { data: pay }, { data: exp }] = await Promise.all([
-      supabase
-        .schema("chongmu")
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from("revenue" as any)
-        .select("amount")
-        .eq("year", year)
-        .eq("month", month),
-      supabase
-        .schema("chongmu")
-        .from("payroll")
-        .select("gross_pay")
-        .eq("pay_year", year)
-        .eq("pay_month", month),
-      supabase
-        .schema("chongmu")
-        .from("expenses")
-        .select("amount, vat")
-        .gte("expense_date", monthStart)
-        .lte("expense_date", monthEnd),
-    ]);
+  const results = await Promise.all(
+    monthMeta.map(async (m) => {
+      const [{ data: rev }, { data: pay }, { data: exp }] = await Promise.all([
+        supabase
+          .schema("chongmu")
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .from("revenue" as any)
+          .select("amount")
+          .eq("year", m.year)
+          .eq("month", m.month),
+        supabase
+          .schema("chongmu")
+          .from("payroll")
+          .select("gross_pay")
+          .eq("pay_year", m.year)
+          .eq("pay_month", m.month),
+        supabase
+          .schema("chongmu")
+          .from("expenses")
+          .select("amount, vat")
+          .gte("expense_date", m.monthStart)
+          .lte("expense_date", m.monthEnd),
+      ]);
 
-    const inflow = ((rev as unknown as { amount: number }[] | null) ?? []).reduce(
-      (s, r) => s + r.amount,
-      0,
-    );
-    const outflow =
-      (pay ?? []).reduce((s, r) => s + (r.gross_pay || 0), 0) +
-      (exp ?? []).reduce((s, r) => s + (r.amount || 0) + (r.vat || 0), 0);
+      const inflow = ((rev as unknown as { amount: number }[] | null) ?? []).reduce(
+        (s, r) => s + r.amount,
+        0,
+      );
+      const outflow =
+        (pay ?? []).reduce((s, r) => s + (r.gross_pay || 0), 0) +
+        (exp ?? []).reduce((s, r) => s + (r.amount || 0) + (r.vat || 0), 0);
 
-    points.push({
-      month: monthStr,
-      inflow,
-      outflow,
-      net: inflow - outflow,
-      is_forecast: false,
-    });
-  }
+      return {
+        month: m.monthStr,
+        inflow,
+        outflow,
+        net: inflow - outflow,
+        is_forecast: false as const,
+      };
+    }),
+  );
 
-  return points;
+  return results;
 }
 
 /**

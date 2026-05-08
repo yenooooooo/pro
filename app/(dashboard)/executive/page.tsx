@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import {
   Crown,
   TrendingUp,
@@ -13,11 +14,12 @@ import { createClient } from "@/lib/supabase/server";
 import {
   calculateFinancialRatios,
   calculateDepartmentROI,
-  getCashFlowHistory,
-  forecastCashFlow,
 } from "@/lib/financials/analytics";
 import { getComplianceRisks } from "@/lib/compliance/checks";
-import { ExecutiveCharts } from "./_charts";
+import {
+  CashFlowSection,
+  CashFlowSectionSkeleton,
+} from "./_cash-flow-section";
 
 export const dynamic = "force-dynamic";
 
@@ -37,33 +39,36 @@ export default async function ExecutivePage({
 
   const supabase = createClient();
 
-  // 활성 직원
-  const { count: activeEmployees } = await supabase
-    .schema("chongmu")
-    .from("employees")
-    .select("id", { count: "exact", head: true })
-    .eq("status", "active")
-    .is("deleted_at", null);
+  // 전월 대비용
+  const prevMonth = month === 1 ? 12 : month - 1;
+  const prevYear = month === 1 ? year - 1 : year;
 
-  // 동시 fetch
-  const [ratios, deptRoi, cashFlowHistory, risks] = await Promise.all([
+  // ★ 모든 fetch 단일 라운드 — 직렬 4단계 → 1단계
+  // (현금흐름 + Gemini 예측은 Suspense 로 분리됨)
+  const [
+    ratios,
+    deptRoi,
+    risks,
+    activeEmployeesResult,
+    prevRatios,
+  ] = await Promise.all([
     calculateFinancialRatios(year, month),
     calculateDepartmentROI(year, month),
-    getCashFlowHistory(12),
     getComplianceRisks(),
+    supabase
+      .schema("chongmu")
+      .from("employees")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "active")
+      .is("deleted_at", null),
+    calculateFinancialRatios(prevYear, prevMonth),
   ]);
-
-  const cashFlowForecast = await forecastCashFlow(cashFlowHistory, 3);
-  const cashFlowAll = [...cashFlowHistory, ...cashFlowForecast];
+  const activeEmployees = activeEmployeesResult.count;
 
   // 리스크 카운트
   const dangerCount = risks.filter((r) => r.severity === "danger").length;
   const warnCount = risks.filter((r) => r.severity === "warn").length;
 
-  // 전월 대비
-  const prevMonth = month === 1 ? 12 : month - 1;
-  const prevYear = month === 1 ? year - 1 : year;
-  const prevRatios = await calculateFinancialRatios(prevYear, prevMonth);
   const revenueDelta =
     prevRatios.revenue > 0
       ? ((ratios.revenue - prevRatios.revenue) / prevRatios.revenue) * 100
@@ -270,8 +275,10 @@ export default async function ExecutivePage({
         )}
       </section>
 
-      {/* 현금흐름 + 예측 */}
-      <ExecutiveCharts cashFlow={cashFlowAll} />
+      {/* 현금흐름 + Gemini 예측 — Suspense streaming (느린 LLM 호출 분리) */}
+      <Suspense fallback={<CashFlowSectionSkeleton />}>
+        <CashFlowSection />
+      </Suspense>
     </div>
   );
 }
