@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Sparkles,
   Send,
@@ -8,6 +8,7 @@ import {
   X,
   AlertCircle,
   TableProperties,
+  Zap,
 } from "lucide-react";
 
 type Props = {
@@ -22,26 +23,44 @@ const SUGGESTIONS = [
   "강민준의 5월 연장근로 시간이 어떻게 돼?",
 ];
 
-type Answer = {
-  answer: string;
+type AnswerMeta = {
   query: { table: string; description: string } | null;
   rows: Record<string, unknown>[] | null;
   source: "gemini" | "fallback" | "no-key";
+  cached: boolean;
+};
+
+type Stage = "intent" | "query" | "answer";
+
+const STAGE_LABEL: Record<Stage, string> = {
+  intent: "질문 분석 중…",
+  query: "데이터 조회 중…",
+  answer: "답변 작성 중…",
 };
 
 export function AskNexusModal({ open, onClose }: Props) {
   const [query, setQuery] = useState("");
-  const [answer, setAnswer] = useState<Answer | null>(null);
+  const [answerText, setAnswerText] = useState("");
+  const [meta, setMeta] = useState<AnswerMeta | null>(null);
+  const [stage, setStage] = useState<Stage | null>(null);
+  const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     if (open) {
       setQuery("");
-      setAnswer(null);
+      setAnswerText("");
+      setMeta(null);
+      setStage(null);
       setError(null);
+      setPending(false);
       setTimeout(() => inputRef.current?.focus(), 50);
+    } else {
+      // 모달 닫힐 때 진행 중 요청 중단
+      abortRef.current?.abort();
+      abortRef.current = null;
     }
   }, [open]);
 
@@ -54,44 +73,127 @@ export function AskNexusModal({ open, onClose }: Props) {
     return () => document.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
-  function submit(q: string) {
+  async function submit(q: string) {
     const cleaned = q.trim();
     if (cleaned.length < 2) return;
+
+    // 이전 요청 중단
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setError(null);
-    setAnswer(null);
-    startTransition(async () => {
-      try {
-        const res = await fetch("/api/ai/query", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query: cleaned }),
-        });
-        const json = await res.json();
-        if (json.source === "no-key") {
-          // 정규식 fallback (제한적)
-          const fb = await fallbackParse(cleaned);
-          setAnswer({
-            answer:
-              fb ??
-              "현재 GEMINI_API_KEY 가 설정되지 않아 AI 분석이 비활성화되어 있습니다. 환경변수를 추가하면 자연어 질의가 동작합니다.",
-            query: null,
-            rows: null,
-            source: "fallback",
-          });
-          return;
-        }
-        if (!json.ok) {
-          setError(json.error ?? "처리 실패");
-          return;
-        }
-        setAnswer(json as Answer);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "네트워크 오류");
+    setAnswerText("");
+    setMeta(null);
+    setStage("intent");
+    setPending(true);
+
+    try {
+      const res = await fetch("/api/ai/query", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: cleaned }),
+        signal: controller.signal,
+      });
+
+      if (!res.ok && res.status !== 200) {
+        const errJson = await res.json().catch(() => null);
+        setError(errJson?.error ?? `요청 실패 (${res.status})`);
+        setPending(false);
+        setStage(null);
+        return;
       }
-    });
+
+      if (!res.body) {
+        setError("응답 본문 없음");
+        setPending(false);
+        return;
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let collectedAnswer = "";
+      let collectedMeta: AnswerMeta = {
+        query: null,
+        rows: null,
+        source: "gemini",
+        cached: false,
+      };
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+
+        // 라인 단위로 파싱 (NDJSON)
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          let event: Record<string, unknown>;
+          try {
+            event = JSON.parse(line) as Record<string, unknown>;
+          } catch {
+            continue;
+          }
+
+          const type = event.type as string;
+          switch (type) {
+            case "progress":
+              setStage(event.stage as Stage);
+              break;
+            case "meta":
+              collectedMeta = {
+                ...collectedMeta,
+                query: (event.query as AnswerMeta["query"]) ?? null,
+                rows: (event.rows as Record<string, unknown>[]) ?? null,
+              };
+              setMeta(collectedMeta);
+              break;
+            case "chunk":
+              collectedAnswer += String(event.text ?? "");
+              setAnswerText(collectedAnswer);
+              break;
+            case "cached":
+              collectedAnswer = String(event.answer ?? "");
+              setAnswerText(collectedAnswer);
+              collectedMeta = {
+                ...collectedMeta,
+                query: (event.query as AnswerMeta["query"]) ?? null,
+                rows: (event.rows as Record<string, unknown>[]) ?? null,
+                cached: true,
+              };
+              setMeta(collectedMeta);
+              break;
+            case "error":
+              setError(String(event.message ?? "처리 실패"));
+              break;
+            case "done":
+              collectedMeta = {
+                ...collectedMeta,
+                source: (event.source as AnswerMeta["source"]) ?? "gemini",
+                cached: Boolean(event.cached),
+              };
+              setMeta(collectedMeta);
+              break;
+          }
+        }
+      }
+    } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") return;
+      setError(err instanceof Error ? err.message : "네트워크 오류");
+    } finally {
+      setPending(false);
+      setStage(null);
+    }
   }
 
   if (!open) return null;
+
+  const hasAnswer = answerText.length > 0;
 
   return (
     <div
@@ -167,7 +269,15 @@ export function AskNexusModal({ open, onClose }: Props) {
             </div>
           </div>
 
-          {!answer && !pending && !error ? (
+          {/* 진행 상태 — 답변 시작 전까지만 표시 */}
+          {pending && stage && !hasAnswer ? (
+            <div className="inline-flex items-center gap-2 rounded-lg border border-primary-electric/20 bg-primary-electric/5 px-3 py-2 text-label-sm text-primary-electric">
+              <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
+              {STAGE_LABEL[stage]}
+            </div>
+          ) : null}
+
+          {!hasAnswer && !pending && !error ? (
             <div>
               <p className="mb-2 text-label-sm uppercase tracking-widest text-on-surface-variant">
                 추천 질문
@@ -197,37 +307,52 @@ export function AskNexusModal({ open, onClose }: Props) {
             </div>
           ) : null}
 
-          {answer ? (
+          {hasAnswer ? (
             <div className="space-y-3">
               <div className="rounded-lg border border-primary-electric/30 bg-primary-electric/5 p-4">
-                <div className="mb-2 inline-flex items-center gap-1 text-label-sm text-primary-electric">
+                <div className="mb-2 inline-flex items-center gap-1.5 text-label-sm text-primary-electric">
                   <Sparkles aria-hidden className="h-4 w-4" />
                   답변
                   <span className="ml-1 rounded bg-surface-container-high px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
-                    {answer.source === "gemini"
+                    {meta?.source === "gemini"
                       ? "Gemini"
-                      : answer.source === "fallback"
+                      : meta?.source === "fallback"
                         ? "Fallback"
                         : "—"}
                   </span>
+                  {meta?.cached ? (
+                    <span
+                      title="5분 캐시 — 즉시 응답"
+                      className="ml-0.5 inline-flex items-center gap-0.5 rounded bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300"
+                    >
+                      <Zap aria-hidden className="h-2.5 w-2.5" />
+                      Cached
+                    </span>
+                  ) : null}
                 </div>
                 <p className="whitespace-pre-wrap text-body-md text-on-surface">
-                  {answer.answer}
+                  {answerText}
+                  {pending ? (
+                    <span
+                      aria-hidden
+                      className="ml-0.5 inline-block h-4 w-1.5 -translate-y-0.5 animate-pulse bg-primary-electric/60 align-middle"
+                    />
+                  ) : null}
                 </p>
               </div>
-              {answer.query ? (
+              {meta?.query ? (
                 <p className="inline-flex items-center gap-1 text-label-sm text-on-surface-variant">
                   <TableProperties aria-hidden className="h-3.5 w-3.5" />
-                  데이터 출처: {answer.query.description}
+                  데이터 출처: {meta.query.description}
                 </p>
               ) : null}
-              {answer.rows && answer.rows.length > 0 ? (
+              {meta?.rows && meta.rows.length > 0 ? (
                 <details className="rounded border border-outline-variant/20 bg-surface-container-low p-3">
                   <summary className="cursor-pointer text-label-sm text-on-surface-variant">
-                    원본 데이터 보기 ({answer.rows.length}행)
+                    원본 데이터 보기 ({meta.rows.length}행)
                   </summary>
                   <pre className="mt-2 max-h-60 overflow-auto text-[11px] text-on-surface-variant">
-                    {JSON.stringify(answer.rows, null, 2)}
+                    {JSON.stringify(meta.rows, null, 2)}
                   </pre>
                 </details>
               ) : null}
@@ -237,13 +362,4 @@ export function AskNexusModal({ open, onClose }: Props) {
       </div>
     </div>
   );
-}
-
-/** 정규식 기반 매우 제한적 fallback. Gemini 키 없을 때만 사용. */
-async function fallbackParse(query: string): Promise<string | null> {
-  // 매우 단순한 패턴 몇 개만 — wow 효과는 없음. UI에서 안내문 보여주는 용도.
-  if (/이번\s*달.*미확정/.test(query)) {
-    return "GEMINI_API_KEY 가 설정되어 있지 않아 정확한 답변은 못 드립니다. 대시보드 우상단 종 아이콘에서 미확정 급여 알림을 확인하세요.";
-  }
-  return null;
 }
