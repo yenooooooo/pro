@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { AlertTriangle } from "lucide-react";
+import * as Sentry from "@sentry/nextjs";
 
 export default function DashboardError({
   error,
@@ -14,6 +15,8 @@ export default function DashboardError({
     if (process.env.NODE_ENV !== "production") {
       console.error("[dashboard error]", error);
     }
+    // Sentry — DSN 미설정 시 no-op
+    Sentry.captureException(error);
   }, [error]);
 
   return (

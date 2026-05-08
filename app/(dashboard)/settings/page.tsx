@@ -1,4 +1,10 @@
-import { Settings as SettingsIcon } from "lucide-react";
+import {
+  Settings as SettingsIcon,
+  ShieldCheck,
+  FileX as FileShield,
+  Database,
+} from "lucide-react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { InsuranceRatesForm } from "./_components/insurance-rates-form";
 import { ClosingTasksManager } from "./_components/closing-tasks-manager";
@@ -37,6 +43,40 @@ export default async function SettingsPage() {
           4대보험 요율과 월말결산 체크리스트를 관리합니다. 모든 변경은 감사 로그에 기록됩니다.
         </p>
       </header>
+
+      {/* 빠른 링크 */}
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <Link
+          href="/settings/security"
+          className="glass-panel flex items-center gap-3 rounded-xl p-4 transition-colors hover:bg-surface-container-high"
+        >
+          <ShieldCheck className="h-5 w-5 text-primary-electric" />
+          <div>
+            <p className="font-semibold text-on-surface">계정 보안</p>
+            <p className="text-label-sm text-on-surface-variant">2단계 인증 (TOTP)</p>
+          </div>
+        </Link>
+        <Link
+          href="/settings/privacy"
+          className="glass-panel flex items-center gap-3 rounded-xl p-4 transition-colors hover:bg-surface-container-high"
+        >
+          <FileShield className="h-5 w-5 text-primary-electric" />
+          <div>
+            <p className="font-semibold text-on-surface">개인정보 자동 폐기</p>
+            <p className="text-label-sm text-on-surface-variant">5년 경과 직원 익명화</p>
+          </div>
+        </Link>
+        <Link
+          href="/settings/backup"
+          className="glass-panel flex items-center gap-3 rounded-xl p-4 transition-colors hover:bg-surface-container-high"
+        >
+          <Database className="h-5 w-5 text-primary-electric" />
+          <div>
+            <p className="font-semibold text-on-surface">데이터 백업</p>
+            <p className="text-label-sm text-on-surface-variant">JSON Export · Supabase 백업 안내</p>
+          </div>
+        </Link>
+      </div>
 
       <section className="glass-panel space-y-6 p-6">
         <div>
