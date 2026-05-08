@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Check, X, Clock, FileSignature } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { DecideButtons } from "./_decide";
+import { CommentThread } from "@/components/shared/CommentThread";
 import {
   APPROVAL_KIND_LABEL,
   APPROVAL_STATUS_LABEL,
@@ -208,6 +209,12 @@ export default async function ApprovalDetailPage({
           })}
         </ol>
       </section>
+
+      <CommentThread
+        entityType="approval_request"
+        entityId={req.id}
+        currentUserEmail={(await supabase.auth.getUser()).data.user?.email ?? null}
+      />
     </div>
   );
 }

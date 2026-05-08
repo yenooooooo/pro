@@ -16,6 +16,7 @@ import {
   Calendar,
   CalendarDays,
   Sparkles,
+  Activity,
 } from "lucide-react";
 
 export type NavItem = {
@@ -43,4 +44,5 @@ export const DASHBOARD_NAV: NavItem[] = [
   { label: "연말정산", href: "/year-end", icon: Calendar },
   { label: "세무 캘린더", href: "/calendar", icon: CalendarDays },
   { label: "AI 채용공고", href: "/recruiting", icon: Sparkles },
+  { label: "활동 피드", href: "/activity", icon: Activity },
 ];

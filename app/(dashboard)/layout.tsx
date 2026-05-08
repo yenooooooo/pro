@@ -4,6 +4,7 @@ import { TopBar } from "@/components/shared/TopBar";
 import { BottomTabBar } from "@/components/shared/BottomTabBar";
 import { OnboardingTour } from "@/components/shared/OnboardingTour";
 import { DemoBanner } from "@/components/shared/DemoBanner";
+import { KeyboardShortcuts } from "@/components/shared/KeyboardShortcuts";
 import { createClient } from "@/lib/supabase/server";
 import { getNotifications } from "@/lib/notifications/server";
 import { getCurrentUserRole } from "@/lib/rbac";
@@ -57,6 +58,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
       </div>
       <BottomTabBar />
       <OnboardingTour />
+      <KeyboardShortcuts />
     </div>
   );
 }
