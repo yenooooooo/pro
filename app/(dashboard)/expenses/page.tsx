@@ -366,8 +366,9 @@ function computeDistribution(
     }),
   );
   if (rest > 0) {
+    // ★ "기타" 카테고리(실제 비용 카테고리)와 혼동 방지 — "그 외" 사용
     segments.push({
-      label: "기타",
+      label: "그 외",
       pct: Math.round((rest / total) * 100),
       color: palette[2],
     });
