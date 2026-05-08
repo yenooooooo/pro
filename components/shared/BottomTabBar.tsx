@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils/cn";
 import { DASHBOARD_NAV } from "@/constants/nav";
 
@@ -10,6 +11,7 @@ const BOTTOM_ITEMS = DASHBOARD_NAV.filter((n) => n.showInBottomBar).slice(0, 4);
 
 export function BottomTabBar() {
   const pathname = usePathname();
+  const t = useTranslations("nav");
 
   return (
     <nav
@@ -29,7 +31,7 @@ export function BottomTabBar() {
                 )}
               >
                 <item.icon className="h-5 w-5" aria-hidden />
-                <span>{item.label}</span>
+                <span>{(() => { try { return t(item.key); } catch { return item.label; } })()}</span>
               </Link>
             </li>
           );

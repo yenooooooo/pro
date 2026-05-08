@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { FileSearch, Plus, Settings, Star } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils/cn";
 import { DASHBOARD_NAV } from "@/constants/nav";
 import { ReportBuilderModal } from "@/components/features/reports/ReportBuilderModal";
@@ -75,6 +76,7 @@ type Props = {
 export function Sidebar({ role, bookmarks = [] }: Props = {}) {
   const pathname = usePathname();
   const [reportOpen, setReportOpen] = useState(false);
+  const t = useTranslations("nav");
   const visibleNav = DASHBOARD_NAV.filter((item) => canSee(role, item.href));
 
   return (
@@ -106,11 +108,18 @@ export function Sidebar({ role, bookmarks = [] }: Props = {}) {
       <nav className="flex-1 space-y-2 overflow-y-auto px-2 py-2 lg:px-4">
         {visibleNav.map((item) => {
           const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          // i18n 라벨 — 키 없으면 폴백 한국어
+          let label: string;
+          try {
+            label = t(item.key);
+          } catch {
+            label = item.label;
+          }
           return (
             <Link
               key={item.href}
               href={item.href as never}
-              title={item.label}
+              title={label}
               aria-current={active ? "page" : undefined}
               className={cn(
                 "flex min-h-11 items-center gap-4 rounded-lg px-3 py-2.5 text-body-md transition-all duration-300 ease-out lg:px-4 lg:py-3",
@@ -120,7 +129,7 @@ export function Sidebar({ role, bookmarks = [] }: Props = {}) {
               )}
             >
               <item.icon className="h-5 w-5 flex-shrink-0" aria-hidden />
-              <span className="hidden font-medium lg:inline">{item.label}</span>
+              <span className="hidden font-medium lg:inline">{label}</span>
             </Link>
           );
         })}

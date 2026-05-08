@@ -23,6 +23,9 @@ import {
 } from "lucide-react";
 
 export type NavItem = {
+  /** i18n key: nav.{key} */
+  key: string;
+  /** 폴백 한국어 라벨 */
   label: string;
   href: string;
   icon: LucideIcon;
@@ -31,25 +34,25 @@ export type NavItem = {
 };
 
 export const DASHBOARD_NAV: NavItem[] = [
-  { label: "대시보드", href: "/dashboard", icon: LayoutDashboard, showInBottomBar: true },
-  { label: "직원정보", href: "/employees", icon: Users, showInBottomBar: true },
-  { label: "근태입력", href: "/attendance", icon: Clock },
-  { label: "급여계산", href: "/payroll", icon: Wallet, showInBottomBar: true },
-  { label: "연차관리", href: "/leave", icon: CalendarCheck },
-  { label: "지출입력", href: "/expenses", icon: Receipt, showInBottomBar: true },
-  { label: "거래처", href: "/vendors", icon: Handshake },
-  { label: "자산관리", href: "/assets", icon: Package },
-  { label: "월말결산", href: "/closing", icon: ClipboardCheck },
-  { label: "전자결재", href: "/approvals", icon: FileSignature },
-  { label: "법적 리스크", href: "/risks", icon: ShieldAlert },
-  { label: "인건비 시뮬", href: "/simulator", icon: TrendingUp },
-  { label: "퇴직급여", href: "/retirement", icon: PiggyBank },
-  { label: "연말정산", href: "/year-end", icon: Calendar },
-  { label: "세무 캘린더", href: "/calendar", icon: CalendarDays },
-  { label: "AI 채용공고", href: "/recruiting", icon: Sparkles },
-  { label: "활동 피드", href: "/activity", icon: Activity },
-  { label: "계약서", href: "/contracts", icon: FileSignature },
-  { label: "출장 정산", href: "/business-trips", icon: Plane },
-  { label: "매출", href: "/revenue", icon: ReceiptIcon },
-  { label: "임원 대시보드", href: "/executive", icon: Crown },
+  { key: "dashboard", label: "대시보드", href: "/dashboard", icon: LayoutDashboard, showInBottomBar: true },
+  { key: "employees", label: "직원정보", href: "/employees", icon: Users, showInBottomBar: true },
+  { key: "attendance", label: "근태입력", href: "/attendance", icon: Clock },
+  { key: "payroll", label: "급여계산", href: "/payroll", icon: Wallet, showInBottomBar: true },
+  { key: "leave", label: "연차관리", href: "/leave", icon: CalendarCheck },
+  { key: "expenses", label: "지출입력", href: "/expenses", icon: Receipt, showInBottomBar: true },
+  { key: "vendors", label: "거래처", href: "/vendors", icon: Handshake },
+  { key: "assets", label: "자산관리", href: "/assets", icon: Package },
+  { key: "closing", label: "월말결산", href: "/closing", icon: ClipboardCheck },
+  { key: "approvals", label: "전자결재", href: "/approvals", icon: FileSignature },
+  { key: "risks", label: "법적 리스크", href: "/risks", icon: ShieldAlert },
+  { key: "simulator", label: "인건비 시뮬", href: "/simulator", icon: TrendingUp },
+  { key: "retirement", label: "퇴직급여", href: "/retirement", icon: PiggyBank },
+  { key: "year_end", label: "연말정산", href: "/year-end", icon: Calendar },
+  { key: "calendar", label: "세무 캘린더", href: "/calendar", icon: CalendarDays },
+  { key: "recruiting", label: "AI 채용공고", href: "/recruiting", icon: Sparkles },
+  { key: "activity", label: "활동 피드", href: "/activity", icon: Activity },
+  { key: "contracts", label: "계약서", href: "/contracts", icon: FileSignature },
+  { key: "business_trips", label: "출장 정산", href: "/business-trips", icon: Plane },
+  { key: "revenue", label: "매출", href: "/revenue", icon: ReceiptIcon },
+  { key: "executive", label: "임원 대시보드", href: "/executive", icon: Crown },
 ];

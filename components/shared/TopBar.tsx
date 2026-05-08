@@ -9,6 +9,7 @@ import { NotificationsPanel } from "@/components/features/topbar/NotificationsPa
 import { HelpModal } from "@/components/features/topbar/HelpModal";
 import { AskNexusModal } from "@/components/features/topbar/AskNexusModal";
 import { PresenceMount } from "@/components/shared/PresenceMount";
+import { LocaleToggle } from "@/components/shared/LocaleToggle";
 import type { NotificationItem } from "@/lib/notifications/server";
 import { cn } from "@/lib/utils/cn";
 
@@ -95,6 +96,7 @@ export function TopBar({ userEmail, notifications, userRole }: TopBarProps) {
 
         <div className="flex items-center gap-4 md:gap-6">
           <PresenceMount userEmail={userEmail} />
+          <LocaleToggle />
           <div className="flex items-center gap-1 md:gap-2">
             {/* Ask Nexus (AI) */}
             <button

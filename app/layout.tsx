@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Toaster } from "sonner";
+import { NextIntlClientProvider } from "next-intl";
 import { PWARegister } from "@/components/shared/PWARegister";
+import { getLocale } from "@/i18n/get-locale";
+import { getMessages } from "@/i18n/get-messages";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -33,9 +36,11 @@ export const viewport: Viewport = {
   themeColor: "#0b1326",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const locale = getLocale();
+  const messages = await getMessages(locale);
   return (
-    <html lang="ko" className="dark" suppressHydrationWarning>
+    <html lang={locale} className="dark" suppressHydrationWarning>
       <head>
         {/* 이전 ThemeToggle 사용자의 localStorage 잔여 라이트 모드 클래스 즉시 제거 */}
         <script
@@ -49,9 +54,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="min-h-screen bg-background text-foreground antialiased">
-        {children}
-        <PWARegister />
-        <Toaster position="top-right" richColors theme="dark" />
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          {children}
+          <PWARegister />
+          <Toaster position="top-right" richColors theme="dark" />
+        </NextIntlClientProvider>
       </body>
     </html>
   );
