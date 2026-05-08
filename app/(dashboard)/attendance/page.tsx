@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { endOfMonth, format, startOfMonth } from "date-fns";
+import { getTranslations } from "next-intl/server";
 import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
 import { cn } from "@/lib/utils/cn";
 import { createClient } from "@/lib/supabase/server";
@@ -83,6 +84,8 @@ export default async function AttendancePage({
 }: {
   searchParams: SearchParams;
 }) {
+  const t = await getTranslations("attendance");
+  const tCommon = await getTranslations("common");
   const supabase = createClient();
   const month = parseMonth(searchParams.month);
 
@@ -145,10 +148,10 @@ export default async function AttendancePage({
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <h2 className="text-headline-lg font-semibold tracking-tight text-on-surface">
-            근태 관리
+            {t("title")}
           </h2>
           <p className="mt-1 text-body-md text-on-surface-variant">
-            월별 근태 집계 · 연장·야간·휴일 근로 모니터링
+            {t("subtitle")}
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
@@ -180,7 +183,7 @@ export default async function AttendancePage({
       {/* Top KPI Row */}
       <div className="grid grid-cols-1 gap-gutter md:grid-cols-3">
         <KPICard
-          label="총 근무 시간"
+          label={t("kpi_total_hours")}
           value={`${formatHours(totalAll)}`}
           unit="h"
           icon={Clock}
@@ -189,7 +192,7 @@ export default async function AttendancePage({
           barWidth={`${Math.min(100, (totalAll / 1000) * 100)}%`}
         />
         <KPICard
-          label="총 연장 근로"
+          label={t("kpi_overtime")}
           value={`${formatHours(totals.overtime)}`}
           unit="h"
           delta={
@@ -203,7 +206,7 @@ export default async function AttendancePage({
           barWidth={`${Math.min(100, (totals.overtime / 200) * 100)}%`}
         />
         <KPICard
-          label="주 52시간 초과"
+          label={t("kpi_week52_alert")}
           labelTone={violators.length > 0 ? "text-error-soft" : undefined}
           value={String(violators.length)}
           unit="명"
@@ -246,7 +249,7 @@ export default async function AttendancePage({
                 type="submit"
                 className="inline-flex min-h-11 items-center rounded-lg border border-primary-electric/40 bg-primary-electric/10 px-4 text-label-sm font-medium text-primary-electric transition-colors hover:bg-primary-electric/20"
               >
-                적용
+                {tCommon("apply")}
               </button>
             </div>
             <div className="text-label-sm text-on-surface-variant">
@@ -264,12 +267,12 @@ export default async function AttendancePage({
               <table className="w-full min-w-[700px] border-collapse text-left">
                 <thead className="border-b border-outline-variant/20 bg-surface-container/30 text-label-sm text-on-surface-variant">
                   <tr>
-                    <th className="px-6 py-4 font-semibold">직원</th>
-                    <th className="px-6 py-4 text-right font-semibold">근무일</th>
-                    <th className="px-6 py-4 text-right font-semibold">정상</th>
-                    <th className="px-6 py-4 text-right font-semibold">연장</th>
-                    <th className="px-6 py-4 text-right font-semibold">야간</th>
-                    <th className="px-6 py-4 text-right font-semibold">휴일</th>
+                    <th className="px-6 py-4 font-semibold">{t("col_employee")}</th>
+                    <th className="px-6 py-4 text-right font-semibold">{t("col_date")}</th>
+                    <th className="px-6 py-4 text-right font-semibold">{t("col_regular")}</th>
+                    <th className="px-6 py-4 text-right font-semibold">{t("col_overtime")}</th>
+                    <th className="px-6 py-4 text-right font-semibold">{t("col_night")}</th>
+                    <th className="px-6 py-4 text-right font-semibold">{t("col_holiday")}</th>
                     <th className="px-6 py-4 text-center font-semibold">주 52h</th>
                   </tr>
                 </thead>

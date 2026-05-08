@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Globe } from "lucide-react";
 import { useLocale } from "next-intl";
@@ -8,15 +8,21 @@ import { setLocaleAction } from "@/app/(dashboard)/actions/locale";
 import type { Locale } from "@/i18n/config";
 
 export function LocaleToggle() {
-  const locale = useLocale() as Locale;
+  const serverLocale = useLocale() as Locale;
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  // ★ 낙관적 UI — 클릭 즉시 토글 라벨 변경 (서버 응답 안 기다림)
+  const [optimisticLocale, setOptimisticLocale] = useState<Locale | null>(null);
+  const locale = optimisticLocale ?? serverLocale;
 
   function toggle() {
     const next: Locale = locale === "ko" ? "en" : "ko";
+    setOptimisticLocale(next);
     startTransition(async () => {
       await setLocaleAction(next);
       router.refresh();
+      // refresh 완료 후 optimistic 제거 — serverLocale 이 정답
+      setOptimisticLocale(null);
     });
   }
 

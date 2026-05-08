@@ -1,4 +1,5 @@
 import { TrendingUp } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { RevenueInput } from "./_input";
 
@@ -21,6 +22,7 @@ export default async function RevenuePage({
 }: {
   searchParams?: { year?: string };
 }) {
+  const t = await getTranslations("revenue");
   const supabase = createClient();
   const year = Number(searchParams?.year) || new Date().getFullYear();
 
@@ -63,10 +65,10 @@ export default async function RevenuePage({
             Revenue Tracking
           </p>
           <h1 className="text-headline-lg font-semibold tracking-tight text-on-surface">
-            매출 관리
+            {t("title")}
           </h1>
           <p className="text-body-md text-on-surface-variant">
-            월별·부서별 매출. 인건비 ROI 와 임원 대시보드 데이터로 활용.
+            {t("subtitle")}
           </p>
         </div>
         <form method="get" className="flex items-center gap-2">

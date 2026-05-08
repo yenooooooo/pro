@@ -1,7 +1,9 @@
 import { Sparkles } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { JobPostingGenerator } from "./_generator";
 
-export default function RecruitingPage() {
+export default async function RecruitingPage() {
+  const t = await getTranslations("recruiting");
   return (
     <div className="space-y-stack-lg">
       <header className="space-y-2">
@@ -10,11 +12,10 @@ export default function RecruitingPage() {
           AI Recruiting Assistant
         </p>
         <h1 className="text-headline-lg font-semibold tracking-tight text-on-surface">
-          AI 채용 공고 작성
+          {t("title")}
         </h1>
         <p className="text-body-md text-on-surface-variant">
-          부서·직급·요구사항을 입력하면 한국 표준 양식의 채용 공고를 마크다운으로
-          자동 생성합니다. Gemini 2.5 Flash 무료 tier 활용.
+          {t("subtitle")}
         </p>
       </header>
 

@@ -1,4 +1,5 @@
 import { CalendarDays } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { getTaxDeadlines, type TaxDeadline } from "@/lib/calendar/tax-deadlines";
 import { CalendarSubscribeButton } from "./_subscribe";
 
@@ -18,11 +19,12 @@ const CATEGORY_LABEL: Record<TaxDeadline["category"], string> = {
   year_end: "연말정산",
 };
 
-export default function CalendarPage({
+export default async function CalendarPage({
   searchParams,
 }: {
   searchParams?: { year?: string };
 }) {
+  const t = await getTranslations("calendar");
   const year = Number(searchParams?.year) || new Date().getFullYear();
   const items = getTaxDeadlines(year);
 
@@ -49,10 +51,10 @@ export default function CalendarPage({
             Tax & Filing Calendar
           </p>
           <h1 className="text-headline-lg font-semibold tracking-tight text-on-surface">
-            세무 신고 캘린더
+            {t("title")}
           </h1>
           <p className="text-body-md text-on-surface-variant">
-            매월 4대보험·원천세 (10일), 분기별 부가세, 법인세, 연말정산까지 한 곳에서.
+            {t("subtitle")}
           </p>
         </div>
         <CalendarSubscribeButton year={year} />

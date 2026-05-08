@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Bell, HelpCircle, LogOut, Search, Settings, Sparkles } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { logoutAction } from "@/lib/auth/actions";
 import { SearchModal } from "@/components/features/topbar/SearchModal";
 import { NotificationsPanel } from "@/components/features/topbar/NotificationsPanel";
@@ -20,6 +21,7 @@ type TopBarProps = {
 };
 
 export function TopBar({ userEmail, notifications, userRole }: TopBarProps) {
+  const t = useTranslations("topbar");
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -101,10 +103,10 @@ export function TopBar({ userEmail, notifications, userRole }: TopBarProps) {
             {/* Ask Nexus (AI) */}
             <button
               type="button"
-              aria-label="Ask Nexus (Ctrl+J)"
+              aria-label={`${t("ask_nexus")} (Ctrl+J)`}
               onClick={() => setAskOpen(true)}
               className="relative inline-flex min-h-11 min-w-11 items-center justify-center rounded-full p-2 text-primary-electric transition-all duration-200 hover:bg-primary-electric/10 active:scale-95"
-              title="Ask Nexus — AI 자연어 질의 (Ctrl+J)"
+              title={`${t("ask_nexus")} (Ctrl+J)`}
             >
               <Sparkles className="h-5 w-5" />
             </button>
@@ -112,7 +114,7 @@ export function TopBar({ userEmail, notifications, userRole }: TopBarProps) {
             {/* 검색 */}
             <button
               type="button"
-              aria-label="전역 검색 (Ctrl+K)"
+              aria-label={`${t("global_search")} (Ctrl+K)`}
               onClick={() => setSearchOpen(true)}
               className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full p-2 text-slate-400 transition-all duration-200 hover:bg-slate-800/40 hover:text-slate-100 active:scale-95"
             >
@@ -123,7 +125,7 @@ export function TopBar({ userEmail, notifications, userRole }: TopBarProps) {
             <div ref={bellWrapRef} className="relative">
               <button
                 type="button"
-                aria-label="알림"
+                aria-label={t("notifications")}
                 aria-haspopup="menu"
                 aria-expanded={bellOpen}
                 onClick={() => setBellOpen((v) => !v)}
@@ -153,7 +155,7 @@ export function TopBar({ userEmail, notifications, userRole }: TopBarProps) {
             {/* 설정 (링크) */}
             <Link
               href={"/settings" as never}
-              aria-label="시스템 설정"
+              aria-label={t("settings")}
               className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full p-2 text-slate-400 transition-all duration-200 hover:bg-slate-800/40 hover:text-slate-100 active:scale-95"
             >
               <Settings className="h-5 w-5" />
@@ -162,7 +164,7 @@ export function TopBar({ userEmail, notifications, userRole }: TopBarProps) {
             {/* 도움말 */}
             <button
               type="button"
-              aria-label="도움말"
+              aria-label={t("help")}
               onClick={() => setHelpOpen(true)}
               className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full p-2 text-slate-400 transition-all duration-200 hover:bg-slate-800/40 hover:text-slate-100 active:scale-95"
             >
@@ -183,7 +185,7 @@ export function TopBar({ userEmail, notifications, userRole }: TopBarProps) {
           <div ref={wrapperRef} className="relative">
             <button
               type="button"
-              aria-label="사용자 메뉴"
+              aria-label={t("user_menu")}
               aria-haspopup="menu"
               aria-expanded={open}
               onClick={() => setOpen((v) => !v)}
@@ -195,7 +197,7 @@ export function TopBar({ userEmail, notifications, userRole }: TopBarProps) {
                 className="absolute right-0 top-full mt-2 w-64 overflow-hidden rounded-lg border border-outline-variant/40 bg-surface-container shadow-2xl"
               >
                 <div className="border-b border-outline-variant/30 px-4 py-3">
-                  <p className="text-label-sm text-on-surface-variant">로그인 계정</p>
+                  <p className="text-label-sm text-on-surface-variant">{t("login_account")}</p>
                   <p className="mt-0.5 truncate text-body-md font-medium text-on-surface">
                     {userEmail ?? "—"}
                   </p>
@@ -212,7 +214,7 @@ export function TopBar({ userEmail, notifications, userRole }: TopBarProps) {
                     className="flex w-full items-center gap-2 px-4 py-3 text-left text-body-md text-on-surface transition-colors hover:bg-error-soft/10 hover:text-error-soft"
                   >
                     <LogOut aria-hidden className="h-4 w-4" />
-                    로그아웃
+                    {t("logout")}
                   </button>
                 </form>
               </div>

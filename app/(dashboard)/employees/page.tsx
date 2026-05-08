@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { differenceInYears, format } from "date-fns";
+import { getTranslations } from "next-intl/server";
 import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
 import { cn } from "@/lib/utils/cn";
 import { createClient } from "@/lib/supabase/server";
@@ -59,6 +60,8 @@ export default async function EmployeesPage({
 }: {
   searchParams: SearchParams;
 }) {
+  const t = await getTranslations("employees");
+  const tCommon = await getTranslations("common");
   const supabase = createClient();
 
   let employeeQuery = supabase
@@ -142,10 +145,10 @@ export default async function EmployeesPage({
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <h2 className="text-headline-lg font-semibold tracking-tight text-on-surface">
-            직원 정보
+            {t("title")}
           </h2>
           <p className="mt-1 text-body-md text-on-surface-variant">
-            인적 자원 마스터 · 부서·직급·근속 통합 관리
+            {t("subtitle")}
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
@@ -154,14 +157,14 @@ export default async function EmployeesPage({
             className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-outline-variant/50 bg-surface-container px-4 py-2 text-label-sm text-on-surface transition-colors hover:bg-surface-container-high"
           >
             <FileSpreadsheet aria-hidden className="h-[18px] w-[18px]" />
-            엑셀 가져오기
+            {t("import_excel")}
           </Link>
           <Link
             href="/employees/new"
             className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary-electric px-4 py-2 text-label-sm font-semibold text-on-primary transition-colors hover:bg-primary-fixed-dim"
           >
             <UserPlus aria-hidden className="h-[18px] w-[18px]" />
-            직원 추가
+            {t("add")}
           </Link>
         </div>
       </div>
@@ -169,27 +172,27 @@ export default async function EmployeesPage({
       {/* Top KPI Row */}
       <div className="grid grid-cols-1 gap-gutter md:grid-cols-3">
         <KPICard
-          label="총 활성 직원"
+          label={t("kpi_total_active")}
           value={String(totalCount)}
-          unit="명"
+          unit={t("kpi_total_active_unit")}
           icon={Users}
           iconTone="text-primary-electric"
           barTone="bg-primary-electric"
           barWidth="80%"
         />
         <KPICard
-          label="부서"
+          label={t("kpi_departments")}
           value={String(allDepts.length)}
-          unit="개"
+          unit={t("kpi_departments_unit")}
           icon={Building2}
           iconTone="text-tertiary-sky"
           barTone="bg-tertiary-sky"
           barWidth="60%"
         />
         <KPICard
-          label="평균 근속"
+          label={t("kpi_avg_tenure")}
           value={avgYearsRaw.toFixed(1)}
-          unit="년"
+          unit={t("kpi_avg_tenure_unit")}
           icon={Activity}
           iconTone="text-secondary-slate"
           barTone="bg-secondary-slate"
@@ -216,7 +219,7 @@ export default async function EmployeesPage({
                   type="search"
                   name="q"
                   defaultValue={searchParams.q ?? ""}
-                  placeholder="이름·사번·이메일"
+                  placeholder={t("search_placeholder")}
                   className="min-h-11 w-full rounded-lg border border-outline-variant/40 bg-surface-container-low py-1.5 pl-9 pr-3 text-data-tabular text-on-surface placeholder:text-outline focus:border-primary-electric focus:outline-none focus:ring-1 focus:ring-primary-electric"
                 />
               </form>
@@ -226,7 +229,7 @@ export default async function EmployeesPage({
                   href={buildHref({ dept: undefined })}
                   active={!searchParams.dept}
                 >
-                  전체
+                  {tCommon("all")}
                 </FilterChip>
                 {allDepts.map((d) => (
                   <FilterChip
@@ -240,19 +243,27 @@ export default async function EmployeesPage({
               </div>
 
               <span className="ml-auto text-label-sm text-on-surface-variant">
-                {list.length}명 표시
+                {t("displayed", { count: list.length })}
               </span>
             </div>
 
             {/* Directory grid */}
             {list.length === 0 ? (
               <div className="rounded-lg border border-outline-variant/30 bg-surface-container-lowest/40 p-12 text-center text-body-md text-on-surface-variant">
-                조건에 맞는 직원이 없습니다.
+                {t("no_match")}
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-stack-md md:grid-cols-2 xl:grid-cols-3">
                 {list.map((emp) => (
-                  <EmployeeCard key={emp.id} emp={emp} />
+                  <EmployeeCard
+                    key={emp.id}
+                    emp={emp}
+                    labels={{
+                      unassignedDept: t("unassigned_dept"),
+                      unassignedPosition: t("unassigned_position"),
+                      hireDateLabel: t("hire_date_label"),
+                    }}
+                  />
                 ))}
               </div>
             )}
@@ -265,10 +276,10 @@ export default async function EmployeesPage({
           <div className="glass-panel rounded-xl p-stack-md">
             <h3 className="mb-stack-md flex items-center gap-2 text-headline-md font-semibold text-on-surface">
               <Building2 aria-hidden className="h-5 w-5 text-primary-electric" />
-              부서별 분포
+              {t("dept_distribution")}
             </h3>
             {deptDistribution.length === 0 ? (
-              <p className="text-body-md text-on-surface-variant">부서 데이터가 없습니다.</p>
+              <p className="text-body-md text-on-surface-variant">{t("no_dept_data")}</p>
             ) : (
               <div className="space-y-4">
                 {deptDistribution.map((d) => {
@@ -303,13 +314,13 @@ export default async function EmployeesPage({
           <div className="glass-panel rounded-xl p-stack-md">
             <h3 className="mb-stack-md flex items-center gap-2 text-headline-md font-semibold text-on-surface">
               <Sparkles aria-hidden className="h-5 w-5 text-tertiary-sky" />
-              신규 입사
+              {t("new_hires")}
             </h3>
             <p className="mb-4 text-label-sm text-on-surface-variant">
-              {format(today, "yyyy'년' M'월'")} 입사자
+              {t("new_hires_caption", { year: today.getFullYear(), month: today.getMonth() + 1 })}
             </p>
             {newHires.length === 0 ? (
-              <p className="text-body-md text-on-surface-variant">해당 없음</p>
+              <p className="text-body-md text-on-surface-variant">{t("no_new_hires")}</p>
             ) : (
               <ul className="space-y-3">
                 {newHires.map((emp) => {
@@ -370,7 +381,17 @@ function FilterChip({
   );
 }
 
-function EmployeeCard({ emp }: { emp: EmployeeListItem }) {
+function EmployeeCard({
+  emp,
+  labels,
+}: {
+  emp: EmployeeListItem;
+  labels: {
+    unassignedDept: string;
+    unassignedPosition: string;
+    hireDateLabel: string;
+  };
+}) {
   const tone = emp.department?.name
     ? (DEPT_TONE[emp.department.name] ?? DEFAULT_TONE)
     : DEFAULT_TONE;
@@ -396,7 +417,7 @@ function EmployeeCard({ emp }: { emp: EmployeeListItem }) {
             tone.badge,
           )}
         >
-          {emp.department?.name ?? "미지정"}
+          {emp.department?.name ?? labels.unassignedDept}
         </span>
       </div>
 
@@ -405,12 +426,12 @@ function EmployeeCard({ emp }: { emp: EmployeeListItem }) {
           {emp.name}
         </h3>
         <p className="text-sm text-on-surface-variant">
-          {emp.position?.name ?? "직급 미지정"}
+          {emp.position?.name ?? labels.unassignedPosition}
         </p>
       </div>
 
       <div className="relative mt-auto flex items-center justify-between border-t border-outline-variant/20 pt-4">
-        <span className="text-[12px] tabular-nums text-outline">입사 {hireText}</span>
+        <span className="text-[12px] tabular-nums text-outline">{labels.hireDateLabel} {hireText}</span>
         <span className="text-[11px] tabular-nums text-on-surface-variant">
           {emp.employee_no}
         </span>

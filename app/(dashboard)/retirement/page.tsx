@@ -1,4 +1,5 @@
 import { PiggyBank, Download } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { calcProvision, type RetirementProvision } from "@/lib/retirement/calculator";
 
@@ -15,6 +16,7 @@ type EmpRow = {
 };
 
 export default async function RetirementPage() {
+  const t = await getTranslations("retirement");
   const supabase = createClient();
 
   const { data: emps } = await supabase
@@ -71,11 +73,10 @@ export default async function RetirementPage() {
             Retirement Provision
           </p>
           <h1 className="text-headline-lg font-semibold tracking-tight text-on-surface">
-            퇴직급여 충당부채
+            {t("title")}
           </h1>
           <p className="text-body-md text-on-surface-variant">
-            근로자퇴직급여보장법 §8 — 1년 이상 근속자별 누적 발생액. 회계 부채 항목으로
-            기록되어야 합니다.
+            {t("subtitle")}
           </p>
         </div>
         <a

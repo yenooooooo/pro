@@ -8,6 +8,7 @@ import {
   Plus,
   Wallet,
 } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { cn } from "@/lib/utils/cn";
 import { formatKRW, formatKRWCompact } from "@/lib/utils/format";
 import { createClient } from "@/lib/supabase/server";
@@ -110,9 +111,12 @@ export default async function ExpensesPage({
         .returns<Vendor[]>(),
     ]);
 
+  const t = await getTranslations("expenses");
   const categories = categoriesRaw ?? [];
   const vendors = vendorsRaw ?? [];
-  const rows = (expensesRaw ?? []).map(toRow);
+  const rows = (expensesRaw ?? []).map((r) =>
+    toRow(r, { receiptMissing: t("receipt_missing") }),
+  );
 
   const totalDisbursed = rows.reduce((s, r) => s + r.amount, 0);
   const anomalies = rows.filter((r) => r.status === "flagged");
@@ -132,10 +136,11 @@ export default async function ExpensesPage({
 
   const byCategory = aggregateByCategory(rows);
   const top4Categories = byCategory.slice(0, 4);
-  const top3Distribution = computeDistribution(byCategory);
 
   const periodLabel =
     month === null ? `${year}년 전체` : `${year}년 ${month}월`;
+
+  const top3Distribution = computeDistribution(byCategory, t("label_other"));
 
   return (
     <div className="space-y-stack-lg">
@@ -143,10 +148,11 @@ export default async function ExpensesPage({
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <h2 className="text-headline-lg font-semibold tracking-tight text-on-surface">
-            지출 관리
+            {t("title")}
           </h2>
           <p className="mt-1 text-body-md text-on-surface-variant">
-            {periodLabel} · {rows.length}건
+            {periodLabel} · {rows.length}
+            {t("kpi_unit_count")}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -165,14 +171,14 @@ export default async function ExpensesPage({
             href="/expenses/import"
             className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-outline-variant/40 bg-surface-container px-4 py-2 text-label-sm text-on-surface transition-colors hover:bg-surface-container-high"
           >
-            카드 임포트
+            {t("import_csv")}
           </Link>
           <Link
             href="/expenses/new"
             className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary-electric px-4 py-2 text-label-sm font-semibold text-on-primary transition-opacity hover:opacity-90"
           >
             <Plus aria-hidden className="h-[18px] w-[18px]" />
-            지출 등록
+            {t("add")}
           </Link>
         </div>
       </div>
@@ -191,12 +197,18 @@ export default async function ExpensesPage({
       </div>
 
       {/* 카테고리 월 한도 경고 */}
-      {budgetChecks.length > 0 ? <BudgetAlertBanner checks={budgetChecks} /> : null}
+      {budgetChecks.length > 0 ? (
+        <BudgetAlertBanner
+          checks={budgetChecks}
+          title={t("limit_warning_title")}
+          exceededLabel={t("exceeded")}
+        />
+      ) : null}
 
       {/* KPI Row */}
       <div className="grid grid-cols-1 gap-gutter md:grid-cols-3">
         <KPICard
-          label="총 지출액"
+          label={t("kpi_total")}
           value={`₩${formatCompactKRW(totalDisbursed)}`}
           icon={Wallet}
           iconTone="text-tertiary-sky/60"
@@ -205,9 +217,9 @@ export default async function ExpensesPage({
           barWidth="100%"
         />
         <KPICard
-          label="확인 대기"
+          label={t("kpi_pending")}
           value={String(pendingCount)}
-          unit="건"
+          unit={t("kpi_unit_count")}
           icon={Hourglass}
           iconTone="text-secondary-slate/60"
           barTone="bg-secondary-slate"
@@ -215,11 +227,11 @@ export default async function ExpensesPage({
           barWidth={pendingCount > 0 ? "40%" : "0%"}
         />
         <KPICard
-          label="검토 필요"
+          label={t("kpi_review_needed")}
           labelTone="text-error-soft"
           value={String(anomalies.length)}
           valueTone="text-error-soft"
-          unit={anomalies.length > 0 ? "건" : ""}
+          unit={anomalies.length > 0 ? t("kpi_unit_count") : ""}
           icon={AlertTriangle}
           iconTone="text-error-soft/80"
           barTone="bg-error-soft animate-pulse"
@@ -234,8 +246,16 @@ export default async function ExpensesPage({
         <div className="flex flex-col gap-gutter lg:col-span-8">
           {/* Distribution + High-Value */}
           <div className="grid grid-cols-1 gap-gutter md:grid-cols-2">
-            <DistributionCard segments={top3Distribution} total={totalDisbursed} />
-            <HighValueCategoriesCard items={top4Categories} />
+            <DistributionCard
+              segments={top3Distribution}
+              total={totalDisbursed}
+              title={t("category_distribution")}
+            />
+            <HighValueCategoriesCard
+              items={top4Categories}
+              title={t("top_categories")}
+              countUnit={t("kpi_unit_count")}
+            />
           </div>
 
           {/* Transactions */}
@@ -291,21 +311,28 @@ export default async function ExpensesPage({
 
         {/* RIGHT — 검토 필요 거래 */}
         <div className="lg:col-span-4">
-          <FlaggedListPanel rows={anomalies.slice(0, 5)} />
+          <FlaggedListPanel
+            rows={anomalies.slice(0, 5)}
+            title={t("review_needed_transactions")}
+            reviewLabel={t("review")}
+          />
         </div>
       </div>
     </div>
   );
 }
 
-function toRow(r: ExpenseDbRow): ExpenseRow {
+function toRow(
+  r: ExpenseDbRow,
+  labels: { receiptMissing: string },
+): ExpenseRow {
   const status = deriveStatus(r);
   const alertReason =
     status === "flagged"
       ? r.vendor_id === null
         ? "거래처 누락"
         : !hasReceipt(r)
-          ? "영수증 누락"
+          ? labels.receiptMissing
           : "확인 필요"
       : undefined;
   return {
@@ -352,6 +379,7 @@ function aggregateByCategory(rows: ExpenseRow[]): Array<{
 
 function computeDistribution(
   byCategory: Array<{ name: string; amount: number }>,
+  otherLabel: string,
 ): Array<{ label: string; pct: number; color: string }> {
   const total = byCategory.reduce((s, c) => s + c.amount, 0);
   if (total === 0) return [];
@@ -368,7 +396,7 @@ function computeDistribution(
   if (rest > 0) {
     // ★ "기타" 카테고리(실제 비용 카테고리)와 혼동 방지 — "그 외" 사용
     segments.push({
-      label: "그 외",
+      label: otherLabel,
       pct: Math.round((rest / total) * 100),
       color: palette[2],
     });
@@ -411,13 +439,15 @@ function formatCompactKRW(n: number): string {
 function DistributionCard({
   segments,
   total,
+  title,
 }: {
   segments: Array<{ label: string; pct: number; color: string }>;
   total: number;
+  title: string;
 }) {
   return (
     <div className="glass-panel flex h-80 flex-col rounded-xl p-stack-md">
-      <h3 className="mb-4 text-sm font-semibold text-on-surface">카테고리 분포</h3>
+      <h3 className="mb-4 text-sm font-semibold text-on-surface">{title}</h3>
       {segments.length === 0 ? (
         <div className="flex flex-1 items-center justify-center text-body-md text-on-surface-variant">
           데이터 없음
@@ -452,12 +482,16 @@ function DistributionCard({
 
 function HighValueCategoriesCard({
   items,
+  title,
+  countUnit,
 }: {
   items: Array<{ name: string; txCount: number; amount: number }>;
+  title: string;
+  countUnit: string;
 }) {
   return (
     <div className="glass-panel flex h-80 flex-col rounded-xl p-stack-md">
-      <h3 className="mb-4 text-sm font-semibold text-on-surface">상위 카테고리</h3>
+      <h3 className="mb-4 text-sm font-semibold text-on-surface">{title}</h3>
       {items.length === 0 ? (
         <div className="flex flex-1 items-center justify-center text-body-md text-on-surface-variant">
           데이터 없음
@@ -484,7 +518,8 @@ function HighValueCategoriesCard({
                   <div>
                     <div className="text-data-tabular text-on-surface">{c.name}</div>
                     <div className="text-label-sm text-on-surface-variant">
-                      {c.txCount}건
+                      {c.txCount}
+                      {countUnit}
                     </div>
                   </div>
                 </div>
@@ -500,7 +535,15 @@ function HighValueCategoriesCard({
   );
 }
 
-function BudgetAlertBanner({ checks }: { checks: BudgetCheck[] }) {
+function BudgetAlertBanner({
+  checks,
+  title,
+  exceededLabel,
+}: {
+  checks: BudgetCheck[];
+  title: string;
+  exceededLabel: string;
+}) {
   const hasOver = checks.some((c) => c.status === "over");
   return (
     <div
@@ -519,7 +562,7 @@ function BudgetAlertBanner({ checks }: { checks: BudgetCheck[] }) {
           )}
         />
         <h3 className="text-label-sm font-semibold uppercase tracking-wider text-on-surface">
-          카테고리 월 한도 경고
+          {title}
         </h3>
       </div>
       <ul className="space-y-2 text-data-tabular">
@@ -542,7 +585,7 @@ function BudgetAlertBanner({ checks }: { checks: BudgetCheck[] }) {
                 )}
               >
                 {Math.round(c.ratio * 100)}%
-                {c.status === "over" ? " · 초과" : " · 임박"}
+                {c.status === "over" ? ` · ${exceededLabel}` : " · 임박"}
               </span>
             </span>
           </li>
@@ -552,12 +595,20 @@ function BudgetAlertBanner({ checks }: { checks: BudgetCheck[] }) {
   );
 }
 
-function FlaggedListPanel({ rows }: { rows: ExpenseRow[] }) {
+function FlaggedListPanel({
+  rows,
+  title,
+  reviewLabel,
+}: {
+  rows: ExpenseRow[];
+  title: string;
+  reviewLabel: string;
+}) {
   return (
     <div className="glass-panel flex h-full flex-col overflow-hidden rounded-xl">
       <div className="flex items-center gap-2 border-b border-surface-container-high bg-surface-container-lowest/50 p-4">
         <AlertTriangle aria-hidden className="h-4 w-4 text-error-soft" />
-        <h3 className="text-sm font-semibold text-on-surface">검토 필요 거래</h3>
+        <h3 className="text-sm font-semibold text-on-surface">{title}</h3>
       </div>
       {rows.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 p-8 text-center">
@@ -590,7 +641,7 @@ function FlaggedListPanel({ rows }: { rows: ExpenseRow[] }) {
                     href={`/expenses/${r.id}/edit`}
                     className="mt-1 inline-flex items-center gap-1 text-label-sm text-primary-electric transition-colors hover:text-primary-container"
                   >
-                    검토 <ChevronRight aria-hidden className="h-3 w-3" />
+                    {reviewLabel} <ChevronRight aria-hidden className="h-3 w-3" />
                   </Link>
                 </div>
               </div>

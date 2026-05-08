@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Calendar, FileText, Users } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -27,6 +28,7 @@ export default async function YearEndPage({
 }: {
   searchParams?: { year?: string };
 }) {
+  const t = await getTranslations("year_end");
   const supabase = createClient();
   const year = Number(searchParams?.year) || new Date().getFullYear();
 
@@ -77,11 +79,10 @@ export default async function YearEndPage({
             Year-End Tax Settlement
           </p>
           <h1 className="text-headline-lg font-semibold tracking-tight text-on-surface">
-            연말정산
+            {t("title")}
           </h1>
           <p className="text-body-md text-on-surface-variant">
-            소득세법 시행령 §45 — 인적공제·특별공제 자동 집계 및 결정세액 추정.
-            매년 1월 신고 자료 준비.
+            {t("subtitle")}
           </p>
         </div>
         <form method="get" className="flex items-center gap-2">

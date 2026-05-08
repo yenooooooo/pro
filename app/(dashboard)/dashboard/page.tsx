@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import {
   AlertTriangle,
   Building2,
@@ -93,6 +94,9 @@ export default async function DashboardPage({
   const year = parseIntInRange(searchParams?.year, 2000, 2100, DEFAULT_YEAR);
   const month = parseIntInRange(searchParams?.month, 1, 12, DEFAULT_MONTH);
   const { year: prevYear, month: prevMonth } = previousMonth(year, month);
+
+  const t = await getTranslations("dashboard");
+  const tCommon = await getTranslations("common");
 
   const supabase = createClient();
   const today = new Date();
@@ -328,17 +332,17 @@ export default async function DashboardPage({
         <div>
           <p className="mb-2 inline-flex items-center gap-2 text-label-sm uppercase tracking-widest text-indigo-400">
             <Radar aria-hidden className="h-4 w-4" />
-            System Status: Nominal · {year}년 {month}월
+            {t("system_status")} · {year}년 {month}월
           </p>
           <h1 className="text-headline-lg font-bold tracking-tight text-on-surface sm:text-display-xl">
-            Strategic Dashboard
+            {t("title")}
           </h1>
           <p className="mt-1 text-body-md text-on-surface-variant">
-            Nexus ERP · 실시간 경영 지표 · 전월 대비 변화
+            {t("subtitle")}
           </p>
         </div>
         <div className="hidden items-center gap-3 rounded-lg border border-outline-variant/30 bg-surface-container-high/50 px-4 py-2 backdrop-blur-md lg:flex">
-          <span className="text-data-tabular text-slate-400">SYNC:</span>
+          <span className="text-data-tabular text-slate-400">{t("sync")}:</span>
           <span className="text-data-tabular font-bold tabular-nums text-tertiary-sky">
             {syncTime} KST
           </span>
@@ -352,14 +356,14 @@ export default async function DashboardPage({
       {/* KPI 4종 */}
       <div className="grid grid-cols-1 gap-gutter sm:grid-cols-2 xl:grid-cols-4">
         <KPICard
-          label="이번달 총 급여"
+          label={t("kpi_total_payroll")}
           value={formatKRW(totalPayroll)}
           delta={payrollDelta}
           icon={Coins}
           tone="primary"
         />
         <KPICard
-          label="이번달 총 지출"
+          label={t("kpi_total_expense")}
           value={formatKRW(totalExpense)}
           delta={expenseDelta}
           icon={TrendingUp}
@@ -367,16 +371,16 @@ export default async function DashboardPage({
           deltaInversed
         />
         <KPICard
-          label="연차 촉진 대상자"
-          value={`${promotionTargets.length}명`}
-          subtext="사용률 80% 미만"
+          label={t("kpi_leave_promotion")}
+          value={`${promotionTargets.length}${t("kpi_leave_promotion_unit")}`}
+          subtext={t("kpi_leave_promotion_desc")}
           icon={Users}
           tone="secondary"
         />
         <KPICard
-          label="월말결산 진행률"
+          label={t("kpi_closing_progress")}
           value={`${closingPct}%`}
-          subtext={`${doneTasks}/${totalTasks} 완료`}
+          subtext={t("kpi_closing_done", { done: doneTasks, total: totalTasks })}
           icon={CalendarClock}
           tone="primary"
           progressValue={closingPct}
@@ -385,16 +389,16 @@ export default async function DashboardPage({
 
       {/* Charts row */}
       <div className="grid grid-cols-1 gap-gutter lg:grid-cols-2">
-        <Panel title="부서별 인건비" subtitle={`${year}년 ${month}월`}>
+        <Panel title={t("department_costs")} subtitle={t("department_costs_caption", { year, month })}>
           <DepartmentCostChart data={departmentChart} />
         </Panel>
-        <Panel title="카테고리별 지출" subtitle={`${year}년 ${month}월 · 상위 5`}>
+        <Panel title={t("category_expenses")} subtitle={t("category_expenses_caption", { year, month, n: 5 })}>
           <ExpenseCategoryChart data={categoryChart} />
         </Panel>
       </div>
 
       {/* 6mo trend */}
-      <Panel title="최근 6개월 급여·지출 추세">
+      <Panel title={t("trend_6mo")}>
         <TrendChart data={trendData} />
       </Panel>
 
@@ -408,6 +412,7 @@ export default async function DashboardPage({
           icon={Building2}
           empty="만료 임박 거래처 없음"
           href="/vendors"
+          viewAllLabel={tCommon("view_all")}
         >
           {expiringVendors.map((v) => (
             <AlertItem
@@ -431,6 +436,7 @@ export default async function DashboardPage({
           icon={Package}
           empty="만료 임박 자산 없음"
           href="/assets"
+          viewAllLabel={tCommon("view_all")}
         >
           {expiringAssets.map((a) => (
             <AlertItem
@@ -452,6 +458,7 @@ export default async function DashboardPage({
           icon={AlertTriangle}
           empty="52시간 초과 직원 없음"
           href="/attendance"
+          viewAllLabel={tCommon("view_all")}
         >
           {overworkedEmployees.map((e) => (
             <AlertItem
@@ -697,12 +704,14 @@ function AlertPanel({
   empty,
   href,
   children,
+  viewAllLabel,
 }: {
   title: string;
   icon: typeof AlertTriangle;
   empty: string;
   href?: string;
   children: React.ReactNode;
+  viewAllLabel?: string;
 }) {
   const items = Array.isArray(children) ? children : [children];
   const hasItems = items.length > 0 && items.some(Boolean);
@@ -719,7 +728,7 @@ function AlertPanel({
             href={href}
             className="text-label-sm text-primary-electric transition-colors hover:text-primary-container"
           >
-            전체보기
+            {viewAllLabel ?? "전체보기"}
           </Link>
         ) : null}
       </header>

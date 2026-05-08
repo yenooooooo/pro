@@ -5,6 +5,7 @@ import {
   Lock,
   ShieldCheck,
 } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { cn } from "@/lib/utils/cn";
 import { formatKRW } from "@/lib/utils/format";
 import { createClient } from "@/lib/supabase/server";
@@ -47,6 +48,7 @@ export default async function ClosingPage({
 }) {
   const year = parseIntInRange(searchParams?.year, 2000, 2100, DEFAULT_YEAR);
   const month = parseIntInRange(searchParams?.month, 1, 12, DEFAULT_MONTH);
+  const t = await getTranslations("closing");
 
   const supabase = createClient();
 
@@ -129,10 +131,10 @@ export default async function ClosingPage({
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-end xl:col-span-12">
         <div>
           <h1 className="mb-2 text-headline-lg font-bold tracking-tight text-white sm:text-display-xl sm:text-5xl">
-            Monthly Closing Center
+            {t("title")}
           </h1>
           <p className="max-w-2xl text-body-lg text-on-surface-variant">
-            {year}년 {month}월 결산 · 모든 항목 정합성 확인 후 마감 확정.
+            {t("subtitle")}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">

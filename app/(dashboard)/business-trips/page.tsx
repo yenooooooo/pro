@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Plane, Plus } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -38,6 +39,7 @@ type Trip = {
 };
 
 export default async function BusinessTripsPage() {
+  const t = await getTranslations("business_trips");
   const supabase = createClient();
   const { data: rows } = await supabase
     .schema("chongmu")
@@ -64,10 +66,10 @@ export default async function BusinessTripsPage() {
             Business Trip Settlement
           </p>
           <h1 className="text-headline-lg font-semibold tracking-tight text-on-surface">
-            출장 정산
+            {t("title")}
           </h1>
           <p className="text-body-md text-on-surface-variant">
-            출장 신청부터 영수증 일괄 OCR, 자동 정산까지. AI 가 사진만으로 카테고리(교통/숙박/식비)를 분류합니다.
+            {t("subtitle")}
           </p>
         </div>
         <Link

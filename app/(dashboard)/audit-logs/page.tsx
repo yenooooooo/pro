@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { ShieldCheck } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { AuditLogsTable } from "./_components/audit-logs-table";
 
@@ -25,6 +26,7 @@ export default async function AuditLogsPage({
 }: {
   searchParams: SearchParams;
 }) {
+  const t = await getTranslations("audit_logs");
   const supabase = createClient();
   const action = searchParams.action ?? "";
   const page = Math.max(1, Number(searchParams.page ?? 1) || 1);
@@ -55,11 +57,10 @@ export default async function AuditLogsPage({
           Audit Trail
         </p>
         <h1 className="text-headline-lg font-semibold tracking-tight text-on-surface">
-          감사 로그
+          {t("title")}
         </h1>
         <p className="text-body-md text-on-surface-variant">
-          급여 확정·직원 정보 변경·퇴사 처리 등 민감 행위 이력을 시간순으로 보관합니다. 로그는
-          수정·삭제할 수 없습니다.
+          {t("subtitle")}
         </p>
       </header>
 

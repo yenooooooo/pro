@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { FileSignature, Plus, AlertTriangle } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { differenceInDays } from "date-fns";
 
@@ -66,6 +67,8 @@ export default async function ContractsPage() {
     (c) => c.daysToExpiry !== null && c.daysToExpiry < 0,
   );
 
+  const t = await getTranslations("contracts");
+
   return (
     <div className="space-y-stack-lg">
       <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
@@ -75,7 +78,7 @@ export default async function ContractsPage() {
             Contract Management
           </p>
           <h1 className="text-headline-lg font-semibold tracking-tight text-on-surface">
-            계약서 관리
+            {t("title")}
           </h1>
           <p className="text-body-md text-on-surface-variant">
             계약서 PDF/이미지를 업로드하면 AI 가 만료일·당사자·금액을 자동 추출.
@@ -87,7 +90,7 @@ export default async function ContractsPage() {
           className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-gradient-to-b from-primary-electric to-primary-container px-4 py-2 text-label-sm font-semibold text-on-primary transition-opacity hover:opacity-90"
         >
           <Plus aria-hidden className="h-4 w-4" />
-          새 계약서 등록
+          {t("add")}
         </Link>
       </header>
 

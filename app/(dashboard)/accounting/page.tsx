@@ -1,4 +1,5 @@
 import { BookOpen, ScrollText, FileText, AlertTriangle } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { getTrialBalance } from "@/lib/accounting/trial-balance";
 
@@ -34,6 +35,7 @@ export default async function AccountingPage({
 }) {
   const today = new Date().toISOString().slice(0, 10);
   const asOf = searchParams?.as_of ?? today;
+  const t = await getTranslations("accounting");
 
   const supabase = createClient();
 
@@ -60,10 +62,10 @@ export default async function AccountingPage({
             Accounting Ledger
           </p>
           <h1 className="text-headline-lg font-semibold tracking-tight text-on-surface">
-            회계
+            {t("title")}
           </h1>
           <p className="text-body-md text-on-surface-variant">
-            분개장 · 원장 · 시산표 · 재무제표. 한국 일반기업회계기준 약식 반영.
+            {t("subtitle")}
           </p>
         </div>
         <form method="get" className="flex items-center gap-2">

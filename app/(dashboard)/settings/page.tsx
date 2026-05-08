@@ -6,11 +6,13 @@ import {
   Plug,
 } from "lucide-react";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { InsuranceRatesForm } from "./_components/insurance-rates-form";
 import { ClosingTasksManager } from "./_components/closing-tasks-manager";
 
 export default async function SettingsPage() {
+  const t = await getTranslations("settings");
   const supabase = createClient();
 
   const [{ data: rates }, { data: tasks }] = await Promise.all([
@@ -38,10 +40,10 @@ export default async function SettingsPage() {
           System
         </p>
         <h1 className="text-headline-lg font-semibold tracking-tight text-on-surface">
-          시스템 설정
+          {t("title")}
         </h1>
         <p className="text-body-md text-on-surface-variant">
-          4대보험 요율과 월말결산 체크리스트를 관리합니다. 모든 변경은 감사 로그에 기록됩니다.
+          {t("subtitle")}
         </p>
       </header>
 

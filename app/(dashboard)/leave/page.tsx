@@ -7,6 +7,7 @@ import {
   Plus,
   Timer,
 } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { cn } from "@/lib/utils/cn";
 import { createClient } from "@/lib/supabase/server";
 import { LeaveActions } from "./list/_components/leave-actions";
@@ -82,6 +83,7 @@ const TONE_INITIAL_BG: Record<Tone, string> = {
 };
 
 export default async function LeavePage() {
+  const t = await getTranslations("leave");
   const supabase = createClient();
   const today = format(new Date(), "yyyy-MM-dd");
   const currentYear = new Date().getFullYear();
@@ -155,10 +157,10 @@ export default async function LeavePage() {
       <div className="mb-stack-lg flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <h2 className="text-headline-lg font-semibold tracking-tight text-on-surface">
-            연차 및 휴가 관리
+            {t("title")}
           </h2>
           <p className="mt-1 text-body-md text-on-surface-variant">
-            실시간 전사 휴가 현황 및 승인 시스템
+            {t("subtitle")}
           </p>
         </div>
         <div className="flex flex-wrap gap-3">

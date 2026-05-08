@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { FileSignature, Plus } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import {
   APPROVAL_KIND_LABEL,
@@ -29,6 +30,7 @@ type Row = {
 };
 
 export default async function ApprovalsPage() {
+  const t = await getTranslations("approvals");
   const supabase = createClient();
   const { data: rows } = await supabase
     .schema("chongmu")
@@ -47,10 +49,10 @@ export default async function ApprovalsPage() {
             Electronic Approval
           </p>
           <h1 className="text-headline-lg font-semibold tracking-tight text-on-surface">
-            전자결재
+            {t("title")}
           </h1>
           <p className="text-body-md text-on-surface-variant">
-            지출·구매·출장 결재를 다단계 결재선으로 처리합니다. 모든 결재 단계는 감사 로그에 자동 기록됩니다.
+            {t("subtitle")}
           </p>
         </div>
         <Link
@@ -58,7 +60,7 @@ export default async function ApprovalsPage() {
           className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-gradient-to-b from-primary-electric to-primary-container px-4 py-2 text-label-sm font-semibold text-on-primary transition-opacity hover:opacity-90"
         >
           <Plus aria-hidden className="h-4 w-4" />
-          새 결재 발의
+          {t("create")}
         </Link>
       </header>
 

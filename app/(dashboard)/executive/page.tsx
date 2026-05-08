@@ -8,6 +8,7 @@ import {
   ArrowDown,
   Minus,
 } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import {
   calculateFinancialRatios,
@@ -30,6 +31,9 @@ export default async function ExecutivePage({
 }) {
   const year = Number(searchParams?.year) || DEFAULT_YEAR;
   const month = Number(searchParams?.month) || DEFAULT_MONTH;
+
+  const t = await getTranslations("executive");
+  const tCommon = await getTranslations("common");
 
   const supabase = createClient();
 
@@ -80,7 +84,7 @@ export default async function ExecutivePage({
             Executive Dashboard
           </p>
           <h1 className="text-headline-lg font-semibold tracking-tight text-on-surface">
-            임원 대시보드
+            {t("title")}
           </h1>
           <p className="text-body-md text-on-surface-variant">
             {year}년 {month}월 핵심 경영 지표 · 부서별 ROI · 현금흐름 예측 ·
@@ -114,7 +118,7 @@ export default async function ExecutivePage({
             type="submit"
             className="h-11 rounded-lg bg-primary px-4 text-label-sm font-semibold text-on-primary transition-opacity hover:opacity-90"
           >
-            적용
+            {tCommon("apply")}
           </button>
         </form>
       </header>
@@ -163,7 +167,7 @@ export default async function ExecutivePage({
         </h2>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           <RatioCard
-            label="유동비율"
+            label={t("kpi_current_ratio")}
             value={ratios.current_ratio}
             unit="%"
             healthy={(v) => v >= 200}
@@ -171,7 +175,7 @@ export default async function ExecutivePage({
             note="200% 이상 우수"
           />
           <RatioCard
-            label="부채비율"
+            label={t("kpi_debt_ratio")}
             value={ratios.debt_ratio}
             unit="%"
             healthy={(v) => v <= 100}
@@ -180,7 +184,7 @@ export default async function ExecutivePage({
             note="100% 이하 안전"
           />
           <RatioCard
-            label="당좌비율"
+            label={t("kpi_quick_ratio")}
             value={ratios.cash_ratio}
             unit="%"
             healthy={(v) => v >= 100}
@@ -188,7 +192,7 @@ export default async function ExecutivePage({
             note="100% 이상"
           />
           <RatioCard
-            label="영업이익률"
+            label={t("kpi_operating_margin")}
             value={ratios.operating_margin}
             unit="%"
             healthy={(v) => v >= 10}

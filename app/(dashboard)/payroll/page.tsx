@@ -8,6 +8,7 @@ import {
   FileText,
   Wallet,
 } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
 import { cn } from "@/lib/utils/cn";
 import { formatKRW } from "@/lib/utils/format";
@@ -60,6 +61,7 @@ export default async function PayrollPage({
 }: {
   searchParams?: { year?: string; month?: string };
 }) {
+  const t = await getTranslations("payroll");
   const year = parseIntInRange(searchParams?.year, 2000, 2100, DEFAULT_YEAR);
   const month = parseIntInRange(searchParams?.month, 1, 12, DEFAULT_MONTH);
 
@@ -105,10 +107,10 @@ export default async function PayrollPage({
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <h2 className="text-headline-lg font-semibold tracking-tight text-on-surface">
-            급여 관리
+            {t("title")}
           </h2>
           <p className="mt-1 text-body-md text-on-surface-variant">
-            월별 급여 계산·검토·확정 · 정밀한 급여 실행 콘솔
+            {t("subtitle")}
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
@@ -195,12 +197,12 @@ export default async function PayrollPage({
               <table className="w-full min-w-[860px] border-collapse text-left">
                 <thead className="border-b border-outline-variant/20 bg-surface-container/30 text-label-sm text-on-surface-variant">
                   <tr>
-                    <th className="min-w-[200px] px-6 py-4 font-semibold">직원</th>
-                    <th className="whitespace-nowrap px-6 py-4 text-right font-semibold">기본급</th>
+                    <th className="min-w-[200px] px-6 py-4 font-semibold">{t("col_employee")}</th>
+                    <th className="whitespace-nowrap px-6 py-4 text-right font-semibold">{t("item_base")}</th>
                     <th className="whitespace-nowrap px-6 py-4 text-right font-semibold">수당</th>
-                    <th className="whitespace-nowrap px-6 py-4 text-right font-semibold">공제</th>
-                    <th className="whitespace-nowrap px-6 py-4 text-right font-semibold">실지급</th>
-                    <th className="whitespace-nowrap px-6 py-4 text-center font-semibold">상태</th>
+                    <th className="whitespace-nowrap px-6 py-4 text-right font-semibold">{t("col_deduction")}</th>
+                    <th className="whitespace-nowrap px-6 py-4 text-right font-semibold">{t("col_net")}</th>
+                    <th className="whitespace-nowrap px-6 py-4 text-center font-semibold">{t("col_status")}</th>
                     <th className="w-10 px-4 py-4" />
                   </tr>
                 </thead>

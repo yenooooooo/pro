@@ -9,6 +9,7 @@ import {
   Plus,
   Sofa,
 } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
 import { cn } from "@/lib/utils/cn";
 import { formatKRW, formatRemainingYears, formatKRWCompact } from "@/lib/utils/format";
@@ -112,16 +113,18 @@ export default async function AssetsPage({
 
   const categoryGroups = aggregateByCategory(decorated);
 
+  const t = await getTranslations("assets");
+
   return (
     <div className="space-y-stack-lg">
       {/* Header */}
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <h2 className="text-headline-lg font-semibold tracking-tight text-on-surface">
-            자산 관리
+            {t("title")}
           </h2>
           <p className="mt-1 text-body-md text-on-surface-variant">
-            고정자산 대장 · 정액법 감가상각 · 내용연수 추적 · {decorated.length}건
+            {t("subtitle")} · {decorated.length}건
           </p>
         </div>
         <Link
@@ -129,14 +132,14 @@ export default async function AssetsPage({
           className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary-electric px-4 py-2 text-label-sm font-semibold text-on-primary transition-opacity hover:opacity-90"
         >
           <Plus aria-hidden className="h-[18px] w-[18px]" />
-          자산 등록
+          {t("add")}
         </Link>
       </div>
 
       {/* KPI Row */}
       <div className="grid grid-cols-1 gap-gutter md:grid-cols-3">
         <KPICard
-          label="총 자산"
+          label={t("kpi_total")}
           value={String(decorated.length)}
           unit="대"
           icon={Package}
@@ -145,7 +148,7 @@ export default async function AssetsPage({
           barWidth="100%"
         />
         <KPICard
-          label="취득 총액"
+          label={t("kpi_total_value")}
           value={`₩${formatCompactKRW(totalCost)}`}
           icon={Coins}
           iconTone="text-tertiary-sky"
@@ -153,7 +156,7 @@ export default async function AssetsPage({
           barWidth="80%"
         />
         <KPICard
-          label="내용연수 임박/만료"
+          label={t("kpi_expiring")}
           labelTone={expiring.length > 0 ? "text-error-soft" : undefined}
           value={String(expiring.length)}
           unit="건"

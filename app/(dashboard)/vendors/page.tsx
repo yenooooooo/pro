@@ -12,6 +12,7 @@ import {
   User,
 } from "lucide-react";
 import { differenceInDays } from "date-fns";
+import { getTranslations } from "next-intl/server";
 import { cn } from "@/lib/utils/cn";
 import { createClient } from "@/lib/supabase/server";
 import { VendorFilters } from "./_components/vendor-filters";
@@ -79,16 +80,18 @@ export default async function VendorsPage({
     (v) => v.daysToExpiry === null || v.daysToExpiry >= 0,
   ).length;
 
+  const t = await getTranslations("vendors");
+
   return (
     <div className="space-y-stack-lg">
       {/* Header */}
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <h2 className="text-headline-lg font-semibold tracking-tight text-on-surface">
-            거래처 관리
+            {t("title")}
           </h2>
           <p className="mt-1 text-body-md text-on-surface-variant">
-            거래처 마스터 · 계약 갱신 알림 · 카테고리별 분류 · {decorated.length}건
+            {t("subtitle")} · {decorated.length}건
           </p>
         </div>
         <Link
@@ -96,14 +99,14 @@ export default async function VendorsPage({
           className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary-electric px-4 py-2 text-label-sm font-semibold text-on-primary transition-opacity hover:opacity-90"
         >
           <Plus aria-hidden className="h-[18px] w-[18px]" />
-          거래처 추가
+          {t("add")}
         </Link>
       </div>
 
       {/* KPI Row */}
       <div className="grid grid-cols-1 gap-gutter md:grid-cols-3">
         <KPICard
-          label="총 거래처"
+          label={t("kpi_total")}
           value={String(decorated.length)}
           unit="개"
           icon={Handshake}
@@ -112,7 +115,7 @@ export default async function VendorsPage({
           barWidth="100%"
         />
         <KPICard
-          label="활성 계약"
+          label={t("kpi_active_contracts")}
           value={String(activeCount)}
           unit="개"
           icon={CheckCircle2}
@@ -125,7 +128,7 @@ export default async function VendorsPage({
           }
         />
         <KPICard
-          label={`만료 임박 (${EXPIRY_THRESHOLD_DAYS}일)`}
+          label={`${t("kpi_expiring_soon")} (${EXPIRY_THRESHOLD_DAYS}일)`}
           labelTone={expiringSoon.length > 0 ? "text-error-soft" : undefined}
           value={String(expiringSoon.length)}
           unit="건"

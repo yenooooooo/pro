@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ShieldAlert, AlertTriangle, AlertCircle, Info } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { getComplianceRisks, severityColor } from "@/lib/compliance/checks";
 
 export const dynamic = "force-dynamic";
@@ -19,6 +20,7 @@ const CATEGORY_LABEL: Record<string, string> = {
 };
 
 export default async function RisksPage() {
+  const t = await getTranslations("risks");
   const items = await getComplianceRisks();
   const dangerCount = items.filter((i) => i.severity === "danger").length;
   const warnCount = items.filter((i) => i.severity === "warn").length;
@@ -32,11 +34,10 @@ export default async function RisksPage() {
           Compliance Risk Center
         </p>
         <h1 className="text-headline-lg font-semibold tracking-tight text-on-surface">
-          법적 리스크 대시보드
+          {t("title")}
         </h1>
         <p className="text-body-md text-on-surface-variant">
-          근로기준법·최저임금법·세무 마감일을 자동 점검합니다. 위반 사항은 즉시 시정,
-          임박 항목은 사전 조치하세요.
+          {t("subtitle")}
         </p>
       </header>
 

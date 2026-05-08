@@ -11,6 +11,7 @@ import {
   Handshake,
   Sparkles,
 } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils/cn";
 
@@ -194,6 +195,7 @@ export default async function ActivityPage({
 }: {
   searchParams?: { page?: string; user?: string };
 }) {
+  const t = await getTranslations("activity");
   const supabase = createClient();
   const page = Math.max(1, Number(searchParams?.page) || 1);
   const userFilter = searchParams?.user ?? "";
@@ -263,11 +265,10 @@ export default async function ActivityPage({
             Company Activity Feed
           </p>
           <h1 className="text-headline-lg font-semibold tracking-tight text-on-surface">
-            활동 피드
+            {t("title")}
           </h1>
           <p className="text-body-md text-on-surface-variant">
-            전사 변경·결재·승인 흐름을 시간순으로 표시. 모든 항목은 감사 로그에
-            연결되어 있습니다.
+            {t("subtitle")}
           </p>
         </div>
         <form className="flex items-center gap-2">

@@ -1,4 +1,5 @@
 import { TrendingUp } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { SimulatorClient } from "./_simulator-client";
 
@@ -18,6 +19,7 @@ type EmpRow = {
 };
 
 export default async function SimulatorPage() {
+  const t = await getTranslations("simulator");
   const supabase = createClient();
 
   // 부서별 인건비 집계
@@ -59,11 +61,10 @@ export default async function SimulatorPage() {
           Workforce Cost Simulator
         </p>
         <h1 className="text-headline-lg font-semibold tracking-tight text-on-surface">
-          인건비 시뮬레이터
+          {t("title")}
         </h1>
         <p className="text-body-md text-on-surface-variant">
-          채용·연봉 인상·최저임금 변동의 월간/연간 비용 임팩트를 실시간으로 계산합니다.
-          기본급에 4대보험 회사부담분(약 9.4%)을 합산해 추정합니다.
+          {t("subtitle")}
         </p>
       </header>
 
