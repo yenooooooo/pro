@@ -34,6 +34,8 @@ const ROLE_NAV_ACCESS: Record<Role, string[]> = {
     "/activity",
     "/contracts",
     "/business-trips",
+    "/revenue",
+    "/executive",
   ],
   finance: [
     "/dashboard",
@@ -51,6 +53,8 @@ const ROLE_NAV_ACCESS: Record<Role, string[]> = {
     "/activity",
     "/contracts",
     "/business-trips",
+    "/revenue",
+    "/executive",
   ],
   employee: ["/dashboard", "/leave", "/payroll", "/approvals"],
 };

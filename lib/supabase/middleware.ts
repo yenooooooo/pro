@@ -111,6 +111,8 @@ const ROLE_ACCESS: Record<string, string[]> = {
     "/activity",
     "/contracts",
     "/business-trips",
+    "/revenue",
+    "/executive",
   ],
   finance: [
     "/payroll",
@@ -128,6 +130,8 @@ const ROLE_ACCESS: Record<string, string[]> = {
     "/activity",
     "/contracts",
     "/business-trips",
+    "/revenue",
+    "/executive",
   ],
   employee: ["/leave", "/payroll", "/approvals"],
 };

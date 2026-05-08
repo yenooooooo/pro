@@ -18,6 +18,8 @@ import {
   Sparkles,
   Activity,
   Plane,
+  Crown,
+  Receipt as ReceiptIcon,
 } from "lucide-react";
 
 export type NavItem = {
@@ -48,4 +50,6 @@ export const DASHBOARD_NAV: NavItem[] = [
   { label: "활동 피드", href: "/activity", icon: Activity },
   { label: "계약서", href: "/contracts", icon: FileSignature },
   { label: "출장 정산", href: "/business-trips", icon: Plane },
+  { label: "매출", href: "/revenue", icon: ReceiptIcon },
+  { label: "임원 대시보드", href: "/executive", icon: Crown },
 ];
