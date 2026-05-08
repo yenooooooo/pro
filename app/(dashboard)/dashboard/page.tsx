@@ -30,6 +30,9 @@ const ExpenseCategoryChart = dynamic(() =>
 const TrendChart = dynamic(() =>
   import("./_components/trend-chart").then((m) => m.TrendChart),
 );
+const AiInsightsCard = dynamic(() =>
+  import("./_components/ai-insights").then((m) => m.AiInsightsCard),
+);
 
 const DEFAULT_YEAR = 2026;
 const DEFAULT_MONTH = 4;
@@ -394,6 +397,9 @@ export default async function DashboardPage({
       <Panel title="최근 6개월 급여·지출 추세">
         <TrendChart data={trendData} />
       </Panel>
+
+      {/* AI 인사이트 */}
+      <AiInsightsCard />
 
       {/* Alerts */}
       <div className="grid grid-cols-1 gap-gutter md:grid-cols-3">

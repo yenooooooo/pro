@@ -18,6 +18,8 @@ import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
 import { ResignButton } from "./_components/ResignButton";
 import { AttendanceHistoryTab } from "./_components/attendance-history-tab";
 import { PayrollHistoryTab } from "./_components/payroll-history-tab";
+import { MarketComparison } from "./_components/market-comparison";
+import { TurnoverRiskCard } from "./_components/turnover-risk-card";
 import { cn } from "@/lib/utils/cn";
 import { maskBankAccount } from "@/lib/utils/mask";
 import { createClient } from "@/lib/supabase/server";
@@ -27,6 +29,8 @@ const TABS = [
   { key: "attendance", label: "근태이력" },
   { key: "payroll", label: "급여이력" },
   { key: "leave", label: "연차" },
+  { key: "market", label: "시장 비교" },
+  { key: "risk", label: "이직 위험" },
 ] as const;
 type TabKey = (typeof TABS)[number]["key"];
 
@@ -249,8 +253,17 @@ export default async function EmployeeDetailPage({
         <LeaveTab balance={leaveBalance} />
       ) : tab === "attendance" ? (
         <AttendanceHistoryTab rows={attendanceRows} />
-      ) : (
+      ) : tab === "payroll" ? (
         <PayrollHistoryTab rows={payrollRows} />
+      ) : tab === "market" ? (
+        <MarketComparison
+          employeeName={emp.name}
+          baseSalary={emp.base_salary}
+          department={emp.department?.name ?? null}
+          position={emp.position?.name ?? null}
+        />
+      ) : (
+        <TurnoverRiskCard employeeId={emp.id} />
       )}
     </div>
   );

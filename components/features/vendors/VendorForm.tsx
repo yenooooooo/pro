@@ -17,6 +17,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils/cn";
 import { recordAudit } from "@/lib/audit/actions";
+import { BusinessCardOcrZone } from "./BusinessCardOcrZone";
 
 const Schema = z.object({
   name: z.string().min(1, "거래처명을 입력하세요").max(100),
@@ -168,6 +169,7 @@ export function VendorForm({ mode, vendorId, initialValues }: Props) {
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-stack-lg" noValidate>
+      {mode === "create" ? <BusinessCardOcrZone form={form} /> : null}
       <Section title="기본 정보">
         <Field label="거래처명" required error={form.formState.errors.name?.message}>
           <input

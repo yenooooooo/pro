@@ -10,6 +10,7 @@ import { formatKRW } from "@/lib/utils/format";
 import { createClient } from "@/lib/supabase/server";
 import { PeriodFilter } from "./_components/period-filter";
 import { TaskToggle } from "./_components/task-toggle";
+import { AiClosingAssistant } from "./_components/ai-assistant";
 
 const DEFAULT_YEAR = 2026;
 const DEFAULT_MONTH = 4;
@@ -262,6 +263,8 @@ export default async function ClosingPage({
 
       {/* RIGHT */}
       <div className="flex flex-col gap-4 xl:col-span-8">
+        <AiClosingAssistant year={year} month={month} />
+
         <div className="flex items-center justify-between border-b border-outline-variant/30 pb-2">
           <h3 className="text-[18px] font-semibold text-white">운영 체크리스트</h3>
           <span className="text-label-sm text-on-surface-variant">
