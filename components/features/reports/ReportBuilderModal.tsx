@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useBodyScrollLock } from "@/lib/hooks/use-body-scroll-lock";
 import {
   X,
   FileSpreadsheet,
@@ -128,6 +129,7 @@ const REPORTS: ReportDef[] = [
 ];
 
 export function ReportBuilderModal({ open, onClose }: Props) {
+  useBodyScrollLock(open);
   const today = new Date();
   const [selected, setSelected] = useState<ReportKind>("payroll");
   const [year, setYear] = useState<number>(today.getFullYear());

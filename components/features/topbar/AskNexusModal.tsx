@@ -10,6 +10,7 @@ import {
   TableProperties,
   Zap,
 } from "lucide-react";
+import { useBodyScrollLock } from "@/lib/hooks/use-body-scroll-lock";
 
 type Props = {
   open: boolean;
@@ -47,6 +48,7 @@ export function AskNexusModal({ open, onClose }: Props) {
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  useBodyScrollLock(open);
 
   useEffect(() => {
     if (open) {

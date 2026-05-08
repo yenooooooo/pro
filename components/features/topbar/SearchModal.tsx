@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { globalSearchAction, type SearchHit } from "@/lib/search/actions";
 import { cn } from "@/lib/utils/cn";
+import { useBodyScrollLock } from "@/lib/hooks/use-body-scroll-lock";
 
 type Props = {
   open: boolean;
@@ -91,6 +92,7 @@ export function SearchModal({ open, onClose }: Props) {
   const [pending, startTransition] = useTransition();
   const [activeIdx, setActiveIdx] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  useBodyScrollLock(open);
   const router = useRouter();
 
   useEffect(() => {

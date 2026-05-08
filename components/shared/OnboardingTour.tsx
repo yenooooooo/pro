@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Sparkles, X, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { useBodyScrollLock } from "@/lib/hooks/use-body-scroll-lock";
 
 /**
  * 첫 방문자를 위한 시나리오 기반 사이트 투어.
@@ -16,17 +17,17 @@ import Link from "next/link";
 const STEPS = [
   {
     title: "Welcome to Nexus ERP",
-    body: "엑셀 10개로 흩어진 총무 업무를 하나로 묶은 미니 ERP 입니다. 5단계 안내로 핵심 차별점을 둘러보세요.",
+    body: "엑셀 10개로 흩어진 총무 업무를 하나로 묶은 미니 ERP 입니다. 7단계 안내로 핵심 차별점을 둘러보세요. (언제든 우상단 ? 아이콘에서 다시 볼 수 있어요)",
     cta: null,
   },
   {
     title: "✨ Ask Nexus — 자연어 질의",
-    body: "상단바 별 아이콘(Ctrl+J)을 누르면 \"개발팀 평균 기본급은?\" 같은 자연어 질문에 답해줍니다. Gemini 무료 tier 기반.",
+    body: "상단바 별 아이콘(Ctrl+J)을 누르면 \"개발팀 평균 기본급은?\" 같은 자연어 질문에 답해줍니다. Gemini 스트리밍으로 답변이 한 글자씩 나타나며, 같은 질문은 5분 캐싱.",
     cta: { label: "Ask Nexus 열기", href: null, hint: "Ctrl+J 또는 상단 ✨ 아이콘" },
   },
   {
     title: "📸 영수증 사진 한 장 → 지출 등록",
-    body: "지출 등록 폼에서 영수증 사진만 업로드하면 일자/금액/VAT/거래처가 자동 입력됩니다. Gemini 우선, 실패 시 Tesseract 자동 fallback.",
+    body: "지출 등록 폼에서 영수증 사진만 업로드하면 일자/금액/VAT/거래처가 자동 입력됩니다. Gemini Vision 우선, 실패 시 Tesseract 자동 fallback.",
     cta: { label: "지출 등록 열기", href: "/expenses/new", hint: null },
   },
   {
@@ -39,11 +40,22 @@ const STEPS = [
     body: "채용·일괄 인상·최저임금 변동 시 월간/연간 비용 임팩트를 슬라이더 한 번으로 계산. 경영진 의사결정 직전 도구.",
     cta: { label: "시뮬레이터", href: "/simulator", hint: null },
   },
+  {
+    title: "👑 임원 대시보드 — 재무 한눈에",
+    body: "유동비율·부채비율·당좌비율·영업이익률 + 부서별 인건비 ROI + AI 현금흐름 예측까지. 회계 분개도 자동 (급여 확정 → 차변/대변).",
+    cta: { label: "임원 대시보드", href: "/executive", hint: null },
+  },
+  {
+    title: "🌐 i18n + ⌨️ 단축키 + 📱 반응형",
+    body: "우상단 EN 토글로 영어 즉시 전환. Ctrl+K(검색) / Ctrl+J(AI) / 모바일에서는 하단 탭바 자동 노출. 전체 28개 페이지 모바일 대응.",
+    cta: { label: "도움말에서 전체 보기", href: null, hint: "우상단 ? 아이콘" },
+  },
 ];
 
 export function OnboardingTour() {
   const [step, setStep] = useState(0);
   const [show, setShow] = useState(false);
+  useBodyScrollLock(show);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
