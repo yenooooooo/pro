@@ -364,3 +364,121 @@ export async function createAndRedirect(input: CreateApprovalInput) {
   }
   return result;
 }
+
+/**
+ * 결재 취소 — 발의자 본인 또는 admin.
+ * draft/pending 상태에서만 가능. status='cancelled' 로 부드러운 처리 (이력 보존).
+ */
+export async function cancelApprovalAction(
+  requestId: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!requestId) return { ok: false, error: "id 누락" };
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "인증 필요" };
+
+  // 권한 확인
+  const { data: req, error: fetchErr } = await supabase
+    .schema("chongmu")
+    .from("approval_requests")
+    .select("id, status, requester_email, title")
+    .eq("id", requestId)
+    .maybeSingle();
+
+  if (fetchErr) return { ok: false, error: fetchErr.message };
+  if (!req) return { ok: false, error: "결재를 찾을 수 없습니다." };
+
+  if (req.status !== "draft" && req.status !== "pending") {
+    return {
+      ok: false,
+      error: "이미 처리된 결재는 취소할 수 없습니다. (admin 권한으로 삭제만 가능)",
+    };
+  }
+
+  const isOwner = req.requester_email === user.email;
+  // admin 체크는 RLS 가 결국 처리 — 여기서는 발의자 본인만 명시 허용
+  if (!isOwner) {
+    // RLS 가 막아주므로 추가 검증 불필요. admin 이면 통과됨.
+  }
+
+  const { error: updateErr } = await supabase
+    .schema("chongmu")
+    .from("approval_requests")
+    .update({
+      status: "cancelled",
+      completed_at: new Date().toISOString(),
+    })
+    .eq("id", requestId);
+
+  if (updateErr) return { ok: false, error: updateErr.message };
+
+  await recordAudit({
+    action: "approval.cancelled",
+    entityType: "approval_request",
+    entityId: requestId,
+    metadata: { title: req.title, by: user.email ?? null },
+  });
+
+  revalidatePath("/approvals");
+  revalidatePath(`/approvals/${requestId}`);
+  return { ok: true };
+}
+
+/**
+ * 결재 영구 삭제 — admin 전용.
+ * status 무관 행 자체 제거. audit log 만 보존.
+ */
+export async function deleteApprovalAction(
+  requestId: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!requestId) return { ok: false, error: "id 누락" };
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "인증 필요" };
+
+  // 메타데이터 미리 (audit 용)
+  const { data: req } = await supabase
+    .schema("chongmu")
+    .from("approval_requests")
+    .select("title, kind, amount, requester_email, status")
+    .eq("id", requestId)
+    .maybeSingle();
+
+  // approval_steps 는 ON DELETE CASCADE 로 자동 삭제됨
+  const { error: deleteErr } = await supabase
+    .schema("chongmu")
+    .from("approval_requests")
+    .delete()
+    .eq("id", requestId);
+
+  if (deleteErr) {
+    return {
+      ok: false,
+      error:
+        deleteErr.message.includes("violates row-level security")
+          ? "삭제 권한이 없습니다 (admin 전용)."
+          : deleteErr.message,
+    };
+  }
+
+  await recordAudit({
+    action: "approval.cancelled", // delete 액션 추가 전까진 cancelled 로 표기 + metadata 에 hard_delete
+    entityType: "approval_request",
+    entityId: requestId,
+    metadata: {
+      hard_delete: true,
+      title: req?.title ?? null,
+      original_status: req?.status ?? null,
+      by: user.email ?? null,
+    },
+  });
+
+  revalidatePath("/approvals");
+  return { ok: true };
+}

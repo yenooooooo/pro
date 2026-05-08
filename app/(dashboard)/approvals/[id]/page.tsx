@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Check, X, Clock, FileSignature } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { DecideButtons } from "./_decide";
+import { ApprovalDangerActions } from "./_actions";
 import { CommentThread } from "@/components/shared/CommentThread";
+import { getCurrentUserRole } from "@/lib/rbac";
 import {
   APPROVAL_KIND_LABEL,
   APPROVAL_STATUS_LABEL,
@@ -71,6 +73,14 @@ export default async function ApprovalDetailPage({
   const statusTone = STATUS_TONE[req.status] ?? STATUS_TONE.draft;
   const statusLabel = label(APPROVAL_STATUS_LABEL, req.status);
 
+  // 현재 사용자 정보 + 권한
+  const { data: { user: currentUser } } = await supabase.auth.getUser();
+  const currentUserEmail = currentUser?.email ?? null;
+  const userRole = await getCurrentUserRole();
+  const isAdmin = userRole === "admin";
+  const isOwner = currentUserEmail === req.requester_email;
+  const isOwnerOrAdmin = isOwner || isAdmin;
+
   return (
     <div className="space-y-stack-lg">
       <Link
@@ -108,6 +118,14 @@ export default async function ApprovalDetailPage({
                 </>
               ) : null}
             </p>
+          </div>
+          <div className="flex flex-col items-end gap-3">
+            <ApprovalDangerActions
+              requestId={req.id}
+              status={req.status}
+              isOwnerOrAdmin={isOwnerOrAdmin}
+              isAdmin={isAdmin}
+            />
           </div>
           {req.amount ? (
             <div className="text-right">
@@ -213,7 +231,7 @@ export default async function ApprovalDetailPage({
       <CommentThread
         entityType="approval_request"
         entityId={req.id}
-        currentUserEmail={(await supabase.auth.getUser()).data.user?.email ?? null}
+        currentUserEmail={currentUserEmail}
       />
     </div>
   );
