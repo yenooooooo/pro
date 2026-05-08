@@ -3,6 +3,7 @@ import {
   ShieldCheck,
   FileX as FileShield,
   Database,
+  Plug,
 } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
@@ -45,7 +46,7 @@ export default async function SettingsPage() {
       </header>
 
       {/* 빠른 링크 */}
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
         <Link
           href="/settings/security"
           className="glass-panel flex items-center gap-3 rounded-xl p-4 transition-colors hover:bg-surface-container-high"
@@ -74,6 +75,16 @@ export default async function SettingsPage() {
           <div>
             <p className="font-semibold text-on-surface">데이터 백업</p>
             <p className="text-label-sm text-on-surface-variant">JSON Export · Supabase 백업 안내</p>
+          </div>
+        </Link>
+        <Link
+          href="/settings/integrations"
+          className="glass-panel flex items-center gap-3 rounded-xl p-4 transition-colors hover:bg-surface-container-high"
+        >
+          <Plug className="h-5 w-5 text-primary-electric" />
+          <div>
+            <p className="font-semibold text-on-surface">외부 연동</p>
+            <p className="text-label-sm text-on-surface-variant">Slack · Sheets · Notion</p>
           </div>
         </Link>
       </div>

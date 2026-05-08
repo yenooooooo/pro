@@ -11,6 +11,7 @@ import {
   approvalRequestedEmail,
   approvalDecidedEmail,
 } from "@/lib/email/templates";
+import { notifyWebhooks } from "@/lib/integrations/webhook";
 
 const StepSchema = z.object({
   approver_email: z.string().email("이메일 형식 오류"),
@@ -112,6 +113,14 @@ export async function createApprovalAction(
     title: parsed.data.title,
     amount: parsed.data.amount ?? null,
     firstApprover: parsed.data.steps[0],
+  });
+
+  // Slack/Discord webhook (graceful skip if 미설정)
+  void notifyWebhooks({
+    title: `📋 새 결재 발의: ${parsed.data.title}`,
+    body: `${user.email ?? "—"} 님이 ${parsed.data.kind} 결재를 발의했습니다.${parsed.data.amount ? ` (${parsed.data.amount.toLocaleString("ko-KR")}원)` : ""}`,
+    category: "approval",
+    url: await getBaseUrl().then((b) => `${b}/approvals/${req.id}`),
   });
 
   revalidatePath("/approvals");
@@ -271,6 +280,15 @@ export async function decideApprovalAction(
     approverEmail: user.email ?? "",
     comment: parsed.data.comment ?? null,
     nextPendingStepNo: nextPending?.step_no ?? null,
+  });
+
+  // Slack/Discord 알림
+  const verb = parsed.data.decision === "approved" ? "승인" : "반려";
+  void notifyWebhooks({
+    title: `${parsed.data.decision === "approved" ? "✅" : "❌"} 결재 ${verb}`,
+    body: `${user.email ?? "—"} 님이 ${parsed.data.stepNo}단계를 ${verb}했습니다.${parsed.data.comment ? `\n💬 ${parsed.data.comment}` : ""}`,
+    category: parsed.data.decision === "approved" ? "approval" : "risk",
+    url: await getBaseUrl().then((b) => `${b}/approvals/${parsed.data.requestId}`),
   });
 
   revalidatePath("/approvals");
