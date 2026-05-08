@@ -36,9 +36,19 @@ export const viewport: Viewport = {
   themeColor: "#0b1326",
 };
 
+// cookies() 를 통해 locale 결정 → 모든 route dynamic 강제
+export const dynamic = "force-dynamic";
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const locale = getLocale();
-  const messages = await getMessages(locale);
+  // i18n: messages 로드 실패 시 fallback (빈 객체) — 페이지 다운 방지
+  let locale: "ko" | "en" = "ko";
+  let messages: Record<string, unknown> = {};
+  try {
+    locale = getLocale();
+    messages = (await getMessages(locale)) as Record<string, unknown>;
+  } catch (err) {
+    console.error("[i18n] failed to load:", err);
+  }
   return (
     <html lang={locale} className="dark" suppressHydrationWarning>
       <head>

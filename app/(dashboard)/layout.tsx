@@ -14,8 +14,21 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const notifications = await getNotifications();
-  const userRole = await getCurrentUserRole();
+
+  // 모든 layout-level fetch 를 fail-soft (페이지 다운 방지)
+  let notifications: Awaited<ReturnType<typeof getNotifications>> = [];
+  try {
+    notifications = await getNotifications();
+  } catch (err) {
+    console.error("[layout] notifications failed:", err);
+  }
+
+  let userRole: Awaited<ReturnType<typeof getCurrentUserRole>> = "admin";
+  try {
+    userRole = await getCurrentUserRole();
+  } catch (err) {
+    console.error("[layout] userRole failed:", err);
+  }
 
   // 즐겨찾기 (UX3)
   let bookmarks: { id: string; kind: "page" | "employee" | "vendor"; target: string; label: string }[] = [];
