@@ -20,6 +20,7 @@ import {
   Plane,
   Crown,
   Receipt as ReceiptIcon,
+  BookOpen,
 } from "lucide-react";
 
 export type NavItem = {
@@ -55,4 +56,5 @@ export const DASHBOARD_NAV: NavItem[] = [
   { key: "business_trips", label: "출장 정산", href: "/business-trips", icon: Plane },
   { key: "revenue", label: "매출", href: "/revenue", icon: ReceiptIcon },
   { key: "executive", label: "임원 대시보드", href: "/executive", icon: Crown },
+  { key: "accounting", label: "회계", href: "/accounting", icon: BookOpen },
 ];

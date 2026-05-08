@@ -37,6 +37,7 @@
     "business_trips": "출장 정산",
     "revenue": "매출",
     "executive": "임원 대시보드",
+    "accounting": "회계",
     "settings": "시스템 설정",
     "audit_logs": "감사 로그"
   },
