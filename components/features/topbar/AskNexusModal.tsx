@@ -121,9 +121,63 @@ export function AskNexusModal({ open, onClose }: Props) {
         cached: false,
       };
 
+      const handleEvent = (event: Record<string, unknown>) => {
+        const type = event.type as string;
+        switch (type) {
+          case "progress":
+            setStage(event.stage as Stage);
+            break;
+          case "meta":
+            collectedMeta = {
+              ...collectedMeta,
+              query: (event.query as AnswerMeta["query"]) ?? null,
+              rows: (event.rows as Record<string, unknown>[]) ?? null,
+            };
+            setMeta(collectedMeta);
+            break;
+          case "chunk":
+            collectedAnswer += String(event.text ?? "");
+            setAnswerText(collectedAnswer);
+            break;
+          case "cached":
+            collectedAnswer = String(event.answer ?? "");
+            setAnswerText(collectedAnswer);
+            collectedMeta = {
+              ...collectedMeta,
+              query: (event.query as AnswerMeta["query"]) ?? null,
+              rows: (event.rows as Record<string, unknown>[]) ?? null,
+              cached: true,
+            };
+            setMeta(collectedMeta);
+            break;
+          case "error":
+            setError(String(event.message ?? "처리 실패"));
+            break;
+          case "done":
+            collectedMeta = {
+              ...collectedMeta,
+              source: (event.source as AnswerMeta["source"]) ?? "gemini",
+              cached: Boolean(event.cached),
+            };
+            setMeta(collectedMeta);
+            break;
+        }
+      };
+
       while (true) {
         const { value, done } = await reader.read();
-        if (done) break;
+        if (done) {
+          // 마지막 partial 라인 flush
+          const tail = buffer.trim();
+          if (tail) {
+            try {
+              handleEvent(JSON.parse(tail) as Record<string, unknown>);
+            } catch {
+              /* 파싱 실패 — 무시 */
+            }
+          }
+          break;
+        }
 
         buffer += decoder.decode(value, { stream: true });
 
@@ -133,52 +187,10 @@ export function AskNexusModal({ open, onClose }: Props) {
 
         for (const line of lines) {
           if (!line.trim()) continue;
-          let event: Record<string, unknown>;
           try {
-            event = JSON.parse(line) as Record<string, unknown>;
+            handleEvent(JSON.parse(line) as Record<string, unknown>);
           } catch {
-            continue;
-          }
-
-          const type = event.type as string;
-          switch (type) {
-            case "progress":
-              setStage(event.stage as Stage);
-              break;
-            case "meta":
-              collectedMeta = {
-                ...collectedMeta,
-                query: (event.query as AnswerMeta["query"]) ?? null,
-                rows: (event.rows as Record<string, unknown>[]) ?? null,
-              };
-              setMeta(collectedMeta);
-              break;
-            case "chunk":
-              collectedAnswer += String(event.text ?? "");
-              setAnswerText(collectedAnswer);
-              break;
-            case "cached":
-              collectedAnswer = String(event.answer ?? "");
-              setAnswerText(collectedAnswer);
-              collectedMeta = {
-                ...collectedMeta,
-                query: (event.query as AnswerMeta["query"]) ?? null,
-                rows: (event.rows as Record<string, unknown>[]) ?? null,
-                cached: true,
-              };
-              setMeta(collectedMeta);
-              break;
-            case "error":
-              setError(String(event.message ?? "처리 실패"));
-              break;
-            case "done":
-              collectedMeta = {
-                ...collectedMeta,
-                source: (event.source as AnswerMeta["source"]) ?? "gemini",
-                cached: Boolean(event.cached),
-              };
-              setMeta(collectedMeta);
-              break;
+            /* 파싱 실패 — 다음 라인 */
           }
         }
       }

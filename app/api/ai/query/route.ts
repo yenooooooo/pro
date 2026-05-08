@@ -25,6 +25,10 @@ import { getGeminiClient, GEMINI_MODELS } from "@/lib/ai/gemini";
 import { SCHEMA_CONTEXT, isSafeQuery } from "@/lib/ai/schema-context";
 import { getCached, setCached, makeCacheKey } from "@/lib/ai/query-cache";
 
+// 스트리밍 정상 동작 위해 dynamic 명시 + Node.js runtime
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 const InputSchema = z.object({
   query: z.string().min(2).max(500),
 });
@@ -248,6 +252,7 @@ export async function POST(req: NextRequest) {
     });
 
     let fullAnswer = "";
+    let lastFinishReason: string | null = null;
     try {
       const stream = await client.models.generateContentStream({
         model: GEMINI_MODELS.flash,
@@ -256,15 +261,26 @@ export async function POST(req: NextRequest) {
             role: "user",
             parts: [
               {
-                text: `사용자 질문: "${userQuery}"\n\n조회된 데이터 (최대 30행, 총 ${rows.length}행):\n\`\`\`json\n${JSON.stringify(sample, null, 2)}\n\`\`\`\n\n위 데이터를 바탕으로 한국어로 친근하게 답변하세요.\n- 1~3 문장\n- 숫자는 천단위 콤마, 금액은 '원' 단위
-- 인사이트(평균 대비, 월대비 등) 1개 포함하면 좋음
-- 데이터가 비어있으면 그렇게 답변
+                text: `사용자 질문: "${userQuery}"
+
+조회된 데이터 (최대 30행, 총 ${rows.length}행):
+\`\`\`json
+${JSON.stringify(sample, null, 2)}
+\`\`\`
+
+위 데이터를 바탕으로 한국어로 친근하게 답변하세요.
+- 2~4 문장으로 충분한 분석 포함 (잘리지 않도록 완결된 문장으로)
+- 숫자는 천단위 콤마, 금액은 '원' 단위
+- 평균/합계/최대값 등 핵심 수치 1개 이상 명시
 - 표/리스트 사용 금지, 자연스러운 문장만`,
               },
             ],
           },
         ],
-        config: { temperature: 0.4 },
+        config: {
+          temperature: 0.4,
+          maxOutputTokens: 1024, // 충분한 답변 보장
+        },
       });
 
       for await (const piece of stream) {
@@ -273,12 +289,31 @@ export async function POST(req: NextRequest) {
           fullAnswer += text;
           await write({ type: "chunk", text });
         }
+        // finishReason 추적 (truncation/safety 감지)
+        const fr = piece.candidates?.[0]?.finishReason;
+        if (fr) lastFinishReason = String(fr);
       }
     } catch (err) {
       // 스트리밍 실패 — explanation fallback
       const fb = plan.explanation ?? "데이터를 조회했지만 요약 생성에 실패했습니다.";
       if (!fullAnswer) await write({ type: "chunk", text: fb });
       console.error("[ask-nexus] stream failed:", err);
+    }
+
+    // 답변이 비정상적으로 짧거나 (truncation 의심) finishReason 이 STOP 이 아니면
+    // 안전하게 fallback 추가 안내.
+    const trimmed = fullAnswer.trim();
+    const looksTruncated =
+      trimmed.length > 0 &&
+      trimmed.length < 30 &&
+      !/[.!?。…」"]$/.test(trimmed);
+    if (
+      looksTruncated ||
+      (lastFinishReason && lastFinishReason !== "STOP" && lastFinishReason !== "FINISH_REASON_STOP")
+    ) {
+      const tail = ` (응답이 일부만 도착했습니다. 다시 질문해 주세요. 사유: ${lastFinishReason ?? "잘림"})`;
+      await write({ type: "chunk", text: tail });
+      fullAnswer += tail;
     }
 
     if (!fullAnswer) {
@@ -288,8 +323,13 @@ export async function POST(req: NextRequest) {
       fullAnswer = fb;
     }
 
-    // ★ 빈 결과는 캐시 안 함 — 잘못된 필터로 0행 나오면 5분간 같은 빈 답변 반복되는 문제
-    if (rows.length > 0) {
+    // ★ 캐싱 조건 — 정상 완료된 응답만 (truncation/짧은 응답/빈결과 캐시 금지)
+    const okToCache =
+      rows.length > 0 &&
+      fullAnswer.trim().length >= 20 &&
+      !looksTruncated &&
+      (!lastFinishReason || lastFinishReason === "STOP" || lastFinishReason === "FINISH_REASON_STOP");
+    if (okToCache) {
       setCached(cacheKey, {
         answer: fullAnswer,
         query: queryMeta,
