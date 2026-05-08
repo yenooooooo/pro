@@ -83,25 +83,24 @@ export default async function EmployeesPage({
     );
   }
 
-  const [{ data: departments }, { data: employees }] = await Promise.all([
+  // ★ 3개 쿼리 병렬화 — 이전: Promise.all(2) 후 sequential 1
+  const [{ data: departments }, { data: employees }, { data: allEmployees }] = await Promise.all([
     supabase
       .from("departments")
       .select("id, name")
       .order("name")
       .returns<{ id: string; name: string }[]>(),
     employeeQuery.returns<EmployeeListItem[]>(),
+    supabase
+      .from("employees")
+      .select("id, department_id, hire_date")
+      .is("deleted_at", null)
+      .eq("status", "active")
+      .returns<{ id: string; department_id: string | null; hire_date: string }[]>(),
   ]);
 
   const list = employees ?? [];
   const allDepts = departments ?? [];
-
-  // 부서별 인원 분포 — 필터와 무관하게 전사 기준 (필터 적용 시 보고용 사이드 패널은 그대로)
-  const { data: allEmployees } = await supabase
-    .from("employees")
-    .select("id, department_id, hire_date")
-    .is("deleted_at", null)
-    .eq("status", "active")
-    .returns<{ id: string; department_id: string | null; hire_date: string }[]>();
 
   const totalCount = allEmployees?.length ?? 0;
   const deptDistribution = allDepts.map((d) => {

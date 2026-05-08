@@ -11,26 +11,22 @@ import { getCurrentUserRole } from "@/lib/rbac";
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
   const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
-  // 모든 layout-level fetch 를 fail-soft (페이지 다운 방지)
-  let notifications: Awaited<ReturnType<typeof getNotifications>> = [];
-  try {
-    notifications = await getNotifications();
-  } catch (err) {
-    console.error("[layout] notifications failed:", err);
-  }
+  // ★ 모든 layout fetch 를 병렬화 — 직렬 4회 호출 → 1라운드 트립
+  const [userResult, notifications, userRole] = await Promise.all([
+    supabase.auth.getUser().catch(() => ({ data: { user: null } })),
+    getNotifications().catch((err) => {
+      console.error("[layout] notifications failed:", err);
+      return [] as Awaited<ReturnType<typeof getNotifications>>;
+    }),
+    getCurrentUserRole().catch((err) => {
+      console.error("[layout] userRole failed:", err);
+      return "admin" as Awaited<ReturnType<typeof getCurrentUserRole>>;
+    }),
+  ]);
+  const user = userResult.data.user;
 
-  let userRole: Awaited<ReturnType<typeof getCurrentUserRole>> = "admin";
-  try {
-    userRole = await getCurrentUserRole();
-  } catch (err) {
-    console.error("[layout] userRole failed:", err);
-  }
-
-  // 즐겨찾기 (UX3)
+  // 즐겨찾기 (UX3) — user 의존이라 별도 (병렬화 직후)
   let bookmarks: { id: string; kind: "page" | "employee" | "vendor"; target: string; label: string }[] = [];
   if (user) {
     try {
