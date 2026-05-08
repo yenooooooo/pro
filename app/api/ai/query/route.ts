@@ -102,6 +102,27 @@ export async function POST(req: NextRequest) {
       label: "질문 분석 중…",
     });
 
+    // ★ Lookup 데이터 사전 조회 — Gemini 가 부서/카테고리/거래처를 ID 로 필터하도록
+    // (이전: '개발' 문자열로 department_id 필터 → 0행)
+    const [deptList, catList, vendList] = await Promise.all([
+      supabase
+        .schema("chongmu")
+        .from("departments")
+        .select("id, name")
+        .then((r) => r.data ?? []),
+      supabase
+        .schema("chongmu")
+        .from("expense_categories")
+        .select("id, name")
+        .then((r) => r.data ?? []),
+      supabase
+        .schema("chongmu")
+        .from("vendors")
+        .select("id, name")
+        .then((r) => r.data ?? []),
+    ]);
+    const lookupContext = `\n\n### 실제 데이터 매핑 (필터는 반드시 아래 ID 사용)\ndepartments: ${JSON.stringify(deptList)}\nexpense_categories: ${JSON.stringify(catList)}\nvendors: ${JSON.stringify(vendList)}\n\n부서/카테고리/거래처 이름으로 필터할 땐 위 매핑에서 id 를 찾아 department_id, category_id, vendor_id 로 필터하세요. 매칭되는 이름이 없으면 intent="unknown" + explanation 에 사유.`;
+
     let plan: GeminiPlan;
     try {
       const today = new Date().toISOString().slice(0, 10);
@@ -112,7 +133,7 @@ export async function POST(req: NextRequest) {
             role: "user",
             parts: [
               {
-                text: `${SCHEMA_CONTEXT}\n\n오늘 날짜: ${today}\n\n사용자 질문: "${userQuery}"\n\nJSON 만 출력.`,
+                text: `${SCHEMA_CONTEXT}${lookupContext}\n\n오늘 날짜: ${today}\n\n사용자 질문: "${userQuery}"\n\nJSON 만 출력.`,
               },
             ],
           },
@@ -267,13 +288,15 @@ export async function POST(req: NextRequest) {
       fullAnswer = fb;
     }
 
-    // 캐싱
-    setCached(cacheKey, {
-      answer: fullAnswer,
-      query: queryMeta,
-      rows: sample,
-      source: "gemini",
-    });
+    // ★ 빈 결과는 캐시 안 함 — 잘못된 필터로 0행 나오면 5분간 같은 빈 답변 반복되는 문제
+    if (rows.length > 0) {
+      setCached(cacheKey, {
+        answer: fullAnswer,
+        query: queryMeta,
+        rows: sample,
+        source: "gemini",
+      });
+    }
 
     // 감사 로그 (실패해도 응답에 영향 없음)
     recordAudit({
