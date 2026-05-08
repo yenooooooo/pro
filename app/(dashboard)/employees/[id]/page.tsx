@@ -20,6 +20,7 @@ import { AttendanceHistoryTab } from "./_components/attendance-history-tab";
 import { PayrollHistoryTab } from "./_components/payroll-history-tab";
 import { MarketComparison } from "./_components/market-comparison";
 import { TurnoverRiskCard } from "./_components/turnover-risk-card";
+import { OnboardingTab } from "./_components/onboarding-tab";
 import { cn } from "@/lib/utils/cn";
 import { maskBankAccount } from "@/lib/utils/mask";
 import { createClient } from "@/lib/supabase/server";
@@ -29,6 +30,7 @@ const TABS = [
   { key: "attendance", label: "근태이력" },
   { key: "payroll", label: "급여이력" },
   { key: "leave", label: "연차" },
+  { key: "onboarding", label: "온보딩" },
   { key: "market", label: "시장 비교" },
   { key: "risk", label: "이직 위험" },
 ] as const;
@@ -261,6 +263,13 @@ export default async function EmployeeDetailPage({
           baseSalary={emp.base_salary}
           department={emp.department?.name ?? null}
           position={emp.position?.name ?? null}
+        />
+      ) : tab === "onboarding" ? (
+        <OnboardingTab
+          employeeId={emp.id}
+          employeeStatus={emp.status}
+          hireDate={emp.hire_date}
+          resignDate={emp.resign_date}
         />
       ) : (
         <TurnoverRiskCard employeeId={emp.id} />

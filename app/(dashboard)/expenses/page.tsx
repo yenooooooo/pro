@@ -162,6 +162,12 @@ export default async function ExpensesPage({
             filename={`expenses_${month === null ? `${year}_all` : `${year}_${String(month).padStart(2, "0")}`}`}
           />
           <Link
+            href="/expenses/import"
+            className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-outline-variant/40 bg-surface-container px-4 py-2 text-label-sm text-on-surface transition-colors hover:bg-surface-container-high"
+          >
+            카드 임포트
+          </Link>
+          <Link
             href="/expenses/new"
             className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary-electric px-4 py-2 text-label-sm font-semibold text-on-primary transition-opacity hover:opacity-90"
           >
