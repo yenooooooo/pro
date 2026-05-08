@@ -189,3 +189,103 @@ export async function createAndRedirectTrip(input: z.infer<typeof CreateSchema>)
   }
   return result;
 }
+
+/**
+ * 출장 취소 — 신청자 본인 또는 admin.
+ * settled / reimbursed 상태에선 취소 불가 (이미 정산 완료).
+ */
+export async function cancelTripAction(tripId: string) {
+  if (!tripId) return { ok: false as const, error: "id 누락" };
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false as const, error: "인증 필요" };
+
+  const { data: trip } = await supabase
+    .schema("chongmu")
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .from("business_trips" as any)
+    .select("title, status")
+    .eq("id", tripId)
+    .maybeSingle();
+
+  if (!trip) return { ok: false as const, error: "출장을 찾을 수 없습니다." };
+
+  const t = trip as unknown as { title: string; status: string };
+  if (t.status === "settled" || t.status === "reimbursed") {
+    return {
+      ok: false as const,
+      error: "이미 정산 완료된 출장은 취소할 수 없습니다 (admin 권한으로 삭제만 가능).",
+    };
+  }
+
+  const { error } = await supabase
+    .schema("chongmu")
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .from("business_trips" as any)
+    .update({ status: "cancelled" })
+    .eq("id", tripId);
+
+  if (error) return { ok: false as const, error: error.message };
+
+  await recordAudit({
+    action: "approval.cancelled",
+    entityType: "approval_request",
+    entityId: tripId,
+    metadata: { kind: "business_trip", title: t.title, by: user.email ?? null },
+  });
+
+  revalidatePath("/business-trips");
+  revalidatePath(`/business-trips/${tripId}`);
+  return { ok: true as const };
+}
+
+/**
+ * 출장 영구 삭제 — admin 전용.
+ * trip_expenses 는 ON DELETE CASCADE 로 자동 정리.
+ */
+export async function deleteTripAction(tripId: string) {
+  if (!tripId) return { ok: false as const, error: "id 누락" };
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false as const, error: "인증 필요" };
+
+  const { data: trip } = await supabase
+    .schema("chongmu")
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .from("business_trips" as any)
+    .select("title, status, total_settled")
+    .eq("id", tripId)
+    .maybeSingle();
+
+  const { error } = await supabase
+    .schema("chongmu")
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .from("business_trips" as any)
+    .delete()
+    .eq("id", tripId);
+
+  if (error) return { ok: false as const, error: error.message };
+
+  await recordAudit({
+    action: "approval.cancelled",
+    entityType: "approval_request",
+    entityId: tripId,
+    metadata: {
+      kind: "business_trip",
+      hard_delete: true,
+      title: (trip as unknown as { title?: string })?.title ?? null,
+      original_status: (trip as unknown as { status?: string })?.status ?? null,
+      total_settled: (trip as unknown as { total_settled?: number })?.total_settled ?? null,
+      by: user.email ?? null,
+    },
+  });
+
+  revalidatePath("/business-trips");
+  return { ok: true as const };
+}

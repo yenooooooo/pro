@@ -11,6 +11,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { TripExpenseManager } from "./_expense-manager";
 import { TripActions } from "./_actions";
+import { getCurrentUserRole } from "@/lib/rbac";
 
 export const dynamic = "force-dynamic";
 
@@ -79,6 +80,22 @@ export default async function BusinessTripDetailPage({
   if (!trip) notFound();
 
   const t = trip as unknown as Trip;
+
+  // 권한 판단
+  const { data: { user: currentUser } } = await supabase.auth.getUser();
+  const userRole = await getCurrentUserRole();
+  const isAdmin = userRole === "admin";
+  // 출장자 본인이거나 admin
+  const { data: ownerEmp } = t.employees
+    ? await supabase
+        .schema("chongmu")
+        .from("employees")
+        .select("email")
+        .eq("id", t.employees.id)
+        .maybeSingle()
+    : { data: null };
+  const isOwner = (ownerEmp as { email?: string } | null)?.email === currentUser?.email;
+  const isOwnerOrAdmin = isOwner || isAdmin;
 
   const { data: expenseRows } = await supabase
     .schema("chongmu")
@@ -155,6 +172,8 @@ export default async function BusinessTripDetailPage({
             status={t.status}
             budget={t.budget}
             totalSettled={t.total_settled}
+            isOwnerOrAdmin={isOwnerOrAdmin}
+            isAdmin={isAdmin}
           />
         </div>
       </header>

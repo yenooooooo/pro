@@ -2,17 +2,30 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Coins, Loader2 } from "lucide-react";
-import { settleTripAction, reimburseTripAction } from "../actions";
+import { CheckCircle2, Coins, Loader2, XCircle, Trash2 } from "lucide-react";
+import {
+  settleTripAction,
+  reimburseTripAction,
+  cancelTripAction,
+  deleteTripAction,
+} from "../actions";
 
 type Props = {
   tripId: string;
   status: string;
   budget: number;
   totalSettled: number;
+  isOwnerOrAdmin?: boolean;
+  isAdmin?: boolean;
 };
 
-export function TripActions({ tripId, status, totalSettled }: Props) {
+export function TripActions({
+  tripId,
+  status,
+  totalSettled,
+  isOwnerOrAdmin = true,
+  isAdmin = true,
+}: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -40,6 +53,41 @@ export function TripActions({ tripId, status, totalSettled }: Props) {
       else setError(result.error);
     });
   }
+
+  function cancel() {
+    if (!confirm("이 출장을 취소하시겠습니까? 영수증은 그대로 유지됩니다.")) return;
+    setError(null);
+    startTransition(async () => {
+      const result = await cancelTripAction(tripId);
+      if (result.ok) router.refresh();
+      else setError(result.error);
+    });
+  }
+
+  function remove() {
+    if (
+      !confirm(
+        "정말 영구 삭제하시겠습니까? 영수증·정산 정보 모두 사라집니다. (감사 로그는 보존)",
+      )
+    ) {
+      return;
+    }
+    setError(null);
+    startTransition(async () => {
+      const result = await deleteTripAction(tripId);
+      if (result.ok) {
+        router.push("/business-trips");
+        router.refresh();
+      } else {
+        setError(result.error);
+      }
+    });
+  }
+
+  const cancellable =
+    status === "requested" ||
+    status === "approved" ||
+    status === "in_progress";
 
   return (
     <div className="flex flex-col items-end gap-2">
@@ -75,6 +123,43 @@ export function TripActions({ tripId, status, totalSettled }: Props) {
           )}
           환급 완료 처리
         </button>
+      )}
+
+      {/* 취소·삭제 버튼 */}
+      {isOwnerOrAdmin && (
+        <div className="flex flex-wrap gap-2">
+          {cancellable ? (
+            <button
+              type="button"
+              onClick={cancel}
+              disabled={pending}
+              className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-1.5 text-label-sm font-semibold text-amber-300 transition-colors hover:bg-amber-500/20 disabled:opacity-50"
+            >
+              {pending ? (
+                <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
+              ) : (
+                <XCircle aria-hidden className="h-4 w-4" />
+              )}
+              출장 취소
+            </button>
+          ) : null}
+
+          {isAdmin ? (
+            <button
+              type="button"
+              onClick={remove}
+              disabled={pending}
+              className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-error-soft/40 bg-error-soft/10 px-3 py-1.5 text-label-sm font-semibold text-error-soft transition-colors hover:bg-error-soft/20 disabled:opacity-50"
+            >
+              {pending ? (
+                <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 aria-hidden className="h-4 w-4" />
+              )}
+              영구 삭제
+            </button>
+          ) : null}
+        </div>
       )}
 
       {error ? (
