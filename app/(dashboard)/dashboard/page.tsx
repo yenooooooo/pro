@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { cn } from "@/lib/utils/cn";
 import { createClient } from "@/lib/supabase/server";
+import { CommandSphere } from "@/components/shared/CommandSphere";
 import { aggregateAttendance, WEEK52_THRESHOLD } from "@/lib/attendance/aggregate";
 import {
   calculateDepreciation,
@@ -422,39 +423,40 @@ export default async function DashboardPage({
           </div>
         </div>
 
-        {/* RIGHT — Side stats panel (v2 Sphere 자리 — Three.js 없이 editorial summary) */}
-        <div className="relative flex flex-col justify-center gap-3 border-l border-dashed border-line pl-6 lg:gap-4">
-          <SideStat label="HEAD" name="직원" value={String((employeesCurr ?? []).length)} />
-          <SideStat
-            label="MTD"
-            name="인건비"
-            value={`₩${(totalPayroll / 10_000_000).toFixed(1)}M`}
-          />
-          <SideStat
-            label="EXP"
-            name="지출"
-            value={`₩${(totalExpense / 10_000_000).toFixed(1)}M`}
-            delta={expenseDelta}
-            deltaInversed
-          />
-          <SideStat
-            label="PEND"
-            name="미결 결산"
-            value={String(totalTasks - doneTasks)}
-            tone={totalTasks - doneTasks > 0 ? "warn" : "default"}
-          />
-          <SideStat
-            label="RISK"
-            name="법적 리스크"
-            value={String(overworkedEmployees.length)}
-            tone={overworkedEmployees.length > 0 ? "danger" : "default"}
-          />
-          <SideStat
-            label="CYCLE"
-            name="결산 진행률"
-            value={`${closingPct}%`}
-            tone={closingPct >= 80 ? "default" : "warn"}
-          />
+        {/* RIGHT — Command Sphere (회전 와이어프레임 + 궤도) + 오버레이 라벨 */}
+        <div className="relative">
+          <CommandSphere />
+          {/* 오버레이 라벨 — v2 App.html 의 sphere-label 패턴 */}
+          <div className="pointer-events-none absolute inset-0">
+            <SphereLabel pos="top-[18%] left-[8%]" label="HEAD" name="직원" value={String((employeesCurr ?? []).length)} />
+            <SphereLabel
+              pos="top-[32%] right-[4%]"
+              label="MTD"
+              name="인건비"
+              value={`₩${(totalPayroll / 10_000_000).toFixed(1)}M`}
+            />
+            <SphereLabel
+              pos="top-[56%] right-[8%]"
+              label="PEND"
+              name="결재"
+              value={String(totalTasks - doneTasks)}
+              tone={totalTasks - doneTasks > 0 ? "warn" : "default"}
+            />
+            <SphereLabel
+              pos="bottom-[22%] left-[6%]"
+              label="RISK"
+              name="리스크"
+              value={String(overworkedEmployees.length)}
+              tone={overworkedEmployees.length > 0 ? "danger" : "default"}
+            />
+            <SphereLabel
+              pos="bottom-[8%] right-[16%]"
+              label="EDI"
+              name={`D-${Math.max(0, 5)}`}
+              value="대기"
+              tone="warn"
+            />
+          </div>
         </div>
       </section>
 
@@ -770,19 +772,17 @@ function DeltaBadge({
   );
 }
 
-function SideStat({
+function SphereLabel({
+  pos,
   label,
   name,
   value,
-  delta,
-  deltaInversed,
   tone = "default",
 }: {
+  pos: string;
   label: string;
   name: string;
   value: string;
-  delta?: Delta | null;
-  deltaInversed?: boolean;
   tone?: "default" | "warn" | "danger";
 }) {
   const valueClass =
@@ -792,18 +792,18 @@ function SideStat({
         ? "text-gold italic"
         : "text-text-1";
   return (
-    <div className="flex items-baseline gap-3 font-mono text-[10px] uppercase tracking-[0.08em] text-text-2">
-      <span className="inline-block h-px w-6 bg-gold align-middle" />
-      <b className="font-normal text-gold">{label}</b>
+    <div
+      className={cn(
+        "absolute whitespace-nowrap font-mono text-[10px] uppercase tracking-[0.08em] text-text-2",
+        pos,
+      )}
+    >
+      <span className="mr-2 inline-block h-px w-6 bg-gold align-middle" />
+      <b className="mr-2 font-normal text-gold">{label}</b>
       <span>{name}</span>
-      <span className={cn("ml-auto font-serif text-[20px] not-italic", valueClass)}>
+      <span className={cn("ml-2 align-[-2px] font-serif text-[18px] italic", valueClass)}>
         {value}
       </span>
-      {delta ? (
-        <span className="font-mono text-[10px]">
-          <DeltaBadge delta={delta} inversed={deltaInversed} />
-        </span>
-      ) : null}
     </div>
   );
 }

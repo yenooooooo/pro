@@ -392,6 +392,42 @@
 }
 
 /* ============================================================
+ * 애니메이션 — Landing 페이지 ticker / 타이핑 / sphere
+ * ============================================================ */
+@keyframes ticker-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.ticker-run {
+  animation: ticker-scroll 30s linear infinite;
+}
+.ticker-run.slow {
+  animation-duration: 60s;
+}
+.ticker-run.fast {
+  animation-duration: 18s;
+}
+
+@keyframes typing-cursor {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  51%,
+  100% {
+    opacity: 0;
+  }
+}
+.typing-cursor {
+  animation: typing-cursor 1s steps(1) infinite;
+}
+
+/* ============================================================
  * 유틸리티
  * ============================================================ */
 @layer utilities {

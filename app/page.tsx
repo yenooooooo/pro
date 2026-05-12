@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TypewriterText } from "@/components/landing/Ticker";
 
 /**
  * Nexus ERP — v2 Editorial Landing
@@ -356,16 +357,18 @@ export default function LandingPage() {
       </section>
 
       {/* ============================================================
-       * 04 · COMPLIANCE TICKER STRIP
+       * 04 · COMPLIANCE TICKER STRIP (가로 마키)
        * ============================================================ */}
-      <div className="overflow-hidden border-b border-line bg-bg">
-        <div className="flex flex-wrap justify-center gap-x-12 gap-y-3 px-8 py-4 font-mono text-[12px] uppercase tracking-[0.08em] text-text-2">
-          {COMPLIANCE_CHIPS.map((c, i) => (
-            <span key={i} className="inline-flex items-center gap-3">
+      <div className="relative overflow-hidden border-b border-line bg-bg">
+        <div className="pointer-events-none absolute inset-y-0 left-0 z-[2] w-24 bg-gradient-to-r from-bg to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-[2] w-24 bg-gradient-to-l from-bg to-transparent" />
+        <div className="ticker-run slow flex shrink-0 whitespace-nowrap py-4 font-mono text-[12px] uppercase tracking-[0.08em] text-text-2">
+          {[...COMPLIANCE_CHIPS, ...COMPLIANCE_CHIPS].map((c, i) => (
+            <span key={i} className="inline-flex items-center gap-3 px-6">
               <span>
                 {c.law} <b className="font-medium text-gold">{c.text}</b>
               </span>
-              {i < COMPLIANCE_CHIPS.length - 1 && <span className="text-text-4">/</span>}
+              <span className="text-text-4">/</span>
             </span>
           ))}
         </div>
@@ -483,13 +486,18 @@ export default function LandingPage() {
               />
             </div>
 
-            {/* command palette mock */}
+            {/* command palette mock — 타이핑 애니메이션 */}
             <div className="border border-line-2 bg-bg-2 text-[13px] shadow-[0_40px_100px_rgba(0,0,0,0.6)]">
               <div className="flex items-center gap-[14px] border-b border-line px-[22px] py-[18px]">
                 <span className="font-mono text-[16px] text-gold">✦</span>
                 <div className="flex-1 font-sans text-[16px] text-text-1">
-                  개발팀 평균 기본급은
-                  <span className="ml-1 inline-block h-[18px] w-2 animate-[blink_1s_steps(2)_infinite] bg-gold align-[-3px]" />
+                  <TypewriterText
+                    text="개발팀 평균 기본급은"
+                    speed={80}
+                    startDelay={800}
+                    loop
+                    pauseAtEnd={4000}
+                  />
                 </div>
                 <span className="border border-line px-2 py-[3px] font-mono text-[10px] tracking-[0.08em] text-text-3">
                   ⌃ J
