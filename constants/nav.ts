@@ -51,7 +51,7 @@ export const DASHBOARD_NAV: NavItem[] = [
   { key: "year_end", label: "연말정산", href: "/year-end", icon: Calendar },
   { key: "calendar", label: "세무 캘린더", href: "/calendar", icon: CalendarDays },
   { key: "recruiting", label: "AI 채용공고", href: "/recruiting", icon: Sparkles },
-  { key: "activity", label: "활동 피드", href: "/activity", icon: Activity },
+  { key: "activity", label: "Live Ops", href: "/activity", icon: Activity },
   { key: "contracts", label: "계약서", href: "/contracts", icon: FileSignature },
   { key: "business_trips", label: "출장 정산", href: "/business-trips", icon: Plane },
   { key: "revenue", label: "매출", href: "/revenue", icon: ReceiptIcon },
