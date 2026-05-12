@@ -65,6 +65,20 @@
     -webkit-font-smoothing: antialiased;
     line-height: 1.45;
     min-height: 100vh;
+    /* ★ 한국어 어절 단위 줄바꿈 — '한 화면 에서.' 같이 어절 중간 끊김 방지 */
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+
+  /* 헤드라인 / 본문 모두 한글 어절 보존. tabular(숫자/코드) 는 예외. */
+  h1, h2, h3, h4, h5, h6, p, li, span, button, a, label, .page-h, .page-sub {
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+  /* 영문/숫자/코드는 일반 break — table 셀, mono, tabular */
+  .tbl, .tbl *, code, pre, .font-mono, .tabular-nums, .n {
+    word-break: normal;
+    overflow-wrap: normal;
   }
 
   /* 스크롤바 — 얇고 미니멀 */
