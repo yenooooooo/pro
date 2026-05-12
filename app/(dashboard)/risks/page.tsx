@@ -1,15 +1,9 @@
 import Link from "next/link";
-import { ShieldAlert, AlertTriangle, AlertCircle, Info } from "lucide-react";
 import { getTranslations } from "next-intl/server";
-import { getComplianceRisks, severityColor } from "@/lib/compliance/checks";
+import { cn } from "@/lib/utils/cn";
+import { getComplianceRisks, type RiskItem } from "@/lib/compliance/checks";
 
 export const dynamic = "force-dynamic";
-
-const SEVERITY_ICON = {
-  danger: AlertCircle,
-  warn: AlertTriangle,
-  info: Info,
-};
 
 const CATEGORY_LABEL: Record<string, string> = {
   labor_hours: "근로시간",
@@ -19,6 +13,18 @@ const CATEGORY_LABEL: Record<string, string> = {
   filing: "신고",
 };
 
+const SEVERITY_CHIP: Record<RiskItem["severity"], string> = {
+  danger: "chip rej",
+  warn: "chip pend",
+  info: "chip info",
+};
+
+const SEVERITY_LABEL: Record<RiskItem["severity"], string> = {
+  danger: "긴급",
+  warn: "경고",
+  info: "정보",
+};
+
 export default async function RisksPage() {
   const t = await getTranslations("risks");
   const items = await getComplianceRisks();
@@ -26,104 +32,103 @@ export default async function RisksPage() {
   const warnCount = items.filter((i) => i.severity === "warn").length;
   const infoCount = items.filter((i) => i.severity === "info").length;
 
+  // 카테고리별 그룹핑
+  const grouped = new Map<string, RiskItem[]>();
+  for (const it of items) {
+    const arr = grouped.get(it.category) ?? [];
+    arr.push(it);
+    grouped.set(it.category, arr);
+  }
+  const groups = Array.from(grouped.entries());
+
   return (
-    <div className="space-y-stack-lg">
-      <header className="space-y-2">
-        <p className="inline-flex items-center gap-2 text-label-sm uppercase tracking-widest text-primary">
-          <ShieldAlert aria-hidden className="h-4 w-4" />
+    <div className="animate-view-in">
+      {/* ===== Page Head ===== */}
+      <header className="mb-9 flex flex-col items-start justify-between gap-8 border-b border-line pb-6 sm:flex-row sm:items-end">
+        <div>
+          <div className="eyebrow mb-3">
+            <b>M12</b>Compliance · Risk
+          </div>
+          <h1 className="page-h">
+            법적 <em>리스크.</em>
+          </h1>
+          <p className="page-sub">{t("subtitle")}</p>
+        </div>
+        <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-text-3">
           Compliance Risk Center
-        </p>
-        <h1 className="text-headline-lg font-semibold tracking-tight text-on-surface">
-          {t("title")}
-        </h1>
-        <p className="text-body-md text-on-surface-variant">
-          {t("subtitle")}
-        </p>
+        </div>
       </header>
 
-      {/* 요약 카운터 */}
-      <div className="grid grid-cols-1 gap-gutter md:grid-cols-3">
-        <SummaryCard
-          severity="danger"
-          count={dangerCount}
-          label="긴급 위반"
-          description="즉시 시정 필요"
-        />
-        <SummaryCard
-          severity="warn"
-          count={warnCount}
-          label="경고"
-          description="조치 권장"
-        />
-        <SummaryCard
-          severity="info"
-          count={infoCount}
-          label="정보"
-          description="참고 알림"
-        />
+      {/* ===== KPIs ===== */}
+      <div className="mb-9 grid grid-cols-1 border-l border-t border-line md:grid-cols-3">
+        <KPI label="긴급 위반" value={dangerCount} suffix="건" tone="danger" subtext="즉시 시정 필요" />
+        <KPI label="경고" value={warnCount} suffix="건" tone="warn" subtext="조치 권장" />
+        <KPI label="정보" value={infoCount} suffix="건" tone="info" subtext="참고 알림" />
       </div>
 
-      {/* 항목 리스트 */}
+      {/* ===== 항목 리스트 ===== */}
       {items.length === 0 ? (
-        <div className="glass-panel rounded-xl p-12 text-center">
-          <p className="text-headline-md font-semibold text-emerald-300">
-            ✓ 모든 점검 통과
-          </p>
-          <p className="mt-2 text-body-md text-on-surface-variant">
-            현 시점에서 발견된 법적 리스크가 없습니다.
-          </p>
-        </div>
+        <section className="panel mb-9 border border-line">
+          <div className="border border-line bg-bg-1/40 py-12 text-center">
+            <p className="font-serif text-[28px] italic text-gold">
+              ✓ 모든 점검 통과
+            </p>
+            <p className="mt-3 font-mono text-[11px] uppercase tracking-[0.08em] text-text-3">
+              현 시점에서 발견된 법적 리스크가 없습니다.
+            </p>
+          </div>
+        </section>
       ) : (
-        <ul className="space-y-3">
-          {items.map((item) => {
-            const Icon = SEVERITY_ICON[item.severity];
-            return (
-              <li
-                key={item.id}
-                className={`glass-panel overflow-hidden rounded-xl border p-5 ${severityColor(item.severity)}`}
-              >
-                <div className="flex items-start gap-3">
-                  <Icon
-                    aria-hidden
-                    className="mt-0.5 h-6 w-6 flex-shrink-0"
-                  />
-                  <div className="flex-1">
-                    <div className="mb-1 flex flex-wrap items-center gap-2">
-                      <h3 className="text-headline-md font-semibold text-on-surface">
+        <div className="mb-9 flex flex-col gap-px bg-line">
+          {groups.map(([cat, arr]) => (
+            <section key={cat} className="panel">
+              <div className="panel-h">
+                <div className="t font-serif">
+                  <em>{CATEGORY_LABEL[cat] ?? cat}</em>
+                </div>
+                <div className="meta">{arr.length}건</div>
+              </div>
+              <ul className="flex flex-col gap-px bg-line">
+                {arr.map((item) => (
+                  <li
+                    key={item.id}
+                    className="flex flex-col gap-2 bg-bg p-4"
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={SEVERITY_CHIP[item.severity]}>
+                        <i />
+                        {SEVERITY_LABEL[item.severity]}
+                      </span>
+                      <h3 className="font-serif text-[20px] italic leading-tight text-text-1">
                         {item.title}
                       </h3>
-                      <span className="rounded bg-surface-container-high px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
-                        {CATEGORY_LABEL[item.category]}
-                      </span>
                     </div>
-                    <p className="text-body-md text-on-surface-variant">
-                      {item.description}
+                    <p className="text-[13px] leading-[1.6] text-text-2">
+                      사유 · {item.description}
                     </p>
                     {item.detail ? (
-                      <p className="mt-1 text-label-sm text-on-surface-variant/70">
-                        {item.detail}
+                      <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-3">
+                        근거 · {item.detail}
                       </p>
                     ) : null}
 
                     {item.affected && item.affected.length > 0 ? (
-                      <ul className="mt-3 grid grid-cols-1 gap-1 sm:grid-cols-2">
+                      <ul className="mt-2 grid grid-cols-1 gap-px bg-line sm:grid-cols-2">
                         {item.affected.map((a) => (
                           <li
                             key={a.id}
-                            className="flex items-center gap-2 rounded border border-outline-variant/20 bg-surface-container-low px-2 py-1.5 text-label-sm"
+                            className="flex items-center gap-2 bg-bg-1 px-3 py-2 text-[12px]"
                           >
-                            <span className="font-medium text-on-surface">
-                              {a.name}
-                            </span>
+                            <span className="text-text-1">{a.name}</span>
                             {a.meta ? (
-                              <span className="text-on-surface-variant tabular-nums">
+                              <span className="font-mono text-[10px] tracking-[0.05em] text-text-3">
                                 · {a.meta}
                               </span>
                             ) : null}
                           </li>
                         ))}
                         {item.count && item.count > item.affected.length ? (
-                          <li className="text-label-sm text-on-surface-variant">
+                          <li className="bg-bg-1 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.08em] text-text-3">
                             외 {item.count - item.affected.length}명/건
                           </li>
                         ) : null}
@@ -133,22 +138,23 @@ export default async function RisksPage() {
                     {item.href ? (
                       <Link
                         href={item.href as never}
-                        className="mt-3 inline-block text-label-sm font-semibold text-primary-electric hover:text-primary-container"
+                        className="mt-2 inline-flex w-max font-mono text-[10px] uppercase tracking-[0.12em] text-gold transition-colors hover:text-gold-2"
                       >
                         해당 페이지로 이동 →
                       </Link>
                     ) : null}
-                  </div>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
       )}
 
-      <div className="glass-panel rounded-xl p-4">
-        <p className="text-label-sm text-on-surface-variant">
-          ⚖️ 점검 근거: 근로기준법 제53조 (연장근로) · 제60조 (연차) · 최저임금법 ·
+      {/* ===== 근거 ===== */}
+      <div className="border border-line bg-bg-1 p-5">
+        <p className="font-mono text-[11px] leading-[1.6] tracking-[0.02em] text-text-3">
+          점검 근거: 근로기준법 제53조 (연장근로) · 제60조 (연차) · 최저임금법 ·
           국민연금/건강보험/고용/산재 신고 마감일 (매월 10일) · 원천세 신고 마감일.
           모든 검사는 read-only 이며 데이터 변경 없음.
         </p>
@@ -157,33 +163,39 @@ export default async function RisksPage() {
   );
 }
 
-function SummaryCard({
-  severity,
-  count,
+function KPI({
   label,
-  description,
+  value,
+  suffix,
+  subtext,
+  tone = "default",
 }: {
-  severity: "danger" | "warn" | "info";
-  count: number;
   label: string;
-  description: string;
+  value: number;
+  suffix?: string;
+  subtext?: string;
+  tone?: "default" | "warn" | "danger" | "info";
 }) {
-  const colorMap = {
-    danger: "text-error-soft",
-    warn: "text-amber-300",
-    info: "text-tertiary",
-  };
+  const toneClass =
+    tone === "danger"
+      ? "text-[#E06B5F] italic"
+      : tone === "warn"
+        ? "text-gold italic"
+        : tone === "info"
+          ? "text-[#8FB6E6]"
+          : "text-text-1";
   return (
-    <div className="glass-panel rounded-xl p-5">
-      <p className="text-label-sm uppercase tracking-widest text-on-surface-variant">
-        {label}
-      </p>
-      <p
-        className={`mt-2 text-display-xl font-bold tabular-nums ${colorMap[severity]}`}
-      >
-        {count}
-      </p>
-      <p className="mt-1 text-label-sm text-on-surface-variant">{description}</p>
+    <div className="kpi-card">
+      <div className="kpi-l">{label}</div>
+      <div className={cn("kpi-v", toneClass)}>
+        {value.toLocaleString("ko-KR")}
+        {suffix ? <span className="ml-2 text-[16px] text-text-3">{suffix}</span> : null}
+      </div>
+      {subtext ? (
+        <div className="kpi-meta">
+          <span>{subtext}</span>
+        </div>
+      ) : null}
     </div>
   );
 }

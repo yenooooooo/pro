@@ -1,16 +1,4 @@
 import Link from "next/link";
-import {
-  Activity,
-  Coins,
-  Receipt,
-  CalendarCheck,
-  FileSignature,
-  UserPlus,
-  UserMinus,
-  Package,
-  Handshake,
-  Sparkles,
-} from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils/cn";
@@ -27,168 +15,45 @@ type AuditRow = {
   metadata: Record<string, unknown> | null;
 };
 
-const ACTION_META: Record<
-  string,
-  { label: string; icon: typeof Activity; tone: string }
-> = {
-  "payroll.confirmed": {
-    label: "급여 확정",
-    icon: Coins,
-    tone: "text-emerald-300",
-  },
-  "payroll.calculated": {
-    label: "급여 계산 실행",
-    icon: Coins,
-    tone: "text-tertiary",
-  },
-  "employee.created": {
-    label: "신규 직원 등록",
-    icon: UserPlus,
-    tone: "text-emerald-300",
-  },
-  "employee.updated": {
-    label: "직원 정보 수정",
-    icon: UserPlus,
-    tone: "text-on-surface-variant",
-  },
-  "employee.bank_changed": {
-    label: "직원 계좌 변경",
-    icon: UserPlus,
-    tone: "text-amber-300",
-  },
-  "employee.resigned": {
-    label: "직원 퇴사 처리",
-    icon: UserMinus,
-    tone: "text-error-soft",
-  },
-  "leave.granted": {
-    label: "연차 부여",
-    icon: CalendarCheck,
-    tone: "text-tertiary",
-  },
-  "leave.requested": {
-    label: "휴가 신청",
-    icon: CalendarCheck,
-    tone: "text-on-surface-variant",
-  },
-  "leave.approved": {
-    label: "휴가 승인",
-    icon: CalendarCheck,
-    tone: "text-emerald-300",
-  },
-  "leave.rejected": {
-    label: "휴가 반려",
-    icon: CalendarCheck,
-    tone: "text-amber-300",
-  },
-  "approval.created": {
-    label: "결재 발의",
-    icon: FileSignature,
-    tone: "text-tertiary",
-  },
-  "approval.approved": {
-    label: "결재 승인",
-    icon: FileSignature,
-    tone: "text-emerald-300",
-  },
-  "approval.rejected": {
-    label: "결재 반려",
-    icon: FileSignature,
-    tone: "text-amber-300",
-  },
-  "approval.cancelled": {
-    label: "결재 취소",
-    icon: FileSignature,
-    tone: "text-on-surface-variant",
-  },
-  "expense.created": {
-    label: "지출 등록",
-    icon: Receipt,
-    tone: "text-emerald-300",
-  },
-  "expense.updated": {
-    label: "지출 수정",
-    icon: Receipt,
-    tone: "text-on-surface-variant",
-  },
-  "expense.deleted": {
-    label: "지출 삭제",
-    icon: Receipt,
-    tone: "text-error-soft",
-  },
-  "vendor.created": {
-    label: "거래처 등록",
-    icon: Handshake,
-    tone: "text-emerald-300",
-  },
-  "vendor.updated": {
-    label: "거래처 수정",
-    icon: Handshake,
-    tone: "text-on-surface-variant",
-  },
-  "vendor.deleted": {
-    label: "거래처 삭제",
-    icon: Handshake,
-    tone: "text-error-soft",
-  },
-  "asset.created": {
-    label: "자산 등록",
-    icon: Package,
-    tone: "text-emerald-300",
-  },
-  "asset.updated": {
-    label: "자산 수정",
-    icon: Package,
-    tone: "text-on-surface-variant",
-  },
-  "asset.disposed": {
-    label: "자산 폐기",
-    icon: Package,
-    tone: "text-error-soft",
-  },
-  "closing.task_toggled": {
-    label: "결산 항목 토글",
-    icon: CalendarCheck,
-    tone: "text-on-surface-variant",
-  },
-  "settings.rate_updated": {
-    label: "요율 변경",
-    icon: Sparkles,
-    tone: "text-amber-300",
-  },
-  "settings.closing_task_added": {
-    label: "결산항목 추가",
-    icon: Sparkles,
-    tone: "text-emerald-300",
-  },
-  "settings.closing_task_removed": {
-    label: "결산항목 삭제",
-    icon: Sparkles,
-    tone: "text-error-soft",
-  },
-  "year_end.saved": {
-    label: "연말정산 입력",
-    icon: CalendarCheck,
-    tone: "text-tertiary",
-  },
-  "report.exported": {
-    label: "리포트 다운로드",
-    icon: Receipt,
-    tone: "text-tertiary",
-  },
-  "ai.ocr": {
-    label: "AI 영수증 OCR",
-    icon: Sparkles,
-    tone: "text-primary-electric",
-  },
-  "ai.query": {
-    label: "AI 자연어 질의",
-    icon: Sparkles,
-    tone: "text-primary-electric",
-  },
+type ActionMeta = { label: string; chip: string };
+
+const ACTION_META: Record<string, ActionMeta> = {
+  "payroll.confirmed": { label: "급여 확정", chip: "chip ok" },
+  "payroll.calculated": { label: "급여 계산 실행", chip: "chip info" },
+  "employee.created": { label: "신규 직원 등록", chip: "chip ok" },
+  "employee.updated": { label: "직원 정보 수정", chip: "chip" },
+  "employee.bank_changed": { label: "직원 계좌 변경", chip: "chip pend" },
+  "employee.resigned": { label: "직원 퇴사 처리", chip: "chip rej" },
+  "leave.granted": { label: "연차 부여", chip: "chip info" },
+  "leave.requested": { label: "휴가 신청", chip: "chip" },
+  "leave.approved": { label: "휴가 승인", chip: "chip ok" },
+  "leave.rejected": { label: "휴가 반려", chip: "chip pend" },
+  "approval.created": { label: "결재 발의", chip: "chip info" },
+  "approval.approved": { label: "결재 승인", chip: "chip ok" },
+  "approval.rejected": { label: "결재 반려", chip: "chip pend" },
+  "approval.cancelled": { label: "결재 취소", chip: "chip" },
+  "expense.created": { label: "지출 등록", chip: "chip ok" },
+  "expense.updated": { label: "지출 수정", chip: "chip" },
+  "expense.deleted": { label: "지출 삭제", chip: "chip rej" },
+  "vendor.created": { label: "거래처 등록", chip: "chip ok" },
+  "vendor.updated": { label: "거래처 수정", chip: "chip" },
+  "vendor.deleted": { label: "거래처 삭제", chip: "chip rej" },
+  "asset.created": { label: "자산 등록", chip: "chip ok" },
+  "asset.updated": { label: "자산 수정", chip: "chip" },
+  "asset.disposed": { label: "자산 폐기", chip: "chip rej" },
+  "closing.task_toggled": { label: "결산 항목 토글", chip: "chip" },
+  "settings.rate_updated": { label: "요율 변경", chip: "chip pend" },
+  "settings.closing_task_added": { label: "결산항목 추가", chip: "chip ok" },
+  "settings.closing_task_removed": { label: "결산항목 삭제", chip: "chip rej" },
+  "year_end.saved": { label: "연말정산 입력", chip: "chip info" },
+  "report.exported": { label: "리포트 다운로드", chip: "chip info" },
+  "ai.ocr": { label: "AI 영수증 OCR", chip: "chip info" },
+  "ai.query": { label: "AI 자연어 질의", chip: "chip info" },
 };
 
 const PAGE_SIZE = 30;
+
+const BUCKET_ORDER = ["오늘", "어제", "이번 주", "이전"] as const;
 
 export default async function ActivityPage({
   searchParams,
@@ -256,26 +121,26 @@ export default async function ActivityPage({
     grouped.set(bucket, cur);
   }
 
+  const empty = (rows ?? []).length === 0;
+
   return (
-    <div className="space-y-stack-lg">
-      <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div className="space-y-2">
-          <p className="inline-flex items-center gap-2 text-label-sm uppercase tracking-widest text-primary">
-            <Activity aria-hidden className="h-4 w-4" />
-            Company Activity Feed
-          </p>
-          <h1 className="text-headline-lg font-semibold tracking-tight text-on-surface">
-            {t("title")}
+    <div className="animate-view-in">
+      {/* ===== Page Head ===== */}
+      <header className="mb-9 flex flex-col items-start justify-between gap-8 border-b border-line pb-6 sm:flex-row sm:items-end">
+        <div>
+          <div className="eyebrow mb-3">
+            <b>M19</b>Operations · Activity Feed
+          </div>
+          <h1 className="page-h">
+            활동 <em>피드.</em>
           </h1>
-          <p className="text-body-md text-on-surface-variant">
-            {t("subtitle")}
-          </p>
+          <p className="page-sub">{t("subtitle")}</p>
         </div>
-        <form className="flex items-center gap-2">
+        <form className="flex flex-wrap items-center gap-2">
           <select
             name="user"
             defaultValue={userFilter}
-            className="h-11 min-w-48 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+            className="h-9 min-w-[180px] border border-line-2 bg-bg px-3 font-mono text-[12px] text-text-1 focus:border-gold focus:outline-none"
           >
             <option value="">전체 사용자</option>
             {users.map((u) => (
@@ -284,32 +149,32 @@ export default async function ActivityPage({
               </option>
             ))}
           </select>
-          <button
-            type="submit"
-            className="inline-flex h-11 items-center rounded-lg bg-primary px-4 text-label-sm font-semibold text-on-primary transition-opacity hover:opacity-90"
-          >
+          <button type="submit" className="btn btn-primary">
             적용
           </button>
         </form>
       </header>
 
-      {(rows ?? []).length === 0 ? (
-        <div className="glass-panel rounded-xl p-12 text-center">
-          <p className="text-body-md text-on-surface-variant">
-            활동 기록이 없습니다.
-          </p>
+      {empty ? (
+        <div className="border border-line bg-bg-1/40 py-16 text-center font-mono text-[11px] uppercase tracking-[0.08em] text-text-3">
+          활동 기록이 없습니다
         </div>
       ) : (
-        <div className="space-y-6">
-          {["오늘", "어제", "이번 주", "이전"].map((bucket) => {
+        <>
+          {BUCKET_ORDER.map((bucket) => {
             const items = grouped.get(bucket);
             if (!items || items.length === 0) return null;
             return (
-              <section key={bucket}>
-                <h2 className="mb-3 text-label-sm font-bold uppercase tracking-widest text-on-surface-variant">
-                  {bucket}
-                </h2>
-                <ul className="space-y-2">
+              <section key={bucket} className="mb-9">
+                <div className="section-rule">
+                  <span className="l">
+                    <b>·</b>
+                    {bucket}
+                    <span className="ml-3 text-text-3">{items.length}건</span>
+                  </span>
+                  <span className="line" />
+                </div>
+                <ul className="border-t border-line">
                   {items.map((row) => (
                     <ActivityItem key={row.id} row={row} />
                   ))}
@@ -319,10 +184,10 @@ export default async function ActivityPage({
           })}
 
           {/* 페이지네이션 */}
-          <div className="flex items-center justify-between text-body-md text-on-surface-variant">
-            <span>
+          <div className="mt-6 flex flex-col items-start justify-between gap-3 border-t border-line pt-6 sm:flex-row sm:items-center">
+            <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-text-3">
               전체 {(count ?? 0).toLocaleString("ko-KR")}건 · {page} /{" "}
-              {totalPages} 페이지
+              {totalPages}
             </span>
             <div className="flex gap-2">
               {page > 1 ? (
@@ -330,9 +195,9 @@ export default async function ActivityPage({
                   href={
                     `/activity?page=${page - 1}${userFilter ? `&user=${userFilter}` : ""}` as never
                   }
-                  className="inline-flex h-9 items-center rounded-lg border border-outline-variant px-3 text-on-surface transition-colors hover:bg-primary/10"
+                  className="btn"
                 >
-                  이전
+                  ← 이전
                 </Link>
               ) : null}
               {page < totalPages ? (
@@ -340,26 +205,24 @@ export default async function ActivityPage({
                   href={
                     `/activity?page=${page + 1}${userFilter ? `&user=${userFilter}` : ""}` as never
                   }
-                  className="inline-flex h-9 items-center rounded-lg border border-outline-variant px-3 text-on-surface transition-colors hover:bg-primary/10"
+                  className="btn"
                 >
-                  다음
+                  다음 →
                 </Link>
               ) : null}
             </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );
 }
 
 function ActivityItem({ row }: { row: AuditRow }) {
-  const meta = ACTION_META[row.action] ?? {
+  const meta: ActionMeta = ACTION_META[row.action] ?? {
     label: row.action,
-    icon: Activity,
-    tone: "text-on-surface-variant",
+    chip: "chip",
   };
-  const Icon = meta.icon;
   const time = new Date(row.occurred_at);
   const timeStr =
     String(time.getHours()).padStart(2, "0") +
@@ -375,29 +238,33 @@ function ActivityItem({ row }: { row: AuditRow }) {
     : "";
 
   return (
-    <li className="flex items-start gap-3 rounded-lg border border-outline-variant/15 bg-surface-container-low/50 px-4 py-3">
-      <div
-        className={cn(
-          "flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-surface-container-high",
-          meta.tone,
-        )}
-      >
-        <Icon aria-hidden className="h-4 w-4" />
-      </div>
-      <div className="flex-1">
-        <p className="text-body-md text-on-surface">
-          <span className={meta.tone}>{meta.label}</span>{" "}
-          <span className="text-on-surface-variant">·{" "}{row.user_email ?? "시스템"}</span>
+    <li
+      className={cn(
+        "flex items-center gap-5 border-b border-line px-1 py-4 transition-colors hover:bg-bg-1",
+      )}
+    >
+      <span className="w-14 shrink-0 font-mono text-[11px] tabular-nums tracking-[0.05em] text-gold">
+        {timeStr}
+      </span>
+      <span className={cn(meta.chip, "shrink-0")}>
+        <i />
+        {meta.label}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[13px] text-text-1">
+          {row.user_email ?? "시스템"}
+          {row.entity_type ? (
+            <span className="ml-2 font-mono text-[10px] uppercase tracking-[0.08em] text-text-3">
+              {row.entity_type}
+            </span>
+          ) : null}
         </p>
         {metaPreview ? (
-          <p className="text-label-sm text-on-surface-variant/70">
+          <p className="mt-[2px] truncate font-mono text-[10px] tracking-[0.05em] text-text-3">
             {metaPreview}
           </p>
         ) : null}
       </div>
-      <span className="text-label-sm tabular-nums text-on-surface-variant/60">
-        {timeStr}
-      </span>
     </li>
   );
 }

@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import { ShieldCheck } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { AuditLogsTable } from "./_components/audit-logs-table";
@@ -50,29 +49,30 @@ export default async function AuditLogsPage({
   const { data: rows, count, error } = await query;
 
   return (
-    <div className="space-y-stack-lg">
-      <header className="space-y-2">
-        <p className="inline-flex items-center gap-2 text-label-sm uppercase tracking-widest text-primary">
-          <ShieldCheck aria-hidden className="h-4 w-4" />
-          Audit Trail
-        </p>
-        <h1 className="text-headline-lg font-semibold tracking-tight text-on-surface">
-          {t("title")}
-        </h1>
-        <p className="text-body-md text-on-surface-variant">
-          {t("subtitle")}
-        </p>
+    <div className="animate-view-in">
+      {/* ===== Page Head ===== */}
+      <header className="mb-9 flex flex-col items-start justify-between gap-8 border-b border-line pb-6 sm:flex-row sm:items-end">
+        <div>
+          <div className="eyebrow mb-3">
+            <b>M20</b>System · Audit Trail
+          </div>
+          <h1 className="page-h">
+            감사 <em>로그.</em>
+          </h1>
+          <p className="page-sub">{t("subtitle")}</p>
+        </div>
       </header>
 
-      <form className="glass-panel flex flex-wrap items-end gap-4 p-4">
-        <label className="flex flex-col gap-1">
-          <span className="text-label-sm uppercase tracking-widest text-on-surface-variant">
+      {/* ===== Filter form ===== */}
+      <form className="mb-6 flex flex-wrap items-end gap-3 border border-line bg-bg-1 p-4">
+        <label className="flex flex-col gap-2">
+          <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-text-3">
             액션 필터
           </span>
           <select
             name="action"
             defaultValue={action}
-            className="h-11 min-w-48 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+            className="h-9 min-w-48 border border-line bg-bg px-3 font-mono text-[12px] text-text-1 focus:border-gold-soft focus:outline-none"
           >
             {ACTION_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -81,29 +81,29 @@ export default async function AuditLogsPage({
             ))}
           </select>
         </label>
-        <button
-          type="submit"
-          className="inline-flex h-11 items-center justify-center rounded-lg bg-primary px-5 text-body-md font-semibold text-on-primary transition-opacity hover:opacity-90"
-        >
+        <button type="submit" className="btn btn-primary">
           적용
         </button>
         {(action || page > 1) && (
-          <a
-            href="/audit-logs"
-            className="inline-flex h-11 items-center justify-center rounded-lg border border-outline-variant px-5 text-body-md text-on-surface-variant transition-colors hover:bg-surface-container-high"
-          >
+          <a href="/audit-logs" className="btn">
             초기화
           </a>
         )}
       </form>
 
       {error && (
-        <div className="glass-panel p-4 text-body-md text-destructive">
+        <div className="mb-6 border border-line bg-bg-1 p-4 font-mono text-[12px] text-[#E06B5F]">
           로그 조회 실패: {error.message}
         </div>
       )}
 
-      <Suspense fallback={<div className="text-on-surface-variant">불러오는 중…</div>}>
+      <Suspense
+        fallback={
+          <div className="font-mono text-[11px] uppercase tracking-[0.08em] text-text-3">
+            불러오는 중…
+          </div>
+        }
+      >
         <AuditLogsTable
           rows={rows ?? []}
           totalCount={count ?? 0}

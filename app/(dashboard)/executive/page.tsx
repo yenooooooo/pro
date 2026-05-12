@@ -1,15 +1,6 @@
 import { Suspense } from "react";
-import {
-  Crown,
-  TrendingUp,
-  Users,
-  Coins,
-  AlertTriangle,
-  ArrowUp,
-  ArrowDown,
-  Minus,
-} from "lucide-react";
 import { getTranslations } from "next-intl/server";
+import { cn } from "@/lib/utils/cn";
 import { createClient } from "@/lib/supabase/server";
 import {
   calculateFinancialRatios,
@@ -80,27 +71,32 @@ export default async function ExecutivePage({
         100
       : null;
 
+  const totalRisk = dangerCount + warnCount;
+  const riskTone: KpiTone =
+    dangerCount > 0 ? "danger" : warnCount > 0 ? "warn" : "default";
+  const profitTone: KpiTone = ratios.net_profit >= 0 ? "default" : "danger";
+
   return (
-    <div className="space-y-stack-lg">
-      <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div className="space-y-2">
-          <p className="inline-flex items-center gap-2 text-label-sm uppercase tracking-widest text-primary">
-            <Crown aria-hidden className="h-4 w-4" />
-            Executive Dashboard
-          </p>
-          <h1 className="text-headline-lg font-semibold tracking-tight text-on-surface">
-            {t("title")}
+    <div className="animate-view-in">
+      {/* ===== Page Head ===== */}
+      <header className="mb-9 flex flex-col items-start justify-between gap-8 border-b border-line pb-6 sm:flex-row sm:items-end">
+        <div>
+          <div className="eyebrow mb-3">
+            <b>M01</b>Operations · Executive
+          </div>
+          <h1 className="page-h">
+            임원 <em>지표.</em>
           </h1>
-          <p className="text-body-md text-on-surface-variant">
+          <p className="page-sub">
             {year}년 {month}월 핵심 경영 지표 · 부서별 ROI · 현금흐름 예측 ·
             리스크 알림.
           </p>
         </div>
-        <form method="get" className="flex items-center gap-2">
+        <form method="get" className="flex flex-wrap items-center gap-2">
           <select
             name="year"
             defaultValue={year}
-            className="h-11 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 text-body-md text-on-surface"
+            className="h-9 border border-line-2 bg-bg px-3 font-mono text-[12px] text-text-1 focus:border-gold focus:outline-none"
           >
             {Array.from({ length: 5 }, (_, i) => DEFAULT_YEAR - 2 + i).map((y) => (
               <option key={y} value={y}>
@@ -111,7 +107,7 @@ export default async function ExecutivePage({
           <select
             name="month"
             defaultValue={month}
-            className="h-11 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 text-body-md text-on-surface"
+            className="h-9 border border-line-2 bg-bg px-3 font-mono text-[12px] text-text-1 focus:border-gold focus:outline-none"
           >
             {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
               <option key={m} value={m}>
@@ -119,58 +115,57 @@ export default async function ExecutivePage({
               </option>
             ))}
           </select>
-          <button
-            type="submit"
-            className="h-11 rounded-lg bg-primary px-4 text-label-sm font-semibold text-on-primary transition-opacity hover:opacity-90"
-          >
+          <button type="submit" className="btn btn-primary">
             {tCommon("apply")}
           </button>
         </form>
       </header>
 
-      {/* 핵심 KPI 5종 */}
-      <section className="grid grid-cols-2 gap-gutter md:grid-cols-3 lg:grid-cols-5">
-        <MegaKpi
-          icon={Coins}
+      {/* ===== KPI grid (5) ===== */}
+      <div className="mb-9 grid grid-cols-1 border-l border-t border-line sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <KPI
           label="매출"
-          value={`${ratios.revenue.toLocaleString("ko-KR")}원`}
+          value={ratios.revenue.toLocaleString("ko-KR")}
+          prefix="₩"
           delta={revenueDelta}
-          tone="primary"
         />
-        <MegaKpi
-          icon={TrendingUp}
+        <KPI
           label="순이익"
-          value={`${ratios.net_profit.toLocaleString("ko-KR")}원`}
+          value={ratios.net_profit.toLocaleString("ko-KR")}
+          prefix="₩"
           delta={profitDelta}
-          tone={ratios.net_profit >= 0 ? "success" : "error"}
+          tone={profitTone}
         />
-        <MegaKpi
-          icon={Coins}
+        <KPI
           label="총 비용"
-          value={`${ratios.total_costs.toLocaleString("ko-KR")}원`}
-          tone="default"
+          value={ratios.total_costs.toLocaleString("ko-KR")}
+          prefix="₩"
         />
-        <MegaKpi
-          icon={Users}
+        <KPI
           label="활성 직원"
-          value={`${activeEmployees ?? 0}명`}
-          tone="default"
+          value={String(activeEmployees ?? 0)}
+          suffix="명"
         />
-        <MegaKpi
-          icon={AlertTriangle}
+        <KPI
           label="법적 리스크"
-          value={`${dangerCount + warnCount}건`}
-          subValue={`긴급 ${dangerCount} / 경고 ${warnCount}`}
-          tone={dangerCount > 0 ? "error" : warnCount > 0 ? "warn" : "success"}
+          value={String(totalRisk)}
+          suffix="건"
+          subtext={`긴급 ${dangerCount} / 경고 ${warnCount}`}
+          tone={riskTone}
         />
-      </section>
+      </div>
 
-      {/* 재무지표 */}
-      <section className="glass-panel rounded-xl p-6">
-        <h2 className="mb-4 text-headline-md font-semibold text-on-surface">
-          재무지표 ({year}.{month})
-        </h2>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+      {/* ===== 재무지표 ===== */}
+      <section className="panel mb-9 border border-line">
+        <div className="panel-h">
+          <div className="t font-serif">
+            재무 <em>지표</em>
+          </div>
+          <div className="meta">
+            {year}.{String(month).padStart(2, "0")}
+          </div>
+        </div>
+        <div className="grid grid-cols-1 border-l border-t border-line sm:grid-cols-2 lg:grid-cols-4">
           <RatioCard
             label={t("kpi_current_ratio")}
             value={ratios.current_ratio}
@@ -185,7 +180,6 @@ export default async function ExecutivePage({
             unit="%"
             healthy={(v) => v <= 100}
             warning={(v) => v <= 200}
-            inverse
             note="100% 이하 안전"
           />
           <RatioCard
@@ -206,66 +200,67 @@ export default async function ExecutivePage({
           />
         </div>
         {(ratios.current_ratio === null || ratios.debt_ratio === null) && (
-          <p className="mt-4 text-label-sm text-on-surface-variant/70">
-            ⚠ 일부 지표는 financial_facts 테이블에 자산/부채 입력이 필요합니다.
+          <p className="mt-4 font-mono text-[11px] leading-[1.6] tracking-[0.02em] text-text-3">
+            일부 지표는 financial_facts 테이블에 자산/부채 입력이 필요합니다.
             현재 기본값은 매출·비용 기반 영업이익률만 자동 계산.
           </p>
         )}
       </section>
 
-      {/* 부서별 ROI */}
-      <section className="glass-panel rounded-xl p-6">
-        <h2 className="mb-4 text-headline-md font-semibold text-on-surface">
-          부서별 인건비 ROI
-        </h2>
+      {/* ===== 부서별 ROI ===== */}
+      <section className="panel mb-9 border border-line">
+        <div className="panel-h">
+          <div className="t font-serif">
+            부서별 <em>인건비 ROI</em>
+          </div>
+          <div className="meta">{deptRoi.length}개 부서</div>
+        </div>
         {deptRoi.length === 0 ? (
-          <p className="text-body-md text-on-surface-variant">
-            매출/인건비 데이터 없음.{" "}
-            <a href="/revenue" className="text-primary-electric hover:underline">
-              매출 입력
-            </a>
-            부터 시작하세요.
-          </p>
+          <div className="border border-line bg-bg-1/40 py-8 text-center font-mono text-[11px] uppercase tracking-[0.08em] text-text-3">
+            매출/인건비 데이터 없음 · 매출 입력부터 시작하세요
+          </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-data-tabular">
+          <div className="w-full overflow-x-auto">
+            <table className="tbl min-w-[640px]">
               <thead>
-                <tr className="border-b border-outline-variant/30 text-label-sm uppercase tracking-widest text-on-surface-variant">
-                  <th className="px-3 py-2 text-left">부서</th>
-                  <th className="px-3 py-2 text-right">매출</th>
-                  <th className="px-3 py-2 text-right">인건비</th>
-                  <th className="px-3 py-2 text-right">매출/인건비</th>
-                  <th className="px-3 py-2 text-right">ROI (%)</th>
+                <tr>
+                  <th>부서</th>
+                  <th className="text-right">매출</th>
+                  <th className="text-right">인건비</th>
+                  <th className="text-right">매출/인건비</th>
+                  <th className="text-right">ROI</th>
                 </tr>
               </thead>
               <tbody>
                 {deptRoi.map((d) => (
-                  <tr key={d.department} className="border-b border-outline-variant/15 last:border-0">
-                    <td className="px-3 py-2 font-medium text-on-surface">
-                      {d.department}
+                  <tr key={d.department}>
+                    <td>
+                      <span className="text-text-1">{d.department}</span>
                     </td>
-                    <td className="px-3 py-2 text-right tabular-nums text-on-surface">
-                      {d.revenue.toLocaleString("ko-KR")}원
+                    <td className="n">
+                      ₩{d.revenue.toLocaleString("ko-KR")}
                     </td>
-                    <td className="px-3 py-2 text-right tabular-nums text-on-surface-variant">
-                      {d.payroll.toLocaleString("ko-KR")}원
+                    <td className="n">
+                      ₩{d.payroll.toLocaleString("ko-KR")}
                     </td>
-                    <td className="px-3 py-2 text-right tabular-nums text-on-surface">
+                    <td className="n">
                       {d.ratio !== null ? `${d.ratio.toFixed(2)}배` : "—"}
                     </td>
                     <td
-                      className={
-                        "px-3 py-2 text-right tabular-nums font-semibold " +
-                        (d.roi === null
-                          ? "text-on-surface-variant/40"
+                      className={cn(
+                        "n",
+                        d.roi === null
+                          ? "text-text-3"
                           : d.roi >= 50
-                            ? "text-emerald-300"
+                            ? "text-gold"
                             : d.roi >= 0
-                              ? "text-on-surface"
-                              : "text-error-soft")
-                      }
+                              ? "text-text-1"
+                              : "text-[#E06B5F]",
+                      )}
                     >
-                      {d.roi !== null ? `${d.roi >= 0 ? "+" : ""}${d.roi.toFixed(1)}%` : "—"}
+                      {d.roi !== null
+                        ? `${d.roi >= 0 ? "+" : ""}${d.roi.toFixed(1)}%`
+                        : "—"}
                     </td>
                   </tr>
                 ))}
@@ -283,64 +278,69 @@ export default async function ExecutivePage({
   );
 }
 
-function MegaKpi({
-  icon: Icon,
+/* ============================================================
+ * UI primitives
+ * ============================================================ */
+
+type KpiTone = "default" | "warn" | "danger";
+
+function KPI({
   label,
   value,
+  prefix,
+  suffix,
   delta,
-  subValue,
-  tone,
+  subtext,
+  tone = "default",
 }: {
-  icon: typeof Crown;
   label: string;
   value: string;
+  prefix?: string;
+  suffix?: string;
   delta?: number | null;
-  subValue?: string;
-  tone: "primary" | "success" | "error" | "warn" | "default";
+  subtext?: string;
+  tone?: KpiTone;
 }) {
-  const colorMap = {
-    primary: "text-primary-electric",
-    success: "text-emerald-300",
-    error: "text-error-soft",
-    warn: "text-amber-300",
-    default: "text-on-surface",
-  };
+  const toneClass =
+    tone === "danger"
+      ? "warn danger"
+      : tone === "warn"
+        ? "warn"
+        : "";
+
   return (
-    <div className="glass-panel rounded-xl p-5">
-      <div className="mb-2 flex items-center justify-between">
-        <span className="text-label-sm uppercase tracking-widest text-on-surface-variant">
-          {label}
-        </span>
-        <Icon aria-hidden className={`h-4 w-4 ${colorMap[tone]} opacity-60`} />
-      </div>
-      <p className={`text-headline-md font-bold tabular-nums ${colorMap[tone]}`}>
+    <div className="kpi-card">
+      <div className="kpi-l">{label}</div>
+      <div className={cn("kpi-v", toneClass)}>
+        {prefix ? <span className="cur">{prefix}</span> : null}
         {value}
-      </p>
-      {delta !== undefined && delta !== null ? (
-        <p
-          className={
-            "mt-1 inline-flex items-center gap-0.5 text-label-sm tabular-nums " +
-            (delta > 0
-              ? "text-emerald-300"
-              : delta < 0
-                ? "text-error-soft"
-                : "text-on-surface-variant")
-          }
-        >
-          {delta > 0 ? (
-            <ArrowUp aria-hidden className="h-3 w-3" />
-          ) : delta < 0 ? (
-            <ArrowDown aria-hidden className="h-3 w-3" />
-          ) : (
-            <Minus aria-hidden className="h-3 w-3" />
-          )}
-          {Math.abs(delta).toFixed(1)}% 전월
-        </p>
-      ) : null}
-      {subValue ? (
-        <p className="mt-1 text-label-sm text-on-surface-variant">{subValue}</p>
-      ) : null}
+        {suffix ? (
+          <span className="ml-2 text-[16px] text-text-3">{suffix}</span>
+        ) : null}
+      </div>
+      <div className="kpi-meta">
+        {delta !== undefined && delta !== null ? (
+          <DeltaBadge delta={delta} />
+        ) : subtext ? (
+          <span>{subtext}</span>
+        ) : (
+          <span />
+        )}
+      </div>
     </div>
+  );
+}
+
+function DeltaBadge({ delta }: { delta: number }) {
+  if (Math.abs(delta) < 0.05) {
+    return <span className="text-text-3">— 전월</span>;
+  }
+  const isUp = delta > 0;
+  const arrow = isUp ? "▲" : "▼";
+  return (
+    <span className={isUp ? "text-[#6BCB8A]" : "text-[#E06B5F]"}>
+      {arrow} {Math.abs(delta).toFixed(1)}% 전월
+    </span>
   );
 }
 
@@ -350,7 +350,6 @@ function RatioCard({
   unit,
   healthy,
   warning,
-  inverse = false,
   note,
 }: {
   label: string;
@@ -358,25 +357,27 @@ function RatioCard({
   unit: string;
   healthy: (v: number) => boolean;
   warning: (v: number) => boolean;
-  inverse?: boolean;
   note?: string;
 }) {
-  let tone = "text-on-surface";
+  let toneClass = "";
   if (value !== null) {
-    if (healthy(value)) tone = inverse ? "text-emerald-300" : "text-emerald-300";
-    else if (warning(value)) tone = "text-amber-300";
-    else tone = "text-error-soft";
+    if (healthy(value)) toneClass = "";
+    else if (warning(value)) toneClass = "warn";
+    else toneClass = "warn danger";
   }
   return (
-    <div className="rounded-lg border border-outline-variant/30 bg-surface-container-low p-4">
-      <p className="text-label-sm uppercase tracking-widest text-on-surface-variant">
-        {label}
-      </p>
-      <p className={`mt-1 text-headline-md font-bold tabular-nums ${tone}`}>
-        {value !== null ? `${value.toFixed(1)}${unit}` : "—"}
-      </p>
+    <div className="kpi-card">
+      <div className="kpi-l">{label}</div>
+      <div className={cn("kpi-v", toneClass)}>
+        {value !== null ? `${value.toFixed(1)}` : "—"}
+        {value !== null ? (
+          <span className="ml-1 text-[16px] text-text-3">{unit}</span>
+        ) : null}
+      </div>
       {note ? (
-        <p className="mt-1 text-label-sm text-on-surface-variant/60">{note}</p>
+        <div className="kpi-meta">
+          <span>{note}</span>
+        </div>
       ) : null}
     </div>
   );

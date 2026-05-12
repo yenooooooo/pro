@@ -1,10 +1,3 @@
-import {
-  AlertTriangle,
-  Check,
-  ExternalLink,
-  Lock,
-  ShieldCheck,
-} from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { cn } from "@/lib/utils/cn";
 import { formatKRW } from "@/lib/utils/format";
@@ -99,10 +92,10 @@ export default async function ClosingPage({
     (historyRaw ?? []).map((h) => [h.task_id, h]),
   );
 
-  const decoratedTasks = tasks.map((t) => {
-    const h = historyMap.get(t.id);
+  const decoratedTasks = tasks.map((task) => {
+    const h = historyMap.get(task.id);
     return {
-      ...t,
+      ...task,
       isDone: h?.is_done ?? false,
       completedAt: h?.completed_at ?? null,
     };
@@ -111,6 +104,7 @@ export default async function ClosingPage({
   const total = decoratedTasks.length;
   const doneCount = decoratedTasks.filter((t) => t.isDone).length;
   const pendingCount = total - doneCount;
+  const overdueCount = 0; // 지연 = (현재 데이터 모델상 별도 due_date 없음 → 0)
   const progressPct = total > 0 ? Math.round((doneCount / total) * 100) : 0;
   const isFullyDone = total > 0 && doneCount === total;
 
@@ -121,323 +115,234 @@ export default async function ClosingPage({
   );
   const newHiresCount = (newHires ?? []).length;
 
-  const RADIUS = 44;
-  const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
-  const dashOffset = CIRCUMFERENCE * (1 - progressPct / 100);
-
   return (
-    <div className="grid grid-cols-1 gap-gutter xl:grid-cols-12">
-      {/* Header */}
-      <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-end xl:col-span-12">
+    <div className="animate-view-in">
+      {/* ===== Page Head ===== */}
+      <header className="mb-9 flex flex-col items-start justify-between gap-8 border-b border-line pb-6 sm:flex-row sm:items-end">
         <div>
-          <h1 className="mb-2 text-headline-lg font-bold tracking-tight text-white sm:text-display-xl sm:text-5xl">
-            {t("title")}
+          <div className="eyebrow mb-3">
+            <b>M11</b>Cycle · Closing
+          </div>
+          <h1 className="page-h">
+            월말 <em>결산.</em>
           </h1>
-          <p className="max-w-2xl text-body-lg text-on-surface-variant">
-            {t("subtitle")}
-          </p>
+          <p className="page-sub">{t("subtitle")}</p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           <PeriodFilter year={year} month={month} />
-          {isFullyDone ? (
-            <span className="glass-panel flex items-center gap-3 rounded-lg px-4 py-2.5">
-              <Check aria-hidden className="h-4 w-4 text-tertiary-sky" />
-              <span className="text-label-sm font-medium text-tertiary-sky">
-                전 항목 완료
+          <a
+            href={`/closing/print?year=${year}&month=${month}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn"
+          >
+            리포트 미리보기
+          </a>
+        </div>
+      </header>
+
+      {/* ===== KPIs ===== */}
+      <div className="mb-9 grid grid-cols-1 border-l border-t border-line md:grid-cols-2 xl:grid-cols-4">
+        <div className="kpi-card">
+          <div className="kpi-l">진행률</div>
+          <div className="kpi-v">
+            {progressPct}
+            <span className="ml-1 text-[16px] text-text-3">%</span>
+          </div>
+          <div className="kpi-meta">
+            <span className="block w-full">
+              <span className="block h-px w-full bg-line">
+                <span
+                  aria-hidden
+                  className="block h-px bg-gold"
+                  style={{ width: `${progressPct}%` }}
+                />
+              </span>
+              <span className="mt-1.5 block">
+                {doneCount} / {total}
               </span>
             </span>
-          ) : (
-            <span className="glass-panel flex items-center gap-3 rounded-lg px-4 py-2.5">
-              <span className="relative flex h-2.5 w-2.5" aria-hidden>
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary-electric opacity-75" />
-                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-primary-electric" />
-              </span>
-              <span className="text-label-sm font-medium text-primary-electric">
-                진행 중 · {pendingCount}개 대기
-              </span>
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* LEFT */}
-      <div className="flex flex-col gap-gutter xl:col-span-4">
-        {/* Radial Gauge */}
-        <div className="glass-panel group relative flex flex-col items-center justify-center overflow-hidden rounded-xl p-6">
-          <div
-            aria-hidden
-            className="absolute inset-0 bg-gradient-to-br from-primary-electric/5 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-          />
-          <h2 className="mb-6 w-full text-headline-md font-semibold text-white">
-            결산 현황
-          </h2>
-          <div className="relative mb-4 flex h-48 w-48 items-center justify-center">
-            <svg
-              className="h-full w-full"
-              viewBox="0 0 100 100"
-              role="img"
-              aria-label={`결산 ${progressPct}% 완료`}
-            >
-              <circle
-                cx="50"
-                cy="50"
-                r={RADIUS}
-                fill="transparent"
-                strokeWidth="6"
-                className="stroke-surface-container-highest"
-              />
-              <circle
-                cx="50"
-                cy="50"
-                r={RADIUS}
-                fill="transparent"
-                strokeWidth="6"
-                strokeLinecap="round"
-                strokeDasharray={CIRCUMFERENCE}
-                strokeDashoffset={dashOffset}
-                className="stroke-primary-electric drop-shadow-[0_0_8px_rgba(192,193,255,0.6)] transition-[stroke-dashoffset] duration-500"
-                style={{ transform: "rotate(-90deg)", transformOrigin: "50% 50%" }}
-              />
-            </svg>
-            <div className="absolute flex flex-col items-center">
-              <span className="text-[40px] font-bold leading-none tabular-nums text-white">
-                {progressPct}%
-              </span>
-              <span className="mt-1 text-label-sm text-on-surface-variant">완료</span>
-            </div>
-          </div>
-          <div className="mt-2 flex w-full items-center justify-between px-2">
-            <GaugeStat label="완료" value={doneCount} />
-            <div aria-hidden className="h-8 w-px bg-outline-variant" />
-            <GaugeStat
-              label="대기"
-              value={pendingCount}
-              tone={pendingCount > 0 ? "tertiary" : "default"}
-            />
-            <div aria-hidden className="h-8 w-px bg-outline-variant" />
-            <GaugeStat label="전체" value={total} />
           </div>
         </div>
-
-        {/* Report Preview */}
-        <div className="glass-panel flex flex-1 flex-col rounded-xl p-6">
-          <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-headline-md font-semibold text-white">리포트 미리보기</h2>
-            <a
-              href={`/closing/print?year=${year}&month=${month}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="리포트 새 창으로 열기"
-              className="text-primary-electric transition-colors hover:text-primary-container"
-            >
-              <ExternalLink className="h-5 w-5" />
-            </a>
+        <div className="kpi-card">
+          <div className="kpi-l">완료</div>
+          <div className="kpi-v">
+            {doneCount.toLocaleString("ko-KR")}
+            <span className="ml-2 text-[16px] text-text-3">건</span>
           </div>
-          <div className="relative flex flex-1 flex-col overflow-hidden rounded-lg border border-outline-variant/30 bg-surface-container-low p-4">
-            <div className="relative z-10 space-y-4">
-              <PreviewRow
-                label="총 급여 (지급)"
-                value={totalGross > 0 ? formatKRW(totalGross) : "—"}
-              />
-              <PreviewRow
-                label="연장근로 시간"
-                value={
-                  totalOvertime > 0
-                    ? `${totalOvertime.toLocaleString("ko-KR", {
-                        maximumFractionDigits: 1,
-                      })} 시간`
-                    : "—"
-                }
-              />
-              <PreviewRow label="신규 입사" value={`${newHiresCount} 명`} />
-            </div>
-            {!isFullyDone ? (
-              <div className="mt-auto pt-6">
-                <div className="flex items-center gap-2 text-sm font-medium text-error-soft">
-                  <AlertTriangle aria-hidden className="h-4 w-4" />
-                  미리보기 불완전 · 남은 체크리스트를 완료하세요
-                </div>
-              </div>
-            ) : null}
+          <div className="kpi-meta">
+            <span>{isFullyDone ? "전 항목 완료" : `남은 ${pendingCount}건`}</span>
+          </div>
+        </div>
+        <div className="kpi-card">
+          <div className="kpi-l">대기</div>
+          <div className={cn("kpi-v", pendingCount > 0 ? "warn" : "")}>
+            {pendingCount.toLocaleString("ko-KR")}
+            <span className="ml-2 text-[16px] text-text-3">건</span>
+          </div>
+          <div className="kpi-meta">
+            <span>{pendingCount > 0 ? "체크리스트 미처리" : "이상 없음"}</span>
+          </div>
+        </div>
+        <div className="kpi-card">
+          <div className="kpi-l">지연</div>
+          <div className={cn("kpi-v", overdueCount > 0 ? "danger" : "")}>
+            {overdueCount.toLocaleString("ko-KR")}
+            <span className="ml-2 text-[16px] text-text-3">건</span>
+          </div>
+          <div className="kpi-meta">
+            <span>{overdueCount > 0 ? "기한 초과" : "정상"}</span>
           </div>
         </div>
       </div>
 
-      {/* RIGHT */}
-      <div className="flex flex-col gap-4 xl:col-span-8">
+      {/* ===== AI Assistant ===== */}
+      <div className="mb-9">
         <AiClosingAssistant year={year} month={month} />
+      </div>
 
-        <div className="flex items-center justify-between border-b border-outline-variant/30 pb-2">
-          <h3 className="text-[18px] font-semibold text-white">운영 체크리스트</h3>
-          <span className="text-label-sm text-on-surface-variant">
-            {doneCount} / {total} 완료
-          </span>
-        </div>
+      {/* ===== Body: Checklist + Preview ===== */}
+      <div className="row-grid mb-9" style={{ gridTemplateColumns: "minmax(0, 2fr) minmax(0, 1fr)" }}>
+        {/* LEFT — Checklist */}
+        <section className="panel">
+          <div className="panel-h">
+            <div className="t font-serif">
+              운영 <em>체크리스트</em>
+            </div>
+            <div className="meta">
+              {doneCount} / {total} 완료
+            </div>
+          </div>
 
-        {decoratedTasks.length === 0 ? (
-          <div className="glass-panel rounded-xl p-12 text-center">
-            <p className="text-body-md text-on-surface-variant">
+          {decoratedTasks.length === 0 ? (
+            <div className="border border-line bg-bg-1/40 py-12 text-center font-mono text-[11px] uppercase tracking-[0.08em] text-text-3">
               체크리스트 템플릿이 없습니다. seed 데이터를 확인하세요.
+            </div>
+          ) : (
+            <ul className="flex flex-col">
+              {decoratedTasks.map((task) => (
+                <li
+                  key={task.id}
+                  className="flex items-start justify-between gap-4 border-b border-line py-4 last:border-b-0"
+                >
+                  <div className="flex min-w-0 flex-1 items-start gap-3">
+                    <span
+                      className={cn(
+                        "mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center border font-mono text-[10px]",
+                        task.isDone
+                          ? "border-gold bg-gold text-[#0A0A0A]"
+                          : "border-line-2 text-transparent",
+                      )}
+                    >
+                      {task.isDone ? "✓" : ""}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <h4
+                        className={cn(
+                          "text-[14px] text-text-1",
+                          task.isDone &&
+                            "text-text-3 line-through decoration-text-4",
+                        )}
+                      >
+                        {task.title}
+                      </h4>
+                      {task.description ? (
+                        <p className="mt-1 text-[12px] leading-[1.6] text-text-2">
+                          {task.description}
+                        </p>
+                      ) : null}
+                      {task.completedAt ? (
+                        <p className="mt-1.5 font-mono text-[10px] tracking-[0.05em] text-text-3">
+                          완료 {formatTimestamp(task.completedAt)}
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+                  <div className="flex-shrink-0">
+                    <TaskToggle
+                      year={year}
+                      month={month}
+                      taskId={task.id}
+                      taskTitle={task.title}
+                      isDone={task.isDone}
+                    />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {/* Final action */}
+          <div className="mt-6 flex flex-col items-start justify-between gap-4 border-t border-dashed border-line pt-6 md:flex-row md:items-center">
+            <p className="max-w-md font-mono text-[11px] leading-[1.6] tracking-[0.02em] text-text-3">
+              모든 항목 완료 시 마감 확정 가능. 잠금 후 데이터는 감사 로그에
+              기록되며, 수정은 별도 권한이 필요합니다.
             </p>
+            <button
+              type="button"
+              disabled={!isFullyDone}
+              className={cn(
+                "btn",
+                isFullyDone ? "btn-primary" : "cursor-not-allowed opacity-50",
+              )}
+            >
+              월말 마감 확정 →
+            </button>
           </div>
-        ) : (
-          <ul className="mt-2 space-y-3">
-            {decoratedTasks.map((t) => (
-              <ClosingTaskCard key={t.id} task={t} year={year} month={month} />
-            ))}
+        </section>
+
+        {/* RIGHT — Report Preview */}
+        <section className="panel">
+          <div className="panel-h">
+            <div className="t font-serif">
+              리포트 <em>미리보기</em>
+            </div>
+            <div className="meta">
+              {year}.{String(month).padStart(2, "0")}
+            </div>
+          </div>
+          <ul className="flex flex-col">
+            <PreviewRow
+              label="총 급여 (지급)"
+              value={totalGross > 0 ? formatKRW(totalGross) : "—"}
+            />
+            <PreviewRow
+              label="연장근로 시간"
+              value={
+                totalOvertime > 0
+                  ? `${totalOvertime.toLocaleString("ko-KR", {
+                      maximumFractionDigits: 1,
+                    })} 시간`
+                  : "—"
+              }
+            />
+            <PreviewRow label="신규 입사" value={`${newHiresCount} 명`} />
           </ul>
-        )}
-
-        {/* Final action */}
-        <div className="mt-8 flex flex-col items-center justify-between gap-6 border-t border-outline-variant/30 pt-6 md:flex-row">
-          <div className="flex max-w-md items-start gap-2 text-sm text-on-surface-variant">
-            <Lock aria-hidden className="mt-1 h-4 w-4 flex-shrink-0 text-tertiary-sky" />
-            <span>
-              모든 항목 완료 시 마감 확정 가능. 잠금 후 데이터는 감사 로그에 기록되며,
-              수정은 별도 권한이 필요합니다.
-            </span>
-          </div>
-          <button
-            type="button"
-            disabled={!isFullyDone}
-            className={cn(
-              "group relative overflow-hidden rounded-lg px-8 py-4 transition-all",
-              isFullyDone
-                ? "border border-primary-electric bg-gradient-to-r from-primary-electric to-primary-container shadow-[0_0_24px_rgba(192,193,255,0.4)] hover:opacity-90"
-                : "cursor-not-allowed border border-outline-variant/50 bg-surface-container-high opacity-50",
-            )}
-          >
-            <div className="relative z-10 flex items-center gap-3">
-              <span
-                className={cn(
-                  "text-[18px] font-semibold",
-                  isFullyDone ? "text-on-primary" : "text-white",
-                )}
-              >
-                월말 마감 확정
-              </span>
-              <ShieldCheck
-                className={cn(
-                  "h-5 w-5",
-                  isFullyDone ? "text-on-primary" : "text-white",
-                )}
-              />
-            </div>
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-type DecoratedTask = ClosingTask & { isDone: boolean; completedAt: string | null };
-
-function ClosingTaskCard({
-  task,
-  year,
-  month,
-}: {
-  task: DecoratedTask;
-  year: number;
-  month: number;
-}) {
-  const isDone = task.isDone;
-  return (
-    <li
-      className={cn(
-        "glass-panel relative flex items-center justify-between overflow-hidden rounded-lg p-4 transition-colors",
-        isDone
-          ? "opacity-70 hover:opacity-100"
-          : "border-l-4 border-l-tertiary-sky bg-surface-container-highest/20 shadow-[0_4px_20px_rgba(123,208,255,0.05)]",
-      )}
-    >
-      {!isDone ? (
-        <div
-          aria-hidden
-          className="pointer-events-none absolute left-0 top-0 h-full w-full bg-gradient-to-r from-tertiary-sky/5 to-transparent"
-        />
-      ) : null}
-
-      <div className="relative z-10 flex flex-1 items-start gap-4">
-        <TaskStatusIcon isDone={isDone} />
-        <div className="min-w-0 flex-1">
-          <h4
-            className={cn(
-              "text-[16px] font-medium tabular-nums text-white",
-              isDone && "line-through decoration-outline-variant",
-            )}
-          >
-            {task.title}
-          </h4>
-          {task.description ? (
-            <p className="mt-1 text-[13px] text-on-surface-variant">
-              {task.description}
+          {!isFullyDone ? (
+            <p className="mt-4 border-t border-dashed border-line pt-4 font-mono text-[11px] uppercase tracking-[0.08em] text-gold">
+              미리보기 불완전 · 남은 체크리스트 {pendingCount}건
             </p>
-          ) : null}
-          {task.completedAt ? (
-            <div className="mt-2 flex flex-wrap gap-3 text-[11px] font-semibold text-outline">
-              <span>완료 {formatTimestamp(task.completedAt)}</span>
-            </div>
-          ) : null}
-        </div>
+          ) : (
+            <p className="mt-4 border-t border-dashed border-line pt-4 font-mono text-[11px] uppercase tracking-[0.08em] text-text-3">
+              마감 확정 준비 완료
+            </p>
+          )}
+        </section>
       </div>
-
-      <TaskToggle
-        year={year}
-        month={month}
-        taskId={task.id}
-        taskTitle={task.title}
-        isDone={isDone}
-      />
-    </li>
-  );
-}
-
-function TaskStatusIcon({ isDone }: { isDone: boolean }) {
-  if (isDone) {
-    return (
-      <div className="mt-1 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border border-primary-electric bg-primary-electric/20 text-primary-electric">
-        <Check aria-hidden className="h-[14px] w-[14px]" strokeWidth={3} />
-      </div>
-    );
-  }
-  return (
-    <div className="mt-1 flex h-6 w-6 flex-shrink-0 animate-pulse items-center justify-center rounded-full border-2 border-tertiary-sky">
-      <div aria-hidden className="h-2 w-2 rounded-full bg-tertiary-sky" />
-    </div>
-  );
-}
-
-function GaugeStat({
-  label,
-  value,
-  tone = "default",
-}: {
-  label: string;
-  value: number;
-  tone?: "default" | "tertiary";
-}) {
-  return (
-    <div className="flex flex-col items-center">
-      <span
-        className={cn(
-          "text-[20px] font-semibold tabular-nums",
-          tone === "tertiary" ? "text-tertiary-sky" : "text-white",
-        )}
-      >
-        {value}
-      </span>
-      <span className="text-[11px] text-outline">{label}</span>
     </div>
   );
 }
 
 function PreviewRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-end justify-between border-b border-outline-variant/30 pb-2">
-      <span className="text-data-tabular text-on-surface-variant">{label}</span>
-      <span className="text-[22px] font-semibold tabular-nums text-white">{value}</span>
-    </div>
+    <li className="flex items-baseline justify-between border-b border-line py-3 last:border-b-0">
+      <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-text-3">
+        {label}
+      </span>
+      <span className="font-serif text-[20px] italic text-text-1 tabular-nums">
+        {value}
+      </span>
+    </li>
   );
 }
 

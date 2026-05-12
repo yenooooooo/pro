@@ -1,5 +1,5 @@
-import { BookOpen, ScrollText, FileText, AlertTriangle } from "lucide-react";
 import { getTranslations } from "next-intl/server";
+import { cn } from "@/lib/utils/cn";
 import { createClient } from "@/lib/supabase/server";
 import { getTrialBalance } from "@/lib/accounting/trial-balance";
 
@@ -11,14 +11,6 @@ const TYPE_LABEL: Record<string, string> = {
   equity: "자본",
   revenue: "수익",
   expense: "비용",
-};
-
-const TYPE_TONE: Record<string, string> = {
-  asset: "bg-tertiary/15 text-tertiary",
-  liability: "bg-amber-500/15 text-amber-300",
-  equity: "bg-purple-500/15 text-purple-300",
-  revenue: "bg-emerald-500/15 text-emerald-300",
-  expense: "bg-error-soft/15 text-error-soft",
 };
 
 type Entry = {
@@ -53,132 +45,186 @@ export default async function AccountingPage({
   // 시산표
   const tb = await getTrialBalance(asOf);
 
+  // KPI: 시산표 유형별 잔액 합계 (정상 방향 기준)
+  const sumByType = (type: string) =>
+    tb.rows
+      .filter((r) => r.type === type)
+      .reduce((s, r) => s + r.balance, 0);
+  const totalAssets = sumByType("asset");
+  const totalLiabilities = sumByType("liability");
+  const totalEquity = sumByType("equity");
+  const totalRevenue = sumByType("revenue");
+
   return (
-    <div className="space-y-stack-lg">
-      <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div className="space-y-2">
-          <p className="inline-flex items-center gap-2 text-label-sm uppercase tracking-widest text-primary">
-            <BookOpen aria-hidden className="h-4 w-4" />
-            Accounting Ledger
-          </p>
-          <h1 className="text-headline-lg font-semibold tracking-tight text-on-surface">
-            {t("title")}
+    <div className="animate-view-in">
+      {/* ===== Page Head ===== */}
+      <header className="mb-9 flex flex-col items-start justify-between gap-8 border-b border-line pb-6 sm:flex-row sm:items-end">
+        <div>
+          <div className="eyebrow mb-3">
+            <b>M15</b>Ledger · Accounting
+          </div>
+          <h1 className="page-h">
+            회계 <em>장부.</em>
           </h1>
-          <p className="text-body-md text-on-surface-variant">
-            {t("subtitle")}
-          </p>
+          <p className="page-sub">{t("subtitle")}</p>
         </div>
         <form method="get" className="flex items-center gap-2">
-          <label className="text-label-sm text-on-surface-variant">기준일</label>
           <input
             type="date"
             name="as_of"
             defaultValue={asOf}
-            className="h-11 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 text-body-md text-on-surface"
+            className="h-9 border border-line bg-bg-1 px-3 font-mono text-[12px] text-text-1 focus:border-gold-soft"
           />
-          <button
-            type="submit"
-            className="h-11 rounded-lg bg-primary px-4 text-label-sm font-semibold text-on-primary transition-opacity hover:opacity-90"
-          >
+          <button type="submit" className="btn">
             적용
           </button>
+          <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-text-3">
+            기준일 {asOf}
+          </span>
         </form>
       </header>
 
-      {/* 시산표 */}
-      <section className="glass-panel rounded-xl p-6">
-        <header className="mb-4 flex items-center justify-between">
-          <h2 className="flex items-center gap-2 text-headline-md font-semibold text-on-surface">
-            <ScrollText aria-hidden className="h-5 w-5 text-primary-electric" />
-            시산표 ({asOf} 기준)
-          </h2>
-          {tb.balanced ? (
-            <span className="inline-flex items-center gap-1 rounded-md border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-300">
-              ✓ 차변 = 대변 일치
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1 rounded-md border border-error-soft/40 bg-error-soft/10 px-2 py-0.5 text-[11px] font-semibold text-error-soft">
-              <AlertTriangle aria-hidden className="h-3.5 w-3.5" />
-              불일치 — 차변 {tb.total_debit.toLocaleString("ko-KR")} ≠ 대변 {tb.total_credit.toLocaleString("ko-KR")}
-            </span>
-          )}
-        </header>
+      {/* ===== KPIs ===== */}
+      <div className="mb-9 grid grid-cols-1 border-l border-t border-line md:grid-cols-2 xl:grid-cols-4">
+        <div className="kpi-card">
+          <div className="kpi-l">자산 합계</div>
+          <div className="kpi-v">
+            <span className="cur">₩</span>
+            {totalAssets.toLocaleString("ko-KR")}
+          </div>
+          <div className="kpi-meta">
+            <span>시산표 기준 (차변)</span>
+          </div>
+        </div>
+        <div className="kpi-card">
+          <div className="kpi-l">부채 합계</div>
+          <div className="kpi-v warn">
+            <span className="cur">₩</span>
+            {totalLiabilities.toLocaleString("ko-KR")}
+          </div>
+          <div className="kpi-meta">
+            <span>시산표 기준 (대변)</span>
+          </div>
+        </div>
+        <div className="kpi-card">
+          <div className="kpi-l">자본 합계</div>
+          <div className="kpi-v warn">
+            <span className="cur">₩</span>
+            {totalEquity.toLocaleString("ko-KR")}
+          </div>
+          <div className="kpi-meta">
+            <span>시산표 기준 (대변)</span>
+          </div>
+        </div>
+        <div className="kpi-card">
+          <div className="kpi-l">수익 합계</div>
+          <div className="kpi-v warn">
+            <span className="cur">₩</span>
+            {totalRevenue.toLocaleString("ko-KR")}
+          </div>
+          <div className="kpi-meta">
+            <span>시산표 기준 (대변)</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ===== 시산표 ===== */}
+      <section className="panel mb-9">
+        <div className="panel-h">
+          <div className="t font-serif">
+            <em>시산표</em>
+          </div>
+          <div className="meta flex items-center gap-3">
+            <span>{asOf} 기준</span>
+            {tb.balanced ? (
+              <span className="chip ok">
+                <i />
+                차변 = 대변
+              </span>
+            ) : (
+              <span className="chip rej">
+                <i />
+                불일치
+              </span>
+            )}
+          </div>
+        </div>
 
         {tb.rows.length === 0 ? (
-          <p className="text-body-md text-on-surface-variant">
+          <div className="border border-line bg-bg-1/40 py-8 text-center font-mono text-[11px] uppercase tracking-[0.08em] text-text-3">
             분개 기록 없음. 급여 확정·지출 등록 시 자동 분개가 생성됩니다.
-          </p>
+          </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-data-tabular">
+          <div className="w-full overflow-x-auto">
+            <table className="tbl min-w-[860px]">
               <thead>
-                <tr className="border-b border-outline-variant/30 text-label-sm uppercase tracking-widest text-on-surface-variant">
-                  <th className="px-3 py-2 text-left">코드</th>
-                  <th className="px-3 py-2 text-left">계정과목</th>
-                  <th className="px-3 py-2 text-left">유형</th>
-                  <th className="px-3 py-2 text-right">차변 합계</th>
-                  <th className="px-3 py-2 text-right">대변 합계</th>
-                  <th className="px-3 py-2 text-right">잔액</th>
+                <tr>
+                  <th>코드</th>
+                  <th>계정과목</th>
+                  <th>유형</th>
+                  <th className="text-right">차변 합계</th>
+                  <th className="text-right">대변 합계</th>
+                  <th className="text-right">잔액</th>
                 </tr>
               </thead>
               <tbody>
-                {tb.rows.map((r) => (
-                  <tr
-                    key={r.code}
-                    className="border-b border-outline-variant/15 last:border-0 hover:bg-primary/5"
-                  >
-                    <td className="px-3 py-2 font-mono text-on-surface-variant">{r.code}</td>
-                    <td className="px-3 py-2 font-medium text-on-surface">{r.name}</td>
-                    <td className="px-3 py-2">
-                      <span
-                        className={`rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${TYPE_TONE[r.type]}`}
-                      >
-                        {TYPE_LABEL[r.type]}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2 text-right tabular-nums text-on-surface-variant">
-                      {r.debit_total > 0 ? r.debit_total.toLocaleString("ko-KR") : "—"}
-                    </td>
-                    <td className="px-3 py-2 text-right tabular-nums text-on-surface-variant">
-                      {r.credit_total > 0 ? r.credit_total.toLocaleString("ko-KR") : "—"}
-                    </td>
-                    <td
-                      className={
-                        "px-3 py-2 text-right tabular-nums font-semibold " +
-                        (r.balance_side === "debit"
-                          ? "text-tertiary"
-                          : r.balance_side === "credit"
-                            ? "text-amber-300"
-                            : "text-on-surface-variant/40")
-                      }
-                    >
-                      {r.balance > 0 ? r.balance.toLocaleString("ko-KR") : "—"}
-                      {r.balance_side !== "zero" ? (
-                        <span className="ml-1 text-[10px] text-on-surface-variant">
-                          {r.balance_side === "debit" ? "(차)" : "(대)"}
-                        </span>
-                      ) : null}
-                    </td>
-                  </tr>
-                ))}
+                {tb.rows.map((r) => {
+                  const isCreditNormal =
+                    r.type === "liability" ||
+                    r.type === "equity" ||
+                    r.type === "revenue";
+                  const balanceClass =
+                    r.balance_side === "zero"
+                      ? "text-text-3"
+                      : isCreditNormal
+                        ? "text-gold"
+                        : "text-text-1";
+                  return (
+                    <tr key={r.code}>
+                      <td className="font-mono text-[12px] text-text-3">{r.code}</td>
+                      <td>
+                        <span className="text-text-1">{r.name}</span>
+                      </td>
+                      <td>
+                        <span className="chip">{TYPE_LABEL[r.type]}</span>
+                      </td>
+                      <td className="n">
+                        {r.debit_total > 0
+                          ? r.debit_total.toLocaleString("ko-KR")
+                          : "—"}
+                      </td>
+                      <td className="n">
+                        {r.credit_total > 0
+                          ? r.credit_total.toLocaleString("ko-KR")
+                          : "—"}
+                      </td>
+                      <td className={cn("n", balanceClass)}>
+                        {r.balance > 0 ? r.balance.toLocaleString("ko-KR") : "—"}
+                        {r.balance_side !== "zero" ? (
+                          <span className="ml-1 font-mono text-[10px] text-text-3">
+                            {r.balance_side === "debit" ? "(차)" : "(대)"}
+                          </span>
+                        ) : null}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
               <tfoot>
-                <tr className="border-t-2 border-outline-variant/40 bg-surface-container/30">
-                  <td className="px-3 py-3 font-bold text-on-surface" colSpan={3}>
+                <tr>
+                  <td
+                    colSpan={3}
+                    className="border-t border-line bg-bg-1 px-[14px] py-[14px] font-mono text-[11px] uppercase tracking-[0.1em] text-text-2"
+                  >
                     합계
                   </td>
-                  <td className="px-3 py-3"></td>
-                  <td className="px-3 py-3"></td>
-                  <td className="px-3 py-3 text-right">
-                    <div className="flex justify-end gap-3 tabular-nums font-bold">
-                      <span className="text-tertiary">
-                        차 {tb.total_debit.toLocaleString("ko-KR")}
-                      </span>
-                      <span className="text-amber-300">
-                        대 {tb.total_credit.toLocaleString("ko-KR")}
-                      </span>
-                    </div>
+                  <td className="border-t border-line bg-bg-1 px-[14px] py-[14px] text-right font-mono font-semibold tabular-nums text-text-1">
+                    {tb.total_debit.toLocaleString("ko-KR")}
                   </td>
+                  <td className="border-t border-line bg-bg-1 px-[14px] py-[14px] text-right font-mono font-semibold tabular-nums text-gold">
+                    {tb.total_credit.toLocaleString("ko-KR")}
+                  </td>
+                  <td className="border-t border-line bg-bg-1" />
                 </tr>
               </tfoot>
             </table>
@@ -186,45 +232,57 @@ export default async function AccountingPage({
         )}
       </section>
 
-      {/* 최근 분개 */}
-      <section className="glass-panel rounded-xl p-6">
-        <header className="mb-4 flex items-center gap-2">
-          <FileText aria-hidden className="h-5 w-5 text-primary-electric" />
-          <h2 className="text-headline-md font-semibold text-on-surface">
-            최근 분개 (최대 10건)
-          </h2>
-        </header>
+      {/* ===== 최근 분개 ===== */}
+      <section className="panel mb-9">
+        <div className="panel-h">
+          <div className="t font-serif">
+            최근 <em>분개</em>
+          </div>
+          <div className="meta">최대 10건</div>
+        </div>
         {recent.length === 0 ? (
-          <p className="text-body-md text-on-surface-variant">
+          <div className="border border-line bg-bg-1/40 py-8 text-center font-mono text-[11px] uppercase tracking-[0.08em] text-text-3">
             분개 기록 없음.
-          </p>
+          </div>
         ) : (
-          <ul className="space-y-2">
-            {recent.map((e) => (
-              <li
-                key={e.id}
-                className="flex items-center justify-between rounded-lg border border-outline-variant/20 bg-surface-container-low px-4 py-2"
-              >
-                <div>
-                  <p className="text-body-md text-on-surface">{e.description}</p>
-                  <p className="text-label-sm text-on-surface-variant tabular-nums">
-                    {e.entry_date} · {e.source_type ?? "manual"}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
+          <div className="w-full overflow-x-auto">
+            <table className="tbl min-w-[560px]">
+              <thead>
+                <tr>
+                  <th>전표일</th>
+                  <th>적요</th>
+                  <th>출처</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recent.map((e) => (
+                  <tr key={e.id}>
+                    <td className="font-mono text-[12px] text-text-2">
+                      {e.entry_date}
+                    </td>
+                    <td>
+                      <span className="text-text-1">{e.description}</span>
+                    </td>
+                    <td>
+                      <span className="chip">{e.source_type ?? "manual"}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </section>
 
-      <div className="glass-panel rounded-xl p-4">
-        <p className="text-label-sm text-on-surface-variant">
-          ⚖️ 본 시스템은 일반기업회계기준 약식 — 풀 회계 (재무제표 자동 생성, 결산 분개,
-          외화·계약·세무 차이 조정) 는 v1.1 로드맵. 자동 분개는{" "}
-          <code className="rounded bg-surface-container-high px-1">
+      {/* ===== 근거 ===== */}
+      <div className="border border-line bg-bg-1 p-5">
+        <p className="font-mono text-[11px] leading-[1.6] tracking-[0.02em] text-text-3">
+          본 시스템은 일반기업회계기준 약식 — 풀 회계 (재무제표 자동 생성, 결산
+          분개, 외화·계약·세무 차이 조정) 는 v1.1 로드맵. 자동 분개는{" "}
+          <code className="border border-line px-1 text-text-2">
             lib/accounting/auto-journalize.ts
           </code>{" "}
-          에서 호출.
+          에서 호출됩니다.
         </p>
       </div>
     </div>
