@@ -3,9 +3,6 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Loader2,
-  Search as SearchIcon,
-  X,
   LayoutDashboard,
   Users,
   Clock,
@@ -77,13 +74,6 @@ const TYPE_LABEL: Record<SearchHit["type"], string> = {
   vendor: "거래처",
   asset: "자산",
   expense: "지출",
-};
-
-const TYPE_TONE: Record<SearchHit["type"], string> = {
-  employee: "bg-primary-electric/15 text-primary-electric",
-  vendor: "bg-tertiary/15 text-tertiary",
-  asset: "bg-amber-500/15 text-amber-300",
-  expense: "bg-emerald-500/15 text-emerald-300",
 };
 
 export function SearchModal({ open, onClose }: Props) {
@@ -183,41 +173,63 @@ export function SearchModal({ open, onClose }: Props) {
       role="dialog"
       aria-modal="true"
       aria-label="명령 팔레트"
-      className="fixed inset-0 z-[60] flex items-start justify-center bg-black/60 px-4 pt-24 backdrop-blur-sm"
+      className="fixed inset-0 z-[100] flex items-start justify-center bg-bg/[0.78] px-6 pt-24 backdrop-blur-[10px]"
       onClick={onClose}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-2xl overflow-hidden rounded-2xl border border-outline-variant/30 bg-surface-container shadow-2xl"
+        className="relative w-full max-w-[720px] border border-line-2 bg-bg-1 shadow-[0_40px_100px_rgba(0,0,0,0.6)] animate-modal-in"
       >
-        <div className="flex items-center gap-3 border-b border-outline-variant/30 px-4 py-3">
-          <SearchIcon aria-hidden className="h-5 w-5 text-on-surface-variant" />
+        <div aria-hidden className="pointer-events-none absolute inset-0 border border-gold/15" />
+
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="닫기"
+          className="absolute right-3 top-3 z-10 flex h-7 w-7 items-center justify-center border border-line text-text-3 hover:border-line-2 hover:text-text-1"
+        >
+          ✕
+        </button>
+
+        {/* Header */}
+        <div className="border-b border-line px-6 py-5">
+          <div className="eyebrow">
+            <b>·</b>Search · Cmd+K
+          </div>
+          <h2 className="mt-2 font-serif text-[28px] italic text-text-1">
+            Global <em className="text-gold">Search.</em>
+          </h2>
+          <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.12em] text-text-3">
+            Navigate · Actions · Data
+          </p>
+        </div>
+
+        {/* Search input */}
+        <div className="flex items-center gap-3 border-b border-line bg-bg px-6 py-3">
+          <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-text-3">
+            ›
+          </span>
           <input
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="페이지로 이동, 액션 실행, 데이터 검색…"
-            className="flex-1 bg-transparent text-body-md text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none"
+            className="flex-1 bg-transparent font-mono text-[13px] text-text-1 placeholder:text-text-4 focus:outline-none"
           />
           {pending ? (
-            <Loader2 aria-hidden className="h-4 w-4 animate-spin text-on-surface-variant" />
+            <span className="animate-pulse font-mono text-[10px] uppercase tracking-[0.12em] text-gold">
+              ▌
+            </span>
           ) : null}
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="닫기"
-            className="rounded p-1 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"
-          >
-            <X aria-hidden className="h-4 w-4" />
-          </button>
         </div>
 
+        {/* Results */}
         <div className="max-h-[60vh] overflow-y-auto">
           {/* Pages 그룹 */}
           {cmdGroups.page.length > 0 && (
-            <div className="border-b border-outline-variant/20 py-1">
-              <p className="px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60">
-                페이지
+            <div className="border-b border-line">
+              <p className="px-6 py-2 font-mono text-[10px] uppercase tracking-[0.15em] text-text-3">
+                <span className="mr-3 text-gold">·</span>Pages
               </p>
               {cmdGroups.page.map((c) => {
                 runningIdx++;
@@ -237,9 +249,9 @@ export function SearchModal({ open, onClose }: Props) {
 
           {/* Actions 그룹 */}
           {cmdGroups.action.length > 0 && (
-            <div className="border-b border-outline-variant/20 py-1">
-              <p className="px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60">
-                액션
+            <div className="border-b border-line">
+              <p className="px-6 py-2 font-mono text-[10px] uppercase tracking-[0.15em] text-text-3">
+                <span className="mr-3 text-gold">·</span>Actions
               </p>
               {cmdGroups.action.map((c) => {
                 runningIdx++;
@@ -259,9 +271,9 @@ export function SearchModal({ open, onClose }: Props) {
 
           {/* 데이터 검색 */}
           {hits.length > 0 && (
-            <div className="py-1">
-              <p className="px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60">
-                검색 결과
+            <div>
+              <p className="px-6 py-2 font-mono text-[10px] uppercase tracking-[0.15em] text-text-3">
+                <span className="mr-3 text-gold">·</span>Results
               </p>
               <ul>
                 {hits.map((h) => {
@@ -274,29 +286,25 @@ export function SearchModal({ open, onClose }: Props) {
                         onClick={() => navigate(h.href)}
                         onMouseEnter={() => setActiveIdx(idx)}
                         className={cn(
-                          "flex w-full items-center gap-3 px-4 py-2 text-left transition-colors",
+                          "flex w-full items-center gap-3 border-b border-line px-6 py-3 text-left transition-colors",
                           idx === activeIdx
-                            ? "bg-primary-electric/10"
-                            : "hover:bg-surface-container-high",
+                            ? "bg-gold/[0.06]"
+                            : "hover:bg-bg-2",
                         )}
                       >
-                        <span
-                          className={cn(
-                            "rounded px-2 py-0.5 text-label-sm font-semibold uppercase tracking-wider",
-                            TYPE_TONE[h.type],
-                          )}
-                        >
-                          {TYPE_LABEL[h.type]}
-                        </span>
+                        <span className="chip">{TYPE_LABEL[h.type]}</span>
                         <span className="flex-1 truncate">
-                          <span className="block truncate text-body-md text-on-surface">
+                          <span className="block truncate font-serif text-[15px] italic text-text-1">
                             {h.title}
                           </span>
                           {h.subtitle ? (
-                            <span className="block truncate text-label-sm text-on-surface-variant">
+                            <span className="block truncate font-mono text-[10px] uppercase tracking-[0.08em] text-text-3">
                               {h.subtitle}
                             </span>
                           ) : null}
+                        </span>
+                        <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-text-3">
+                          Enter ↵
                         </span>
                       </button>
                     </li>
@@ -307,24 +315,31 @@ export function SearchModal({ open, onClose }: Props) {
           )}
 
           {q.length >= 2 && hits.length === 0 && !pending && filteredCommands.length === 0 && (
-            <div className="px-4 py-10 text-center text-sm text-on-surface-variant">
-              결과 없음
+            <div className="px-6 py-10 text-center font-serif text-[18px] italic text-text-3">
+              결과 없음.
             </div>
           )}
         </div>
 
-        <div className="flex items-center justify-between border-t border-outline-variant/30 bg-surface-container-low px-4 py-2 text-label-sm text-on-surface-variant">
-          <span>
-            <kbd className="rounded border border-outline-variant/40 bg-surface-container px-1.5 py-0.5 font-mono text-[10px]">↑↓</kbd>{" "}
-            이동{" "}
-            <kbd className="ml-2 rounded border border-outline-variant/40 bg-surface-container px-1.5 py-0.5 font-mono text-[10px]">Enter</kbd>{" "}
-            선택{" "}
-            <kbd className="ml-2 rounded border border-outline-variant/40 bg-surface-container px-1.5 py-0.5 font-mono text-[10px]">Esc</kbd>{" "}
-            닫기
+        {/* Footer */}
+        <div className="flex items-center justify-between border-t border-line bg-bg px-6 py-3 font-mono text-[10px] uppercase tracking-[0.1em] text-text-3">
+          <span className="flex items-center gap-3">
+            <span>
+              <kbd className="border border-line bg-bg-1 px-1.5 py-0.5 text-text-2">↑↓</kbd>{" "}
+              Move
+            </span>
+            <span>
+              <kbd className="border border-line bg-bg-1 px-1.5 py-0.5 text-text-2">Enter</kbd>{" "}
+              Select
+            </span>
+            <span>
+              <kbd className="border border-line bg-bg-1 px-1.5 py-0.5 text-text-2">Esc</kbd>{" "}
+              Close
+            </span>
           </span>
           <span>
-            <kbd className="rounded border border-outline-variant/40 bg-surface-container px-1.5 py-0.5 font-mono text-[10px]">Ctrl</kbd>{" "}
-            <kbd className="rounded border border-outline-variant/40 bg-surface-container px-1.5 py-0.5 font-mono text-[10px]">K</kbd>
+            <kbd className="border border-line bg-bg-1 px-1.5 py-0.5 text-text-2">Ctrl</kbd>{" "}
+            <kbd className="border border-line bg-bg-1 px-1.5 py-0.5 text-text-2">K</kbd>
           </span>
         </div>
       </div>
@@ -350,17 +365,20 @@ function CommandRow({
       onClick={onClick}
       onMouseEnter={onMouseEnter}
       className={cn(
-        "flex w-full items-center gap-3 px-4 py-2 text-left transition-colors",
-        active ? "bg-primary-electric/10" : "hover:bg-surface-container-high",
+        "flex w-full items-center gap-3 px-6 py-2.5 text-left transition-colors",
+        active ? "bg-gold/[0.06]" : "hover:bg-bg-2",
       )}
     >
-      <Icon aria-hidden className="h-4 w-4 text-on-surface-variant" />
-      <span className="flex-1 text-body-md text-on-surface">
-        {command.label}
-      </span>
+      <Icon aria-hidden className={cn("h-4 w-4", active ? "text-gold" : "text-text-3")} />
+      <span className="flex-1 text-[14px] text-text-1">{command.label}</span>
       {command.hint ? (
-        <span className="text-label-sm text-on-surface-variant/60">
+        <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-3">
           {command.hint}
+        </span>
+      ) : null}
+      {active ? (
+        <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-gold">
+          ↵
         </span>
       ) : null}
     </button>

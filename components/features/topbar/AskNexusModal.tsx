@@ -1,15 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import {
-  Sparkles,
-  Send,
-  Loader2,
-  X,
-  AlertCircle,
-  TableProperties,
-  Zap,
-} from "lucide-react";
 import { useBodyScrollLock } from "@/lib/hooks/use-body-scroll-lock";
 
 type Props = {
@@ -214,36 +205,40 @@ export function AskNexusModal({ open, onClose }: Props) {
       role="dialog"
       aria-modal="true"
       aria-label="Ask Nexus"
-      className="fixed inset-0 z-[60] flex items-start justify-center bg-black/60 px-4 pt-20 backdrop-blur-sm"
+      className="fixed inset-0 z-[100] flex items-start justify-center bg-bg/[0.78] px-6 pt-24 backdrop-blur-[10px]"
       onClick={onClose}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-2xl overflow-hidden rounded-2xl border border-outline-variant/30 bg-surface-container shadow-2xl"
+        className="relative w-full max-w-[720px] border border-line-2 bg-bg-1 shadow-[0_40px_100px_rgba(0,0,0,0.6)] animate-modal-in"
       >
-        <div className="flex items-center justify-between border-b border-outline-variant/30 px-5 py-4">
-          <div className="flex items-center gap-2">
-            <Sparkles aria-hidden className="h-5 w-5 text-primary-electric" />
-            <div>
-              <h2 className="text-headline-md font-semibold text-on-surface">
-                Ask Nexus
-              </h2>
-              <p className="mt-0.5 text-label-sm text-on-surface-variant">
-                ERP 데이터에 자연어로 질문하세요. Gemini 무료 tier 기반.
-              </p>
-            </div>
+        {/* Inner gold-soft rim */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 border border-gold/15" />
+
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="닫기"
+          className="absolute right-3 top-3 z-10 flex h-7 w-7 items-center justify-center border border-line text-text-3 hover:border-line-2 hover:text-text-1"
+        >
+          ✕
+        </button>
+
+        {/* Header */}
+        <div className="border-b border-line px-6 py-5">
+          <div className="eyebrow">
+            <b>·</b>AI · Natural Language Query
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="닫기"
-            className="rounded p-1 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"
-          >
-            <X aria-hidden className="h-5 w-5" />
-          </button>
+          <h2 className="mt-2 font-serif text-[28px] italic text-text-1">
+            Ask <em className="text-gold">Nexus.</em>
+          </h2>
+          <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.12em] text-text-3">
+            ERP 데이터에 자연어로 질문 · Gemini streaming · 5min cache
+          </p>
         </div>
 
-        <div className="space-y-4 p-5">
+        {/* Body */}
+        <div className="space-y-4 p-6">
           <div>
             <textarea
               ref={inputRef}
@@ -254,47 +249,43 @@ export function AskNexusModal({ open, onClose }: Props) {
               }}
               placeholder="예: '개발팀 평균 기본급', '강민준의 5월 연장근로'"
               rows={2}
-              className="w-full resize-none rounded-lg border border-outline-variant/40 bg-surface-container-low px-3 py-2 text-body-md text-on-surface outline-none placeholder:text-on-surface-variant/60 focus:border-primary-electric focus:ring-1 focus:ring-primary-electric"
+              className="w-full resize-none border border-line bg-bg p-3 font-mono text-[13px] text-text-1 placeholder:text-text-4 focus:border-gold focus:outline-none"
             />
-            <div className="mt-2 flex items-center justify-between gap-2">
-              <span className="text-label-sm text-on-surface-variant">
-                <kbd className="rounded border border-outline-variant/40 bg-surface-container px-1 py-0.5 font-mono text-[10px]">
+            <div className="mt-3 flex items-center justify-between gap-2">
+              <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-text-3">
+                <kbd className="border border-line bg-bg px-1.5 py-0.5 text-text-2">
                   Ctrl
-                </kbd>{" "}
-                +{" "}
-                <kbd className="rounded border border-outline-variant/40 bg-surface-container px-1 py-0.5 font-mono text-[10px]">
+                </kbd>
+                {" + "}
+                <kbd className="border border-line bg-bg px-1.5 py-0.5 text-text-2">
                   Enter
-                </kbd>{" "}
-                로 전송
+                </kbd>
+                {" "}to send
               </span>
               <button
                 type="button"
                 onClick={() => submit(query)}
                 disabled={pending || query.trim().length < 2}
-                className="inline-flex min-h-9 items-center gap-1 rounded-lg bg-gradient-to-b from-primary-electric to-primary-container px-3 py-1.5 text-label-sm font-semibold text-on-primary transition-opacity hover:opacity-90 disabled:opacity-50"
+                className="btn btn-primary disabled:opacity-50"
               >
-                {pending ? (
-                  <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Send aria-hidden className="h-4 w-4" />
-                )}
-                질문하기
+                <span>✦</span>
+                {pending ? "전송 중…" : "질문하기"}
               </button>
             </div>
           </div>
 
           {/* 진행 상태 — 답변 시작 전까지만 표시 */}
           {pending && stage && !hasAnswer ? (
-            <div className="inline-flex items-center gap-2 rounded-lg border border-primary-electric/20 bg-primary-electric/5 px-3 py-2 text-label-sm text-primary-electric">
-              <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
+            <div className="inline-flex items-center gap-2 border border-gold-soft/40 bg-gold/[0.06] px-3 py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-gold">
+              <span className="animate-pulse">▌</span>
               {STAGE_LABEL[stage]}
             </div>
           ) : null}
 
           {!hasAnswer && !pending && !error ? (
             <div>
-              <p className="mb-2 text-label-sm uppercase tracking-widest text-on-surface-variant">
-                추천 질문
+              <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.15em] text-text-3">
+                <span className="mr-3 text-gold">·</span>Suggestions
               </p>
               <div className="flex flex-wrap gap-2">
                 {SUGGESTIONS.map((s) => (
@@ -305,7 +296,7 @@ export function AskNexusModal({ open, onClose }: Props) {
                       setQuery(s);
                       submit(s);
                     }}
-                    className="rounded-full border border-outline-variant/30 bg-surface-container-low px-3 py-1.5 text-label-sm text-on-surface-variant transition-colors hover:border-primary-electric/40 hover:bg-primary-electric/10 hover:text-primary-electric"
+                    className="chip hover:border-gold-soft hover:text-gold"
                   >
                     {s}
                   </button>
@@ -315,19 +306,20 @@ export function AskNexusModal({ open, onClose }: Props) {
           ) : null}
 
           {error ? (
-            <div className="inline-flex items-center gap-2 rounded border border-error-soft/30 bg-error-soft/5 px-3 py-2 text-body-md text-error-soft">
-              <AlertCircle aria-hidden className="h-4 w-4" />
+            <div className="inline-flex items-center gap-2 border border-[rgba(224,107,95,0.35)] bg-[rgba(224,107,95,0.06)] px-3 py-2 font-mono text-[11px] uppercase tracking-[0.08em] text-[#e06b5f]">
+              <span>!</span>
               {error}
             </div>
           ) : null}
 
           {hasAnswer ? (
             <div className="space-y-3">
-              <div className="rounded-lg border border-primary-electric/30 bg-primary-electric/5 p-4">
-                <div className="mb-2 inline-flex items-center gap-1.5 text-label-sm text-primary-electric">
-                  <Sparkles aria-hidden className="h-4 w-4" />
-                  답변
-                  <span className="ml-1 rounded bg-surface-container-high px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
+              <div className="border border-gold-soft/50 bg-gold/[0.06] p-4">
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="font-serif text-[15px] italic text-gold">
+                    ✦ 답변
+                  </span>
+                  <span className="chip pend">
                     {meta?.source === "gemini"
                       ? "Gemini"
                       : meta?.source === "fallback"
@@ -337,35 +329,36 @@ export function AskNexusModal({ open, onClose }: Props) {
                   {meta?.cached ? (
                     <span
                       title="5분 캐시 — 즉시 응답"
-                      className="ml-0.5 inline-flex items-center gap-0.5 rounded bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300"
+                      className="chip ok"
                     >
-                      <Zap aria-hidden className="h-2.5 w-2.5" />
-                      Cached
+                      ⚡ Cached
                     </span>
                   ) : null}
                 </div>
-                <p className="whitespace-pre-wrap text-body-md text-on-surface">
+                <p className="whitespace-pre-wrap text-[14px] leading-[1.6] text-text-1">
                   {answerText}
                   {pending ? (
                     <span
                       aria-hidden
-                      className="ml-0.5 inline-block h-4 w-1.5 -translate-y-0.5 animate-pulse bg-primary-electric/60 align-middle"
-                    />
+                      className="ml-1 inline-block animate-pulse font-mono text-gold"
+                    >
+                      ▌
+                    </span>
                   ) : null}
                 </p>
               </div>
               {meta?.query ? (
-                <p className="inline-flex items-center gap-1 text-label-sm text-on-surface-variant">
-                  <TableProperties aria-hidden className="h-3.5 w-3.5" />
-                  데이터 출처: {meta.query.description}
+                <p className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.1em] text-text-3">
+                  <span className="text-gold">·</span>
+                  Source: {meta.query.description}
                 </p>
               ) : null}
               {meta?.rows && meta.rows.length > 0 ? (
-                <details className="rounded border border-outline-variant/20 bg-surface-container-low p-3">
-                  <summary className="cursor-pointer text-label-sm text-on-surface-variant">
-                    원본 데이터 보기 ({meta.rows.length}행)
+                <details className="border border-line bg-bg p-3">
+                  <summary className="cursor-pointer font-mono text-[10px] uppercase tracking-[0.12em] text-text-2 hover:text-gold">
+                    Raw data ({meta.rows.length} rows)
                   </summary>
-                  <pre className="mt-2 max-h-60 overflow-auto text-[11px] text-on-surface-variant">
+                  <pre className="mt-2 max-h-60 overflow-auto font-mono text-[11px] text-text-2">
                     {JSON.stringify(meta.rows, null, 2)}
                   </pre>
                 </details>
