@@ -384,7 +384,9 @@ export default function LandingPage() {
               <b className="mr-3 font-normal text-gold">01</b>The Numbers
             </div>
             <h2 className="max-w-[880px] font-serif text-[clamp(40px,4.4vw,64px)] font-normal leading-[1.02] tracking-[-0.02em]">
-              한 명이 운영하는 모든 것을, <em className="italic text-gold">한 화면에서.</em>
+              한 명이 운영하는 모든 것을,
+              <br />
+              <em className="italic text-gold">한 화면에서.</em>
             </h2>
           </div>
 
@@ -418,7 +420,9 @@ export default function LandingPage() {
             </div>
             <div>
               <h2 className="max-w-[880px] font-serif text-[clamp(40px,4.4vw,64px)] font-normal leading-[1.02] tracking-[-0.02em]">
-                17개 모듈, <em className="italic text-gold">하나의 진실의 출처.</em>
+                17개 모듈,
+                <br />
+                <em className="italic text-gold">하나의 진실의 출처.</em>
                 <br />
                 <span className="text-text-3">엑셀 파일 17개로 운영하던 일을 한 자리에.</span>
               </h2>
@@ -568,7 +572,9 @@ export default function LandingPage() {
             </div>
             <div>
               <h2 className="max-w-[880px] font-serif text-[clamp(40px,4.4vw,64px)] font-normal leading-[1.02] tracking-[-0.02em]">
-                근로기준법은 <em className="italic text-gold">코드로 강제됩니다.</em>
+                근로기준법은
+                <br />
+                <em className="italic text-gold">코드로 강제됩니다.</em>
               </h2>
               <p className="mt-6 max-w-[640px] text-[16px] leading-[1.65] text-text-2">
                 하드코딩하지 않는 요율, 해석의 여지를 남기지 않는 계산식. 한국 노무·세무 디테일을 시스템이 보증합니다.
@@ -634,7 +640,9 @@ export default function LandingPage() {
               <b className="mr-3 font-normal text-gold">05</b>The Stack
             </div>
             <h2 className="max-w-[880px] font-serif text-[clamp(40px,4.4vw,64px)] font-normal leading-[1.02] tracking-[-0.02em]">
-              엣지에서 검증, <em className="italic text-gold">RLS에서 격리.</em>
+              엣지에서 검증,
+              <br />
+              <em className="italic text-gold">RLS에서 격리.</em>
             </h2>
           </div>
 
