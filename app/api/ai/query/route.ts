@@ -402,11 +402,18 @@ function ndjsonStream(
 }
 
 function jsonError(source: string, message: string, status: number): Response {
-  return new Response(
-    JSON.stringify({ ok: false, source, error: message }) + "\n",
-    {
-      status,
-      headers: { "Content-Type": "application/x-ndjson; charset=utf-8" },
+  // ★ NDJSON 형식으로 통일 — 클라이언트의 handleEvent 가 인식하도록
+  // type=error + type=done 두 라인 전송 (클라이언트가 error 표시 + pending 해제)
+  const lines =
+    JSON.stringify({ type: "error", source, message }) +
+    "\n" +
+    JSON.stringify({ type: "done", source, cached: false }) +
+    "\n";
+  return new Response(lines, {
+    status,
+    headers: {
+      "Content-Type": "application/x-ndjson; charset=utf-8",
+      "Cache-Control": "no-cache, no-transform",
     },
-  );
+  });
 }

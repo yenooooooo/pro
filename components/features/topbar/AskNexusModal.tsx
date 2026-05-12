@@ -89,17 +89,12 @@ export function AskNexusModal({ open, onClose }: Props) {
         signal: controller.signal,
       });
 
-      if (!res.ok && res.status !== 200) {
-        const errJson = await res.json().catch(() => null);
-        setError(errJson?.error ?? `요청 실패 (${res.status})`);
+      // ★ 401/400/500 도 NDJSON 으로 응답 — 본문 스트리밍 파싱으로 통일
+      // (이전엔 status !== 200 일 때 단일 JSON 파싱했는데 NDJSON 통일됨)
+      if (!res.body) {
+        setError(`응답 본문 없음 (${res.status})`);
         setPending(false);
         setStage(null);
-        return;
-      }
-
-      if (!res.body) {
-        setError("응답 본문 없음");
-        setPending(false);
         return;
       }
 
