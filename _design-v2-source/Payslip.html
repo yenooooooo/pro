@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nexus · 급여명세서 · 김지원 · 2026.05</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+  html, body { background: #2a2a2a; margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; color: #111; }
+  .toolbar { position: fixed; top: 0; left: 0; right: 0; height: 56px; background: var(--bg); border-bottom: 1px solid var(--line); display: flex; align-items: center; padding: 0 28px; z-index: 100; }
+  .toolbar .l { flex: 1; display: flex; align-items: baseline; gap: 16px; }
+  .toolbar .l .brand { font-family: var(--serif); font-size: 22px; letter-spacing: -0.02em; color: var(--text-1); font-style: italic; }
+  .toolbar .l .doc { font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; color: var(--text-3); text-transform: uppercase; }
+  .toolbar .r { display: flex; gap: 8px; }
+  .pp-wrap { padding: 96px 0 80px; display: flex; justify-content: center; }
+  .pp-paper {
+    width: 794px; /* A4 @ 96dpi */
+    min-height: 1123px;
+    background: #fefdf9;
+    color: #111;
+    padding: 64px 72px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3);
+    position: relative;
+    font-family: 'Pretendard', sans-serif;
+  }
+  .pp-paper::before { content: ""; position: absolute; left: 72px; right: 72px; top: 36px; height: 1px; background: #111; }
+
+  .pp-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 36px; padding-top: 20px; }
+  .pp-head .id { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.18em; color: #888; text-transform: uppercase; }
+  .pp-head h1 { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 56px; letter-spacing: -0.02em; line-height: 1; margin: 12px 0 0; font-weight: 400; }
+  .pp-head h1 small { font-family: 'Instrument Serif', serif; font-style: italic; color: #b08038; font-size: 56px; }
+  .pp-head .meta { text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #555; line-height: 1.8; letter-spacing: 0.04em; }
+  .pp-head .meta b { display: block; color: #111; font-weight: 500; font-size: 14px; letter-spacing: 0; font-family: 'Pretendard', sans-serif; }
+
+  .pp-emp { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; padding: 20px 0; border-top: 1px solid #111; border-bottom: 1px solid #ddd; margin-bottom: 30px; }
+  .pp-emp .cell .l { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.14em; color: #888; text-transform: uppercase; margin-bottom: 4px; }
+  .pp-emp .cell .v { font-size: 14px; color: #111; font-weight: 500; }
+  .pp-emp .cell .v small { display: block; font-family: 'JetBrains Mono', monospace; color: #888; font-size: 10px; font-weight: 400; margin-top: 2px; letter-spacing: 0.04em; }
+
+  .pp-net { background: #111; color: #fefdf9; margin: 0 -72px 30px; padding: 24px 72px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 40px; }
+  .pp-net .lbl { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.18em; color: rgba(254,253,249,0.5); text-transform: uppercase; }
+  .pp-net .lbl b { display: block; font-family: 'Instrument Serif', serif; font-style: italic; color: #b08038; font-size: 28px; letter-spacing: -0.01em; margin-top: 6px; }
+  .pp-net .vbar { width: 1px; height: 48px; background: rgba(254,253,249,0.18); }
+  .pp-net .amt { text-align: right; font-family: 'Instrument Serif', serif; font-style: italic; font-size: 64px; letter-spacing: -0.03em; line-height: 1; color: #fefdf9; }
+  .pp-net .amt small { font-size: 22px; color: rgba(254,253,249,0.5); margin-left: 6px; font-style: normal; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.04em; }
+
+  .pp-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; margin-bottom: 30px; }
+  .pp-col h3 { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.16em; color: #888; text-transform: uppercase; margin: 0 0 12px; padding-bottom: 8px; border-bottom: 1px solid #111; display: flex; justify-content: space-between; align-items: baseline; }
+  .pp-col h3 em { font-style: normal; font-family: 'Instrument Serif', serif; font-style: italic; font-size: 18px; letter-spacing: -0.01em; color: #b08038; text-transform: none; }
+  .pp-row { display: flex; justify-content: space-between; align-items: baseline; padding: 7px 0; border-bottom: 1px dotted #ccc; font-size: 13px; }
+  .pp-row .l { color: #333; }
+  .pp-row .l small { display: block; color: #999; font-size: 10px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.04em; margin-top: 1px; }
+  .pp-row .v { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; color: #111; font-weight: 500; }
+  .pp-row.tot { border-top: 1px solid #111; border-bottom: none; padding-top: 12px; margin-top: 6px; }
+  .pp-row.tot .l { font-weight: 500; color: #111; }
+  .pp-row.tot .v { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 22px; letter-spacing: -0.01em; color: #111; }
+
+  .pp-att { padding: 18px 0; border-top: 1px solid #111; border-bottom: 1px solid #ddd; margin-bottom: 24px; display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+  .pp-att .c { text-align: center; }
+  .pp-att .c .l { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.12em; color: #888; text-transform: uppercase; margin-bottom: 6px; }
+  .pp-att .c .v { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 26px; letter-spacing: -0.02em; line-height: 1; color: #111; }
+  .pp-att .c .v small { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #888; font-style: normal; letter-spacing: 0.04em; }
+  .pp-att .c.warn .v { color: #c94a3a; }
+
+  .pp-foot { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 40px; padding-top: 16px; border-top: 1px solid #111; }
+  .pp-foot .legal { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #888; letter-spacing: 0.04em; line-height: 1.7; max-width: 380px; }
+  .pp-foot .legal b { color: #111; }
+  .pp-foot .sig { text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #888; letter-spacing: 0.04em; line-height: 1.7; }
+  .pp-foot .sig b { display: block; font-family: 'Instrument Serif', serif; font-style: italic; color: #111; font-size: 18px; letter-spacing: -0.01em; margin-bottom: 6px; }
+  .pp-foot .sig .hash { color: #b08038; }
+
+  .corner-num { position: absolute; top: 36px; left: 72px; font-family: 'Instrument Serif', serif; font-style: italic; font-size: 12px; color: #b08038; letter-spacing: 0.08em; }
+  .corner-pg  { position: absolute; bottom: 36px; right: 72px; font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #aaa; letter-spacing: 0.12em; text-transform: uppercase; }
+
+  @media print {
+    html, body { background: #fefdf9; }
+    .toolbar { display: none; }
+    .pp-wrap { padding: 0; }
+    .pp-paper { box-shadow: none; padding: 48px 56px; width: 100%; min-height: auto; margin: 0; }
+    @page { size: A4; margin: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <div class="l">
+    <div class="brand"><em style="font-style:italic">Nexus.</em></div>
+    <div class="doc">PAYSLIP · M04 · 2026.05 · 김지원</div>
+  </div>
+  <div class="r">
+    <a class="btn" href="App.html#payroll">← App으로</a>
+    <button class="btn btn-primary" onclick="window.print()">PDF로 인쇄</button>
+  </div>
+</div>
+
+<div class="pp-wrap">
+<div class="pp-paper">
+  <div class="corner-num">N°<em style="font-style:italic">04 / 25</em></div>
+
+  <div class="pp-head">
+    <div>
+      <div class="id">EMP-001 · DEV · SR.ENG</div>
+      <h1>김지원, <small>5월.</small></h1>
+    </div>
+    <div class="meta">
+      <b>(주) 아크미 코퍼레이션</b>
+      서울 강남구 테헤란로 123<br>
+      위워크 12F · 06234<br><br>
+      사업자 123-86-12345<br>
+      대표 박대표
+    </div>
+  </div>
+
+  <div class="pp-emp">
+    <div class="cell"><div class="l">귀속 월</div><div class="v">2026 . 05<small>2026.05.01 — 05.31</small></div></div>
+    <div class="cell"><div class="l">지급일</div><div class="v">2026 . 05 . 25<small>월요일 · 우리은행 1005-•••</small></div></div>
+    <div class="cell"><div class="l">고용 형태</div><div class="v">정규직 · 풀타임<small>입사 2022.03.14 · 4.2년</small></div></div>
+    <div class="cell"><div class="l">근거</div><div class="v">근기법 §43<small>매월 통화 지급 · 직접 지급</small></div></div>
+  </div>
+
+  <div class="pp-net">
+    <div class="lbl">실수령액 · NET PAY<b>after tax · after insurance</b></div>
+    <div class="vbar"></div>
+    <div class="amt">₩4,427,830<small>KRW</small></div>
+  </div>
+
+  <div class="pp-cols">
+    <div class="pp-col">
+      <h3><span>지급 · GROSS</span><em>+ ₩5,924,000</em></h3>
+      <div class="pp-row"><div class="l">기본급<small>월 통상임금</small></div><div class="v">₩5,200,000</div></div>
+      <div class="pp-row"><div class="l">연장근로수당<small>12h × 1.5 × ₩24,880 · §56 ①</small></div><div class="v">₩447,840</div></div>
+      <div class="pp-row"><div class="l">야간근로수당<small>4h × 0.5 × ₩24,880 · §56 ③</small></div><div class="v">₩49,760</div></div>
+      <div class="pp-row"><div class="l">식대<small>비과세 · 월 200,000 한도</small></div><div class="v">₩200,000</div></div>
+      <div class="pp-row"><div class="l">직책수당<small>시니어 엔지니어</small></div><div class="v">₩300,000</div></div>
+      <div class="pp-row"><div class="l">기술수당</div><div class="v">₩200,000</div></div>
+      <div class="pp-row"><div class="l">자가운전보조금<small>비과세 · 월 200,000 한도</small></div><div class="v">₩200,000</div></div>
+      <div class="pp-row tot"><div class="l">지급 합계</div><div class="v">₩5,924,000</div></div>
+    </div>
+
+    <div class="pp-col">
+      <h3><span>공제 · DEDUCTIONS</span><em>− ₩1,496,170</em></h3>
+      <div class="pp-row"><div class="l">국민연금<small>4.5% · 상한 ₩590,400</small></div><div class="v">₩234,000</div></div>
+      <div class="pp-row"><div class="l">건강보험<small>3.545%</small></div><div class="v">₩184,340</div></div>
+      <div class="pp-row"><div class="l">장기요양보험<small>건보 × 12.81%</small></div><div class="v">₩23,610</div></div>
+      <div class="pp-row"><div class="l">고용보험<small>0.9%</small></div><div class="v">₩46,800</div></div>
+      <div class="pp-row"><div class="l">소득세<small>간이세액표 · 부양 1인</small></div><div class="v">₩916,420</div></div>
+      <div class="pp-row"><div class="l">지방소득세<small>소득세 × 10%</small></div><div class="v">₩91,640</div></div>
+      <div class="pp-row"><div class="l">노조회비</div><div class="v">₩0</div></div>
+      <div class="pp-row tot"><div class="l">공제 합계</div><div class="v">₩1,496,170</div></div>
+    </div>
+  </div>
+
+  <div class="pp-att">
+    <div class="c"><div class="l">소정근로</div><div class="v">160<small>h</small></div></div>
+    <div class="c"><div class="l">연장근로</div><div class="v">12<small>h</small></div></div>
+    <div class="c warn"><div class="l">야간근로</div><div class="v">4<small>h</small></div></div>
+    <div class="c"><div class="l">휴일근로</div><div class="v">0<small>h</small></div></div>
+    <div class="c"><div class="l">연차 사용</div><div class="v">3<small>일</small></div></div>
+    <div class="c"><div class="l">연차 잔여</div><div class="v">12<small>일</small></div></div>
+  </div>
+
+  <div class="pp-foot">
+    <div class="legal">
+      본 명세서는 <b>근로기준법 제48조</b>에 따라 사용자가 근로자에게 교부하는 임금명세서입니다.
+      이의가 있을 경우 지급일로부터 <b>3년 이내</b>에 청구할 수 있습니다.
+      관련 자료는 <b>Nexus · M15 감사 로그</b>에서 변경 불가 형태로 5년간 보관됩니다.
+    </div>
+    <div class="sig">
+      <b>(주) 아크미 코퍼레이션</b>
+      대표 박대표 <span style="opacity:.4">·</span> [인]<br>
+      JE-2026-05-128 <span class="hash">· sha256 8f4a···21c9</span><br>
+      2026.05.11 14:09:42 KST
+    </div>
+  </div>
+
+  <div class="corner-pg">page <em style="font-style:italic;font-family:'Instrument Serif',serif;color:#b08038">01</em> / 01 · nexus.app</div>
+</div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Nexus — Enterprise ERP for the Solo Operator</title>
+
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg: #08090B;
+  --bg-1: #0E1014;
+  --bg-2: #14171C;
+  --bg-3: #1C2027;
+  --line: #232830;
+  --line-2: #2E343E;
+  --text-1: #EDEEF0;
+  --text-2: #9098A6;
+  --text-3: #5A6170;
+  --text-4: #3A4150;
+  --accent: #F5C26B;       /* champagne / money */
+  --accent-soft: #C99A4A;
+  --blue: #8FB6E6;
+  --green: #6BCB8A;
+  --red: #E06B5F;
+
+  --serif: 'Instrument Serif', 'Pretendard Variable', serif;
+  --sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: var(--bg); color: var(--text-1); }
+body {
+  font-family: var(--sans);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.45;
+  letter-spacing: -0.005em;
+  overflow-x: hidden;
+}
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+img, svg { display: block; }
+
+/* ============ LAYOUT GRID ============ */
+.container { max-width: 1360px; margin: 0 auto; padding: 0 32px; }
+
+/* ============ TOPBAR ============ */
+.topbar {
+  position: sticky; top: 0; z-index: 50;
+  border-bottom: 1px solid var(--line);
+  background: rgba(8,9,11,0.72);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+}
+.topbar-inner {
+  display: flex; align-items: center; justify-content: space-between;
+  height: 64px;
+}
+.brand {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--mono); font-size: 13px; letter-spacing: 0.15em;
+  font-weight: 500;
+}
+.brand-mark {
+  width: 22px; height: 22px; position: relative;
+}
+.brand-mark::before, .brand-mark::after {
+  content: ""; position: absolute; inset: 0;
+  border: 1px solid var(--accent);
+}
+.brand-mark::after { transform: rotate(45deg); }
+.brand-text { color: var(--text-1); }
+.brand-text em {
+  font-style: normal; color: var(--text-3); margin-left: 8px;
+  font-size: 11px;
+}
+
+.nav {
+  display: flex; align-items: center; gap: 36px;
+}
+.nav a {
+  font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em;
+  color: var(--text-2); text-transform: uppercase;
+  padding: 6px 0;
+  position: relative;
+  transition: color .2s;
+}
+.nav a:hover { color: var(--text-1); }
+.nav-num {
+  font-size: 10px; color: var(--text-4);
+  margin-right: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.top-actions { display: flex; align-items: center; gap: 12px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  height: 40px; padding: 0 18px;
+  font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em;
+  color: var(--text-1);
+  border: 1px solid var(--line-2);
+  border-radius: 0;
+  text-transform: uppercase;
+  transition: border-color .2s, background .2s, color .2s;
+}
+.btn:hover { border-color: var(--text-3); background: var(--bg-2); }
+.btn-primary {
+  background: var(--accent); color: #0A0A0A; border-color: var(--accent);
+  font-weight: 500;
+}
+.btn-primary:hover { background: #FFD27E; border-color: #FFD27E; color: #0A0A0A; }
+.btn-arrow { display: inline-block; transition: transform .2s; }
+.btn:hover .btn-arrow { transform: translateX(2px); }
+
+/* ============ HERO ============ */
+.hero {
+  position: relative;
+  padding: 96px 0 120px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--line);
+}
+.hero-canvas {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  mask-image: radial-gradient(ellipse 80% 65% at 65% 50%, #000 30%, transparent 85%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 65% at 65% 50%, #000 30%, transparent 85%);
+}
+.hero-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 96px 96px;
+  opacity: 0.4;
+  mask-image: radial-gradient(ellipse 100% 80% at 50% 50%, #000 0%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse 100% 80% at 50% 50%, #000 0%, transparent 70%);
+}
+.hero-inner {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 80px;
+  align-items: center;
+  z-index: 2;
+}
+
+.eyebrow {
+  display: inline-flex; align-items: center; gap: 12px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  padding: 8px 14px;
+  border: 1px solid var(--line-2);
+  margin-bottom: 36px;
+}
+.eyebrow-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 12px var(--accent);
+}
+
+h1.hero-h {
+  font-family: var(--serif);
+  font-size: clamp(56px, 7.2vw, 108px);
+  line-height: 0.96;
+  letter-spacing: -0.025em;
+  font-weight: 400;
+  color: var(--text-1);
+  margin-bottom: 32px;
+}
+h1.hero-h em {
+  font-style: italic; color: var(--accent);
+}
+h1.hero-h .strike {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+  text-decoration-color: var(--text-3);
+  color: var(--text-3);
+  font-style: italic;
+}
+h1.hero-h .small {
+  display: block;
+  font-size: 0.32em;
+  font-family: var(--mono);
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  margin-top: 18px;
+}
+.hero-sub {
+  max-width: 520px;
+  color: var(--text-2);
+  font-size: 17px;
+  line-height: 1.65;
+  margin-bottom: 40px;
+}
+.hero-sub strong { color: var(--text-1); font-weight: 500; }
+
+.hero-actions { display: flex; gap: 12px; margin-bottom: 64px; }
+
+.hero-meta {
+  display: flex; gap: 48px;
+  padding-top: 32px;
+  border-top: 1px solid var(--line);
+}
+.hero-meta-item {
+  font-family: var(--mono);
+  font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-3);
+}
+.hero-meta-item b {
+  display: block;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 26px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--text-1);
+  text-transform: none;
+  margin-bottom: 4px;
+}
+
+/* Floating product mock */
+.hero-mock {
+  position: relative;
+  perspective: 1800px;
+  height: 540px;
+}
+.mock-window {
+  position: absolute;
+  background: var(--bg-1);
+  border: 1px solid var(--line-2);
+  box-shadow:
+    0 30px 80px rgba(0,0,0,0.5),
+    0 0 0 1px rgba(245,194,107,0.04);
+}
+.mock-window.main {
+  top: 20px; left: 0; right: -40px;
+  height: 480px;
+  transform: rotateX(8deg) rotateY(-14deg) rotateZ(1deg);
+  transform-style: preserve-3d;
+}
+.mock-window.modal {
+  top: 280px; right: 40px;
+  width: 360px;
+  transform: rotateX(8deg) rotateY(-14deg) rotateZ(1deg) translateZ(60px);
+  z-index: 3;
+  background: var(--bg-2);
+}
+.mock-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em;
+  color: var(--text-3);
+  text-transform: uppercase;
+}
+.mock-dots { display: flex; gap: 6px; }
+.mock-dots i { width: 8px; height: 8px; background: var(--line-2); display: block; }
+.mock-content { padding: 18px; }
+
+.mock-kpi-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 18px; }
+.mock-kpi {
+  border: 1px solid var(--line);
+  padding: 12px;
+}
+.mock-kpi-label {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em;
+  color: var(--text-3); text-transform: uppercase; margin-bottom: 8px;
+}
+.mock-kpi-val {
+  font-family: var(--mono); font-size: 20px; color: var(--text-1);
+  font-variant-numeric: tabular-nums;
+}
+.mock-kpi-val em {
+  color: var(--green); font-style: normal; font-size: 11px; margin-left: 4px;
+}
+
+.mock-chart {
+  height: 160px;
+  border: 1px solid var(--line);
+  padding: 14px;
+  position: relative;
+}
+.mock-chart-title {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em;
+  color: var(--text-3); text-transform: uppercase;
+}
+.mock-chart svg { width: 100%; height: 110px; margin-top: 8px; }
+
+.mock-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 0;
+  border-bottom: 1px dashed var(--line);
+  font-size: 12px;
+}
+.mock-row:last-child { border-bottom: none; }
+.mock-row span:last-child { font-family: var(--mono); color: var(--text-2); font-variant-numeric: tabular-nums; }
+
+.mock-modal-h {
+  font-family: var(--serif); font-size: 22px; font-style: italic;
+  color: var(--text-1); padding: 16px 16px 4px; line-height: 1.2;
+}
+.mock-modal-sub {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em;
+  color: var(--text-3); text-transform: uppercase; padding: 0 16px 14px;
+}
+.mock-input {
+  margin: 0 16px 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line-2);
+  background: var(--bg);
+  color: var(--text-1);
+  font-family: var(--mono); font-size: 12px;
+}
+.mock-input.amount { color: var(--accent); font-size: 18px; }
+
+/* ============ TICKER STRIP ============ */
+.ticker {
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+  overflow: hidden;
+}
+.ticker-track {
+  display: flex; gap: 64px;
+  padding: 16px 0;
+  font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em;
+  color: var(--text-2);
+  white-space: nowrap;
+  animation: ticker 60s linear infinite;
+  text-transform: uppercase;
+}
+@keyframes ticker { to { transform: translateX(-50%); } }
+.ticker-item { display: inline-flex; align-items: center; gap: 12px; }
+.ticker-item b { color: var(--accent); font-weight: 500; }
+.ticker-item .sep { color: var(--text-4); }
+
+/* ============ SECTION SHELL ============ */
+.section { padding: 120px 0; border-bottom: 1px solid var(--line); position: relative; }
+.section-head {
+  display: grid; grid-template-columns: 220px 1fr; gap: 64px;
+  margin-bottom: 72px;
+}
+.section-num {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em;
+  color: var(--text-3); text-transform: uppercase;
+  padding-top: 8px;
+  border-top: 1px solid var(--accent);
+  width: max-content;
+}
+.section-num b { color: var(--accent); margin-right: 12px; }
+.section-title {
+  font-family: var(--serif);
+  font-size: clamp(40px, 4.4vw, 64px);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  font-weight: 400;
+  max-width: 880px;
+}
+.section-title em { font-style: italic; color: var(--accent); }
+.section-title .quiet { color: var(--text-3); }
+.section-lead {
+  margin-top: 24px;
+  max-width: 640px;
+  font-size: 16px; line-height: 1.65;
+  color: var(--text-2);
+}
+
+/* ============ STATS ============ */
+.stats {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+}
+.stat {
+  padding: 36px 28px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.stat-num {
+  font-family: var(--serif); font-style: italic;
+  font-size: 80px; line-height: 0.9;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: var(--text-1);
+}
+.stat-num .unit { font-family: var(--mono); font-style: normal; font-size: 18px; color: var(--text-3); margin-left: 6px; letter-spacing: 0.05em; }
+.stat-label {
+  margin-top: 24px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-2);
+}
+.stat-desc {
+  margin-top: 6px;
+  font-size: 13px; color: var(--text-3);
+  line-height: 1.5;
+}
+
+/* ============ MODULES ============ */
+.modules {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  border-left: 1px solid var(--line);
+  border-top: 1px solid var(--line);
+}
+.module {
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 28px;
+  min-height: 220px;
+  position: relative;
+  cursor: pointer;
+  transition: background .25s;
+}
+.module:hover { background: var(--bg-1); }
+.module-num {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em;
+  color: var(--text-3); text-transform: uppercase;
+  margin-bottom: 32px;
+}
+.module-title {
+  font-family: var(--serif); font-size: 26px;
+  letter-spacing: -0.015em;
+  margin-bottom: 8px;
+  line-height: 1.1;
+}
+.module-path {
+  font-family: var(--mono); font-size: 11px;
+  color: var(--accent-soft); margin-bottom: 14px;
+}
+.module-desc {
+  font-size: 13px; color: var(--text-2); line-height: 1.5;
+}
+.module-arrow {
+  position: absolute; right: 28px; bottom: 24px;
+  font-family: var(--mono); color: var(--text-3);
+  transition: transform .2s, color .2s;
+}
+.module:hover .module-arrow { transform: translateX(4px); color: var(--accent); }
+
+/* ============ AI SECTION ============ */
+.ai-section { background: var(--bg-1); }
+.ai-grid {
+  display: grid; grid-template-columns: 1fr 1.1fr;
+  gap: 80px; align-items: center;
+}
+.ai-features { display: flex; flex-direction: column; gap: 28px; }
+.ai-feature {
+  padding-left: 24px;
+  border-left: 1px solid var(--line-2);
+  transition: border-color .25s, padding .25s;
+}
+.ai-feature.active { border-left-color: var(--accent); padding-left: 32px; }
+.ai-feature-h {
+  font-family: var(--serif); font-size: 24px; margin-bottom: 6px;
+  letter-spacing: -0.01em;
+}
+.ai-feature-h em { font-style: italic; color: var(--accent); }
+.ai-feature-d { color: var(--text-2); font-size: 14px; line-height: 1.6; max-width: 460px; }
+.ai-feature-kbd {
+  display: inline-flex; gap: 4px; margin-top: 12px;
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em;
+}
+.ai-feature-kbd kbd {
+  padding: 4px 8px; border: 1px solid var(--line-2);
+  background: var(--bg-2); color: var(--text-2);
+  border-radius: 0;
+}
+
+/* Command palette mock */
+.palette {
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  box-shadow: 0 40px 100px rgba(0,0,0,0.6);
+  font-size: 13px;
+}
+.palette-bar {
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; gap: 14px;
+}
+.palette-ico { color: var(--accent); font-family: var(--mono); font-size: 16px; }
+.palette-input {
+  font-family: var(--sans); font-size: 16px; color: var(--text-1);
+  flex: 1;
+}
+.palette-cursor {
+  display: inline-block; width: 8px; height: 18px;
+  background: var(--accent); vertical-align: -3px;
+  animation: blink 1s steps(2) infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+.palette-kbd {
+  font-family: var(--mono); font-size: 10px;
+  color: var(--text-3); letter-spacing: 0.08em;
+  padding: 3px 8px; border: 1px solid var(--line);
+}
+.palette-section {
+  padding: 12px 22px 6px;
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em;
+  color: var(--text-3); text-transform: uppercase;
+  border-bottom: 1px solid var(--line);
+}
+.palette-answer {
+  padding: 22px;
+}
+.palette-q {
+  color: var(--text-2); font-size: 13px; margin-bottom: 14px;
+  font-family: var(--mono);
+}
+.palette-a {
+  font-family: var(--serif); font-style: italic;
+  font-size: 26px; line-height: 1.25;
+  color: var(--text-1);
+  margin-bottom: 18px;
+}
+.palette-a b { font-style: normal; color: var(--accent); font-family: var(--mono); font-weight: 400; }
+.palette-table {
+  width: 100%; border-collapse: collapse;
+  font-family: var(--mono); font-size: 12px;
+}
+.palette-table th {
+  text-align: left; padding: 8px 0;
+  font-size: 10px; color: var(--text-3); letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--line);
+  font-weight: 400;
+}
+.palette-table td {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+.palette-table td:last-child, .palette-table th:last-child { text-align: right; color: var(--text-1); }
+.palette-foot {
+  padding: 12px 22px;
+  display: flex; justify-content: space-between;
+  border-top: 1px solid var(--line);
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em;
+  color: var(--text-3); text-transform: uppercase;
+}
+
+/* ============ COMPLIANCE ============ */
+.compliance-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+.comp-card {
+  background: var(--bg);
+  padding: 36px 28px;
+  display: flex; flex-direction: column;
+  gap: 18px;
+  min-height: 280px;
+}
+.comp-law {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em;
+  color: var(--accent); text-transform: uppercase;
+}
+.comp-h {
+  font-family: var(--serif); font-size: 28px;
+  letter-spacing: -0.015em; line-height: 1.15;
+}
+.comp-d {
+  color: var(--text-2); font-size: 14px; line-height: 1.6;
+}
+.comp-code {
+  margin-top: auto;
+  padding: 14px;
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  font-family: var(--mono); font-size: 11px;
+  color: var(--text-2);
+  line-height: 1.6;
+  overflow: hidden;
+}
+.comp-code .k { color: var(--blue); }
+.comp-code .n { color: var(--accent); }
+.comp-code .c { color: var(--text-3); }
+
+/* ============ ARCHITECTURE ============ */
+.arch {
+  display: grid; grid-template-columns: 1fr 2fr; gap: 64px;
+  align-items: stretch;
+}
+.arch-diagram {
+  position: relative;
+  border: 1px solid var(--line);
+  background: var(--bg-1);
+  padding: 40px;
+  min-height: 460px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr;
+  gap: 18px;
+}
+.arch-node {
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  padding: 16px;
+  display: flex; flex-direction: column; justify-content: center;
+  position: relative;
+  z-index: 2;
+}
+.arch-node-l {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em;
+  color: var(--text-3); text-transform: uppercase; margin-bottom: 6px;
+}
+.arch-node-t {
+  font-family: var(--serif); font-size: 18px; line-height: 1.1;
+  color: var(--text-1);
+}
+.arch-node.accent { border-color: var(--accent); }
+.arch-node.accent .arch-node-t { color: var(--accent); }
+.arch-svg { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+.arch-list { display: flex; flex-direction: column; gap: 18px; }
+.arch-item {
+  padding: 18px 0;
+  border-bottom: 1px solid var(--line);
+  display: grid; grid-template-columns: 100px 1fr;
+  gap: 24px;
+  align-items: baseline;
+}
+.arch-item-k {
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+.arch-item-v { color: var(--text-2); font-size: 14px; line-height: 1.6; }
+
+/* ============ FOOTER CTA ============ */
+.closer {
+  padding: 140px 0;
+  text-align: center;
+  border-bottom: 1px solid var(--line);
+  position: relative;
+  overflow: hidden;
+}
+.closer-canvas {
+  position: absolute; inset: 0;
+  mask-image: radial-gradient(ellipse 70% 100% at 50% 50%, #000 20%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 100% at 50% 50%, #000 20%, transparent 80%);
+}
+.closer-inner { position: relative; z-index: 2; }
+.closer h2 {
+  font-family: var(--serif);
+  font-size: clamp(56px, 7vw, 104px);
+  line-height: 0.98; font-weight: 400;
+  letter-spacing: -0.025em;
+  max-width: 900px;
+  margin: 0 auto 32px;
+}
+.closer h2 em { font-style: italic; color: var(--accent); }
+.closer-sub {
+  font-size: 16px; color: var(--text-2);
+  max-width: 560px; margin: 0 auto 48px;
+  line-height: 1.65;
+}
+.closer-actions { display: flex; gap: 12px; justify-content: center; }
+
+.footer {
+  padding: 64px 0 40px;
+  background: var(--bg);
+}
+.footer-grid {
+  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+  gap: 48px; padding-bottom: 48px;
+  border-bottom: 1px solid var(--line);
+}
+.footer-brand { max-width: 320px; }
+.footer-brand .brand { margin-bottom: 16px; }
+.footer-brand p {
+  font-size: 13px; color: var(--text-3); line-height: 1.6;
+}
+.footer-col h4 {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-3);
+  margin-bottom: 16px; font-weight: 400;
+}
+.footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.footer-col a { color: var(--text-2); font-size: 13px; }
+.footer-col a:hover { color: var(--text-1); }
+.footer-base {
+  padding-top: 32px;
+  display: flex; justify-content: space-between;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em;
+  color: var(--text-3); text-transform: uppercase;
+}
+
+@media (max-width: 1100px) {
+  .hero-inner { grid-template-columns: 1fr; }
+  .hero-mock { display: none; }
+  .modules, .stats { grid-template-columns: repeat(2, 1fr); }
+  .compliance-grid { grid-template-columns: 1fr; }
+  .ai-grid, .arch, .section-head { grid-template-columns: 1fr; gap: 32px; }
+  .nav { display: none; }
+  .footer-grid { grid-template-columns: 1fr 1fr; }
+}
+/* live ticker */
+.ticker-bar { display: flex; align-items: center; background: #050608; border-bottom: 1px solid var(--line, #232830); height: 32px; font-family: var(--mono, 'JetBrains Mono'); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #9098A6; overflow: hidden; position: sticky; top: 0; z-index: 50; }
+.ticker-lbl { display: flex; align-items: center; gap: 8px; padding: 0 16px; color: #F5C26B; border-right: 1px solid #232830; height: 100%; flex-shrink: 0; }
+.ticker-lbl i { width: 6px; height: 6px; border-radius: 50%; background: #F5C26B; box-shadow: 0 0 8px #F5C26B; animation: tk-pulse 1.4s infinite; }
+@keyframes tk-pulse { 50% { opacity: 0.4; } }
+.ticker-track { flex: 1; overflow: hidden; height: 100%; position: relative; }
+.ticker-track::before, .ticker-track::after { content: ""; position: absolute; top: 0; bottom: 0; width: 60px; z-index: 2; pointer-events: none; }
+.ticker-track::before { left: 0; background: linear-gradient(to right, #050608, transparent); }
+.ticker-track::after { right: 0; background: linear-gradient(to left, #050608, transparent); }
+.ticker-run { display: flex; align-items: center; gap: 38px; height: 100%; white-space: nowrap; animation: ticker 50s linear infinite; padding-left: 20px; }
+@keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.ticker-run span { display: inline-flex; align-items: center; gap: 8px; }
+.ticker-run b { color: #EDEEF0; font-weight: 400; }
+.ticker-run i { font-style: normal; font-size: 9px; }
+.ticker-run i.up { color: #6BCB8A; }
+.ticker-run i.dn { color: #E06B5F; }
+.ticker-clk { padding: 0 16px; border-left: 1px solid #232830; height: 100%; display: flex; align-items: center; font-variant-numeric: tabular-nums; color: #F5C26B; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<!-- ============ LIVE TICKER ============ -->
+<div class="ticker-bar">
+  <div class="ticker-lbl"><i></i>LIVE · NEXUS OPS</div>
+  <div class="ticker-track">
+    <div class="ticker-run">
+      <span><b>PAYROLL</b> ₩84.21M MTD <i class="up">▲ 2.4%</i></span>
+      <span><b>HEAD</b> 15 ACTIVE</span>
+      <span><b>RISK</b> <i class="dn">2 ACTIVE</i> · §53 §61</span>
+      <span><b>EDI</b> D−5 · CSV READY 87%</span>
+      <span><b>OCR</b> 142 PROCESSED · 98.4% CONF</span>
+      <span><b>APPROVALS</b> 7 PENDING · AVG 2.1d</span>
+      <span><b>AI</b> 23 QUERIES TODAY · GEMINI VISION</span>
+      <span><b>UPTIME</b> 99.998%</span>
+      <span><b>PAYROLL</b> ₩84.21M MTD <i class="up">▲ 2.4%</i></span>
+      <span><b>HEAD</b> 15 ACTIVE</span>
+      <span><b>RISK</b> <i class="dn">2 ACTIVE</i> · §53 §61</span>
+      <span><b>EDI</b> D−5 · CSV READY 87%</span>
+      <span><b>OCR</b> 142 PROCESSED · 98.4% CONF</span>
+      <span><b>APPROVALS</b> 7 PENDING · AVG 2.1d</span>
+      <span><b>AI</b> 23 QUERIES TODAY · GEMINI VISION</span>
+      <span><b>UPTIME</b> 99.998%</span>
+    </div>
+  </div>
+  <div class="ticker-clk" id="tickerClk">14:22:08</div>
+</div>
+
+<!-- ============ TOPBAR ============ -->
+<header class="topbar">
+  <div class="container topbar-inner">
+    <a class="brand" href="#">
+      <span class="brand-mark"></span>
+      <span class="brand-text">NEXUS<em>ERP / v1.4</em></span>
+    </a>
+    <nav class="nav">
+      <a href="#modules"><span class="nav-num">01</span>Platform</a>
+      <a href="#ai"><span class="nav-num">02</span>Intelligence</a>
+      <a href="#compliance"><span class="nav-num">03</span>Compliance</a>
+      <a href="#arch"><span class="nav-num">04</span>Infrastructure</a>
+      <a href="#docs"><span class="nav-num">05</span>Docs</a>
+    </nav>
+    <div class="top-actions">
+      <a href="App.html" class="btn">로그인</a>
+      <a href="App.html" class="btn btn-primary">데모 시작 <span class="btn-arrow">→</span></a>
+    </div>
+  </div>
+</header>
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <canvas class="hero-canvas" id="heroCanvas"></canvas>
+
+  <div class="container hero-inner">
+    <div>
+      <div class="eyebrow">
+        <span class="eyebrow-dot"></span>
+        Enterprise Edition · 2026 Q2 Release
+      </div>
+
+      <h1 class="hero-h">
+        한 명을 위한<br>
+        <em>풀스택 ERP.</em><br>
+        <span class="strike">스프레드시트.</span>
+        <span class="small">Built for the solo administrator.</span>
+      </h1>
+
+      <p class="hero-sub">
+        중소기업의 총무 1인 담당자가 <strong>인사 · 근태 · 급여 · 연차 · 지출 · 자산 · 결산</strong>을
+        하나의 단일 통제권에서 운영합니다. 근로기준법은 시스템이 보증하고,
+        AI는 질문에 SQL 대신 답합니다.
+      </p>
+
+      <div class="hero-actions">
+        <a href="App.html" class="btn btn-primary">데모 계정으로 둘러보기 <span class="btn-arrow">→</span></a>
+        <a href="#modules" class="btn">17개 모듈 살펴보기</a>
+      </div>
+
+      <div class="hero-meta">
+        <div class="hero-meta-item">
+          <b>0.4초</b>
+          평균 응답
+        </div>
+        <div class="hero-meta-item">
+          <b>17</b>
+          코어 모듈
+        </div>
+        <div class="hero-meta-item">
+          <b>99.99%</b>
+          가용성
+        </div>
+      </div>
+    </div>
+
+    <!-- Floating product mock -->
+    <div class="hero-mock">
+      <div class="mock-window main">
+        <div class="mock-bar">
+          <div class="mock-dots"><i></i><i></i><i></i></div>
+          <span>nexus / dashboard</span>
+          <span>K · ⌃</span>
+        </div>
+        <div class="mock-content">
+          <div class="mock-kpi-row">
+            <div class="mock-kpi">
+              <div class="mock-kpi-label">총 인건비 · MTD</div>
+              <div class="mock-kpi-val">₩84.2M <em>▲ 2.4%</em></div>
+            </div>
+            <div class="mock-kpi">
+              <div class="mock-kpi-label">미결 결재</div>
+              <div class="mock-kpi-val">7</div>
+            </div>
+            <div class="mock-kpi">
+              <div class="mock-kpi-label">법적 리스크</div>
+              <div class="mock-kpi-val" style="color:var(--accent)">2</div>
+            </div>
+          </div>
+
+          <div class="mock-chart">
+            <div class="mock-chart-title">월별 인건비 추세 · 6M</div>
+            <svg viewBox="0 0 320 110" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="cg" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stop-color="#F5C26B" stop-opacity="0.35"/>
+                  <stop offset="1" stop-color="#F5C26B" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <path d="M0 80 L53 72 L106 78 L160 56 L213 60 L266 38 L320 30" fill="none" stroke="#F5C26B" stroke-width="1.5"/>
+              <path d="M0 80 L53 72 L106 78 L160 56 L213 60 L266 38 L320 30 L320 110 L0 110 Z" fill="url(#cg)"/>
+              <path d="M0 90 L53 84 L106 88 L160 76 L213 72 L266 58 L320 52" fill="none" stroke="#8FB6E6" stroke-width="1" stroke-dasharray="3 3"/>
+            </svg>
+          </div>
+
+          <div style="margin-top:16px">
+            <div class="mock-row"><span>김지원 · 개발팀 · 11월 정산</span><span>₩4,820,000</span></div>
+            <div class="mock-row"><span>박서연 · 디자인팀 · 11월 정산</span><span>₩3,950,000</span></div>
+            <div class="mock-row"><span>이민준 · 영업팀 · 11월 정산</span><span>₩4,210,000</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mock-window modal">
+        <div class="mock-bar">
+          <div class="mock-dots"><i></i><i></i><i></i></div>
+          <span>지출 등록 · OCR</span>
+          <span style="color:var(--accent)">●</span>
+        </div>
+        <div class="mock-modal-h">영수증 1장이면<br>충분합니다.</div>
+        <div class="mock-modal-sub">Gemini Vision · 0.4s</div>
+        <div class="mock-input" style="display:flex;justify-content:space-between"><span style="color:var(--text-3)">거래처</span><span>현대카드</span></div>
+        <div class="mock-input" style="display:flex;justify-content:space-between"><span style="color:var(--text-3)">일자</span><span>2026.05.08</span></div>
+        <div class="mock-input amount" style="display:flex;justify-content:space-between"><span style="color:var(--text-3);font-size:12px;align-self:center">금액</span><span>₩142,500</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TICKER ============ -->
+<div class="ticker">
+  <div class="ticker-track">
+    <span class="ticker-item">근로기준법 §53 <b>주 52시간</b></span><span class="sep">/</span>
+    <span class="ticker-item">근기법 §60 <b>연차 촉진</b></span><span class="sep">/</span>
+    <span class="ticker-item">소득세법 §45 <b>연말정산 자동</b></span><span class="sep">/</span>
+    <span class="ticker-item">근퇴법 §8 <b>퇴직급여 충당</b></span><span class="sep">/</span>
+    <span class="ticker-item">국세청 odcloud <b>사업자 진위</b></span><span class="sep">/</span>
+    <span class="ticker-item">최저임금법 <b>2026</b></span><span class="sep">/</span>
+    <span class="ticker-item">4대보험 <b>EDI</b></span><span class="sep">/</span>
+    <span class="ticker-item">RLS <b>역할 격리</b></span><span class="sep">/</span>
+    <span class="ticker-item">감사 로그 <b>28종</b></span><span class="sep">/</span>
+    <!-- duplicate for loop -->
+    <span class="ticker-item">근로기준법 §53 <b>주 52시간</b></span><span class="sep">/</span>
+    <span class="ticker-item">근기법 §60 <b>연차 촉진</b></span><span class="sep">/</span>
+    <span class="ticker-item">소득세법 §45 <b>연말정산 자동</b></span><span class="sep">/</span>
+    <span class="ticker-item">근퇴법 §8 <b>퇴직급여 충당</b></span><span class="sep">/</span>
+    <span class="ticker-item">국세청 odcloud <b>사업자 진위</b></span><span class="sep">/</span>
+    <span class="ticker-item">최저임금법 <b>2026</b></span><span class="sep">/</span>
+    <span class="ticker-item">4대보험 <b>EDI</b></span><span class="sep">/</span>
+    <span class="ticker-item">RLS <b>역할 격리</b></span><span class="sep">/</span>
+    <span class="ticker-item">감사 로그 <b>28종</b></span><span class="sep">/</span>
+  </div>
+</div>
+
+<!-- ============ STATS ============ -->
+<section class="section" style="padding:96px 0">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-num"><b>01</b>The Numbers</div>
+      <h2 class="section-title">한 명이 운영하는 모든 것을, <em>한 화면에서.</em></h2>
+    </div>
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-num">15<span class="unit">명</span></div>
+        <div class="stat-label">평균 운영 인원</div>
+        <div class="stat-desc">1인 담당자 + 직원 15명 시나리오 데모.</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">2,700<span class="unit">행</span></div>
+        <div class="stat-label">연 근태 데이터</div>
+        <div class="stat-desc">CSV 가져오기 · 일별 입력 · 월별 집계.</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">8<span class="unit">단계</span></div>
+        <div class="stat-label">월말결산 체크리스트</div>
+        <div class="stat-desc">PDF 종합 리포트로 사장님 보고.</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">14<span class="unit">종</span></div>
+        <div class="stat-label">차별화 기능</div>
+        <div class="stat-desc">대기업 ERP가 빠진 한국 노무·세무 디테일.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MODULES ============ -->
+<section class="section" id="modules">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-num"><b>02</b>The Platform</div>
+      <div>
+        <h2 class="section-title">17개 모듈, <em>하나의 진실의 출처.</em><br><span class="quiet">엑셀 파일 17개로 운영하던 일을 한 자리에.</span></h2>
+        <p class="section-lead">
+          분리된 시스템이 만드는 정합성 오류와 이중 입력을 제거합니다.
+          모든 모듈은 동일한 RLS 정책과 감사 로그를 공유합니다.
+        </p>
+      </div>
+    </div>
+
+    <div class="modules">
+      <a class="module">
+        <div class="module-num">M-01</div>
+        <div class="module-title">대시보드</div>
+        <div class="module-path">/dashboard</div>
+        <div class="module-desc">KPI 4종 · 부서별 인건비 · 카테고리별 지출 · 6개월 추세.</div>
+        <div class="module-arrow">→</div>
+      </a>
+      <a class="module">
+        <div class="module-num">M-02</div>
+        <div class="module-title">직원 정보</div>
+        <div class="module-path">/employees</div>
+        <div class="module-desc">CRUD · 엑셀 import · 근태/급여/연차 통합 탭.</div>
+        <div class="module-arrow">→</div>
+      </a>
+      <a class="module">
+        <div class="module-num">M-03</div>
+        <div class="module-title">근태</div>
+        <div class="module-path">/attendance</div>
+        <div class="module-desc">일별 입력 · CSV 가져오기 · 월별 집계.</div>
+        <div class="module-arrow">→</div>
+      </a>
+      <a class="module">
+        <div class="module-num">M-04</div>
+        <div class="module-title">급여</div>
+        <div class="module-path">/payroll</div>
+        <div class="module-desc">근기법 §56 일괄 계산 · 명세서 PDF · 원장 export.</div>
+        <div class="module-arrow">→</div>
+      </a>
+
+      <a class="module">
+        <div class="module-num">M-05</div>
+        <div class="module-title">연차</div>
+        <div class="module-path">/leave</div>
+        <div class="module-desc">발생·사용·잔여 · 결재 워크플로우.</div>
+        <div class="module-arrow">→</div>
+      </a>
+      <a class="module">
+        <div class="module-num">M-06</div>
+        <div class="module-title">지출</div>
+        <div class="module-path">/expenses</div>
+        <div class="module-desc">영수증 OCR · 카테고리·거래처·월별 원장.</div>
+        <div class="module-arrow">→</div>
+      </a>
+      <a class="module">
+        <div class="module-num">M-07</div>
+        <div class="module-title">거래처</div>
+        <div class="module-path">/vendors</div>
+        <div class="module-desc">국세청 진위확인 · 계약 만료 알림.</div>
+        <div class="module-arrow">→</div>
+      </a>
+      <a class="module">
+        <div class="module-num">M-08</div>
+        <div class="module-title">자산</div>
+        <div class="module-path">/assets</div>
+        <div class="module-desc">정액법 감가상각 · 내용연수 · 잔존가.</div>
+        <div class="module-arrow">→</div>
+      </a>
+
+      <a class="module">
+        <div class="module-num">M-09</div>
+        <div class="module-title">월말결산</div>
+        <div class="module-path">/closing</div>
+        <div class="module-desc">8단계 체크리스트 · 종합 PDF 리포트.</div>
+        <div class="module-arrow">→</div>
+      </a>
+      <a class="module">
+        <div class="module-num">M-10</div>
+        <div class="module-title">전자결재</div>
+        <div class="module-path">/approvals</div>
+        <div class="module-desc">1~5단 결재선 · 단계별 audit log · 이메일 알림.</div>
+        <div class="module-arrow">→</div>
+      </a>
+      <a class="module">
+        <div class="module-num">M-11</div>
+        <div class="module-title">법적 리스크</div>
+        <div class="module-path">/risks</div>
+        <div class="module-desc">근기법 5종 자동 점검 · 위반 사전 차단.</div>
+        <div class="module-arrow">→</div>
+      </a>
+      <a class="module">
+        <div class="module-num">M-12</div>
+        <div class="module-title">인건비 시뮬</div>
+        <div class="module-path">/simulator</div>
+        <div class="module-desc">슬라이더 4개로 채용·인상·최저임금 What-if.</div>
+        <div class="module-arrow">→</div>
+      </a>
+
+      <a class="module">
+        <div class="module-num">M-13</div>
+        <div class="module-title">퇴직급여</div>
+        <div class="module-path">/retirement</div>
+        <div class="module-desc">근퇴법 §8 충당부채 자동 · 부서별 추적.</div>
+        <div class="module-arrow">→</div>
+      </a>
+      <a class="module">
+        <div class="module-num">M-14</div>
+        <div class="module-title">연말정산</div>
+        <div class="module-path">/year-end</div>
+        <div class="module-desc">소득세법 §45 · 누진 7단계 자동 결정세액.</div>
+        <div class="module-arrow">→</div>
+      </a>
+      <a class="module">
+        <div class="module-num">M-15</div>
+        <div class="module-title">감사 로그</div>
+        <div class="module-path">/audit-logs</div>
+        <div class="module-desc">28종 액션 자동 기록 · 액션·기간 필터.</div>
+        <div class="module-arrow">→</div>
+      </a>
+      <a class="module">
+        <div class="module-num">M-16</div>
+        <div class="module-title">시스템 설정</div>
+        <div class="module-path">/settings</div>
+        <div class="module-desc">4대보험 요율 · 결산 체크리스트 편집.</div>
+        <div class="module-arrow">→</div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ AI ============ -->
+<section class="section ai-section" id="ai">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-num"><b>03</b>The Intelligence</div>
+      <h2 class="section-title">SQL을 쓰지 마세요.<br><em>물어보세요.</em></h2>
+    </div>
+
+    <div class="ai-grid">
+      <div class="ai-features">
+        <div class="ai-feature active">
+          <div class="ai-feature-h"><em>Ask Nexus.</em> 자연어 질의.</div>
+          <p class="ai-feature-d">
+            "개발팀 평균 기본급은?" — 시스템이 SQL을 작성하고,
+            화이트리스트로 검증한 뒤, 표와 인사이트를 반환합니다.
+            금지된 컬럼에는 접근하지 않습니다.
+          </p>
+          <div class="ai-feature-kbd">단축키 <kbd>Ctrl</kbd><kbd>J</kbd></div>
+        </div>
+        <div class="ai-feature">
+          <div class="ai-feature-h">영수증 <em>OCR 듀얼모드.</em></div>
+          <p class="ai-feature-d">
+            사진 한 장 → 일자·금액·VAT·거래처 자동 입력.
+            Gemini Vision 우선, 실패 시 Tesseract.js로 fallback.
+            네트워크가 끊겨도 멈추지 않습니다.
+          </p>
+        </div>
+        <div class="ai-feature">
+          <div class="ai-feature-h">AI 안전장치.</div>
+          <p class="ai-feature-d">
+            schema-context whitelist + isSafeQuery 검증.
+            모델이 작성한 모든 쿼리는 실행 전 정적 분석을 거칩니다.
+            급여·주민번호·계좌번호는 컨텍스트에서 영구 제거됩니다.
+          </p>
+        </div>
+      </div>
+
+      <div class="palette">
+        <div class="palette-bar">
+          <span class="palette-ico">✦</span>
+          <div class="palette-input">개발팀 평균 기본급은<span class="palette-cursor"></span></div>
+          <span class="palette-kbd">⌃ J</span>
+        </div>
+        <div class="palette-section">생성된 SQL · 화이트리스트 검증 통과</div>
+        <div style="padding:14px 22px;font-family:var(--mono);font-size:11px;color:var(--text-2);line-height:1.7">
+          <span style="color:var(--blue)">SELECT</span> AVG(base_salary)<br>
+          <span style="color:var(--blue)">FROM</span> payroll p <span style="color:var(--blue)">JOIN</span> employees e <span style="color:var(--blue)">ON</span> p.employee_id = e.id<br>
+          <span style="color:var(--blue)">WHERE</span> e.department = <span style="color:var(--accent)">'개발팀'</span> <span style="color:var(--blue)">AND</span> p.period = <span style="color:var(--accent)">'2026-05'</span>;
+        </div>
+        <div class="palette-answer">
+          <div class="palette-q">// 응답 · 0.42초</div>
+          <div class="palette-a">평균 기본급은 <b>₩4,182,000</b>입니다. 전월 대비 <b>+1.8%</b>.</div>
+          <table class="palette-table">
+            <thead><tr><th>직원</th><th>직급</th><th>기본급</th></tr></thead>
+            <tbody>
+              <tr><td>김지원</td><td>시니어</td><td>₩5,200,000</td></tr>
+              <tr><td>박서연</td><td>시니어</td><td>₩4,800,000</td></tr>
+              <tr><td>이민준</td><td>미드</td><td>₩3,950,000</td></tr>
+              <tr><td>최유진</td><td>주니어</td><td>₩2,780,000</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="palette-foot">
+          <span>schema-context · whitelist 통과</span>
+          <span>↵ 인사이트 더 보기</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ COMPLIANCE ============ -->
+<section class="section" id="compliance">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-num"><b>04</b>The Law, Encoded</div>
+      <div>
+        <h2 class="section-title">근로기준법은 <em>코드로 강제됩니다.</em></h2>
+        <p class="section-lead">
+          하드코딩하지 않는 요율, 해석의 여지를 남기지 않는 계산식. 한국 노무·세무 디테일을 시스템이 보증합니다.
+        </p>
+      </div>
+    </div>
+
+    <div class="compliance-grid">
+      <div class="comp-card">
+        <div class="comp-law">근로기준법 §56</div>
+        <div class="comp-h">월 소정근로 209시간, 연장 1.5배.</div>
+        <div class="comp-d">야간 22~06시 가산분, 휴일 8시간 이내·초과 가산을 컬럼으로 분리합니다.</div>
+        <div class="comp-code">
+<span class="c">// lib/calculators/payroll.ts</span><br>
+<span class="k">export const</span> MONTHLY_REGULAR_HOURS = <span class="n">209</span>;<br>
+<span class="k">export const</span> OVERTIME_RATE = <span class="n">1.5</span>;<br>
+<span class="k">export const</span> NIGHT_RATE_PREMIUM = <span class="n">0.5</span>;<br>
+<span class="k">export const</span> HOLIDAY_RATE_OVER_8H = <span class="n">2.0</span>;
+        </div>
+      </div>
+      <div class="comp-card">
+        <div class="comp-law">근로기준법 §60</div>
+        <div class="comp-h">연차 발생·촉진·소멸까지.</div>
+        <div class="comp-d">1년 미만 월차, 3년차+ 가산, 25일 상한을 함수 하나로. 결재 워크플로우 연동.</div>
+        <div class="comp-code">
+<span class="c">// lib/calculators/leave.ts</span><br>
+<span class="k">if</span> (years &lt; <span class="n">1</span>) <span class="k">return</span> Math.min(<span class="n">11</span>, monthsServed);<br>
+<span class="k">if</span> (years &lt; <span class="n">3</span>) <span class="k">return</span> <span class="n">15</span>;<br>
+<span class="k">return</span> Math.min(<span class="n">25</span>, <span class="n">15</span> + Math.floor((years - <span class="n">1</span>) / <span class="n">2</span>));
+        </div>
+      </div>
+      <div class="comp-card">
+        <div class="comp-law">근퇴법 §8 · 소득세법 §45</div>
+        <div class="comp-h">퇴직급여 충당, 연말정산까지.</div>
+        <div class="comp-d">1년 이상 근속자 충당부채 자동 누적. 인적공제 + 특별공제 + 누진 7단계 결정세액.</div>
+        <div class="comp-code">
+<span class="c">// 4대보험 요율은 하드코딩 금지.</span><br>
+<span class="k">await</span> supabase<br>
+&nbsp;&nbsp;.from(<span class="n">'insurance_rates'</span>)<br>
+&nbsp;&nbsp;.select(<span class="n">'*'</span>)<br>
+&nbsp;&nbsp;.eq(<span class="n">'year'</span>, <span class="n">2026</span>);
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ARCHITECTURE ============ -->
+<section class="section" id="arch">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-num"><b>05</b>The Stack</div>
+      <h2 class="section-title">엣지에서 검증, <em>RLS에서 격리.</em></h2>
+    </div>
+
+    <div class="arch">
+      <div class="arch-diagram">
+        <svg class="arch-svg" viewBox="0 0 600 460" preserveAspectRatio="none">
+          <defs>
+            <marker id="ah" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 z" fill="#F5C26B"/>
+            </marker>
+          </defs>
+          <path d="M100 80 L100 170" stroke="#2E343E" stroke-width="1" marker-end="url(#ah)"/>
+          <path d="M100 230 L100 320" stroke="#2E343E" stroke-width="1" marker-end="url(#ah)"/>
+          <path d="M170 350 L430 350" stroke="#2E343E" stroke-width="1" marker-end="url(#ah)"/>
+          <path d="M170 200 L430 200" stroke="#F5C26B" stroke-width="1" stroke-dasharray="3 3"/>
+          <path d="M170 80 L430 80" stroke="#2E343E" stroke-width="1" stroke-dasharray="3 3"/>
+        </svg>
+        <div class="arch-node" style="grid-column:1;grid-row:1">
+          <div class="arch-node-l">Client</div>
+          <div class="arch-node-t">Next.js<br>App Router</div>
+        </div>
+        <div class="arch-node accent" style="grid-column:1;grid-row:2">
+          <div class="arch-node-l">Edge</div>
+          <div class="arch-node-t">Middleware<br>+ RBAC Guard</div>
+        </div>
+        <div class="arch-node" style="grid-column:1;grid-row:3">
+          <div class="arch-node-l">Server</div>
+          <div class="arch-node-t">Server Actions<br>+ Calculators</div>
+        </div>
+        <div class="arch-node" style="grid-column:3;grid-row:1">
+          <div class="arch-node-l">AI</div>
+          <div class="arch-node-t">Gemini 2.5<br>Flash</div>
+        </div>
+        <div class="arch-node accent" style="grid-column:3;grid-row:2">
+          <div class="arch-node-l">Database</div>
+          <div class="arch-node-t">Supabase<br>Postgres · RLS</div>
+        </div>
+        <div class="arch-node" style="grid-column:3;grid-row:3">
+          <div class="arch-node-l">External</div>
+          <div class="arch-node-t">Resend · NTS<br>odcloud</div>
+        </div>
+      </div>
+
+      <div class="arch-list">
+        <div class="arch-item">
+          <div class="arch-item-k">Frontend</div>
+          <div class="arch-item-v">Next.js 14 · Server Components · TypeScript strict · Tailwind + Stitch "Executive Command" 디자인 토큰.</div>
+        </div>
+        <div class="arch-item">
+          <div class="arch-item-k">Backend</div>
+          <div class="arch-item-v">Supabase PostgreSQL · Row Level Security 4단계 (admin / hr / finance / employee) · Server Actions + Route Handlers.</div>
+        </div>
+        <div class="arch-item">
+          <div class="arch-item-k">AI Layer</div>
+          <div class="arch-item-v">Gemini 2.5 Flash 무료 tier + Tesseract.js fallback. 모든 쿼리 schema-context whitelist 통과.</div>
+        </div>
+        <div class="arch-item">
+          <div class="arch-item-k">Security</div>
+          <div class="arch-item-v">계좌번호 마스킹 · 주민번호 미저장 · service_role 키 차단 · 28종 액션 감사 로그.</div>
+        </div>
+        <div class="arch-item">
+          <div class="arch-item-k">Quality</div>
+          <div class="arch-item-v">Vitest · TS strict · ESLint · GitHub Actions CI 자동 lint·typecheck·test·build.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CLOSER ============ -->
+<section class="closer">
+  <canvas class="closer-canvas" id="closerCanvas"></canvas>
+  <div class="container closer-inner">
+    <h2>한 명이 다 하는 일을,<br><em>한 명도 모자라지 않게.</em></h2>
+    <p class="closer-sub">
+      가입도, 결제도 필요 없습니다. 데모 계정 한 번 클릭으로 1년치 시나리오 데이터를 그대로 만나보세요.
+    </p>
+    <div class="closer-actions">
+      <a href="App.html" class="btn btn-primary">데모 계정으로 둘러보기 <span class="btn-arrow">→</span></a>
+      <a href="App.html" class="btn">영업팀에 문의</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a class="brand" href="#">
+          <span class="brand-mark"></span>
+          <span class="brand-text">NEXUS<em>ERP / v1.4</em></span>
+        </a>
+        <p>중소기업 1인 총무 담당자를 위한 통합 미니 ERP. 근로기준법 자동 준수 + AI 분석.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul>
+          <li><a>대시보드</a></li><li><a>인사·근태</a></li>
+          <li><a>급여·연차</a></li><li><a>지출·자산</a></li>
+          <li><a>전자결재</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Compliance</h4>
+        <ul>
+          <li><a>근로기준법</a></li><li><a>소득세법</a></li>
+          <li><a>근퇴법</a></li><li><a>4대보험</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Developers</h4>
+        <ul>
+          <li><a>문서</a></li><li><a>API</a></li>
+          <li><a>마이그레이션</a></li><li><a>변경 로그</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a>회사 소개</a></li><li><a>채용</a></li>
+          <li><a>약관</a></li><li><a>개인정보처리방침</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-base">
+      <span>© 2026 Nexus Systems Inc.</span>
+      <span>MIT Licensed · v1.4.0 · Seoul</span>
+    </div>
+  </div>
+</footer>
+
+<script src="background.js"></script>
+<script>
+  // Hero canvas — self-contained wireframe sphere
+  (function(){
+    function paint(canvas, opts){
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const dpr = Math.min(window.devicePixelRatio||1, 2);
+      let W, H;
+      function size(){ const r = canvas.getBoundingClientRect(); W=r.width; H=r.height; canvas.width=W*dpr; canvas.height=H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0); }
+      size(); window.addEventListener('resize', size);
+      let t0 = performance.now();
+      function f(now){
+        const t=(now-t0)/1000; ctx.clearRect(0,0,W,H);
+        const cx=W*opts.cx, cy=H*opts.cy, R=Math.min(W,H)*opts.scale;
+        const rotY=t*0.18, rotX=Math.sin(t*0.12)*0.15-0.18;
+        function proj(p){ const cy1=Math.cos(rotY),sy1=Math.sin(rotY); let x=p.x*cy1-p.z*sy1; let z=p.x*sy1+p.z*cy1; const cx1=Math.cos(rotX),sx1=Math.sin(rotX); const y2=p.y*cx1-z*sx1; const z2=p.y*sx1+z*cx1; const f=1.8/(1.8+z2); return{sx:cx+x*R*f,sy:cy+y2*R*f,z:z2,f}; }
+        ctx.strokeStyle='rgba(245,194,107,'+(0.22*opts.intensity)+')'; ctx.lineWidth=0.9;
+        for(let li=1;li<8;li++){ const lat=(li/8)*Math.PI-Math.PI/2; ctx.beginPath(); let st=false; for(let j=0;j<=60;j++){ const lon=(j/60)*Math.PI*2; const p={x:Math.cos(lat)*Math.cos(lon),y:Math.sin(lat),z:Math.cos(lat)*Math.sin(lon)}; const pr=proj(p); if(pr.z<-0.1){st=false;continue;} if(!st){ctx.moveTo(pr.sx,pr.sy);st=true;}else ctx.lineTo(pr.sx,pr.sy);} ctx.stroke(); }
+        for(let lo=0;lo<16;lo++){ const lon=(lo/16)*Math.PI*2; ctx.beginPath(); let st=false; for(let j=0;j<=40;j++){ const lat=(j/40)*Math.PI-Math.PI/2; const p={x:Math.cos(lat)*Math.cos(lon),y:Math.sin(lat),z:Math.cos(lat)*Math.sin(lon)}; const pr=proj(p); if(pr.z<-0.1){st=false;continue;} if(!st){ctx.moveTo(pr.sx,pr.sy);st=true;}else ctx.lineTo(pr.sx,pr.sy);} ctx.stroke(); }
+        requestAnimationFrame(f);
+      }
+      requestAnimationFrame(f);
+    }
+    window.NexusBackground = { init: paint };
+    paint(document.getElementById('heroCanvas'), { intensity:1.0, cx:0.7, cy:0.5, scale:0.36 });
+    paint(document.getElementById('closerCanvas'), { intensity:0.6, cx:0.5, cy:0.5, scale:0.28 });
+  })();
+</script>
+<script>
+  window.NexusBackground.init = window.NexusBackground.init || function(){};
+
+  // ai feature hover swap
+  document.querySelectorAll('.ai-feature').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      document.querySelectorAll('.ai-feature').forEach(e => e.classList.remove('active'));
+      el.classList.add('active');
+    });
+  });
+</script>
+
+<script>
+(function(){
+  const el = document.getElementById('tickerClk');
+  if (!el) return;
+  function pad(n){ return String(n).padStart(2,'0'); }
+  function tick(){ const d = new Date(); el.textContent = pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds()); }
+  tick(); setInterval(tick, 1000);
+})();
+</script>
+</body>
+</html>

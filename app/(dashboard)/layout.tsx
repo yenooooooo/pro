@@ -49,18 +49,19 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   return (
     <div className="min-h-screen print:min-h-0">
       <Sidebar role={userRole} bookmarks={bookmarks} />
-      <div className="md:ml-16 lg:ml-72 print:ml-0">
+      {/* v2: 사이드바 240px (md+) 또는 미노출 (sm), 헤더는 sticky */}
+      <div className="md:ml-60 print:ml-0">
+        <DemoBanner
+          userEmail={user?.email ?? null}
+          demoEmail={process.env.DEMO_EMAIL ?? null}
+        />
         <TopBar
           userEmail={user?.email ?? null}
           notifications={notifications}
           userRole={userRole}
         />
-        <DemoBanner
-          userEmail={user?.email ?? null}
-          demoEmail={process.env.DEMO_EMAIL ?? null}
-        />
         <main className="min-h-[calc(100vh-4rem)] pb-24 md:pb-8 print:min-h-0 print:pb-0">
-          <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-container-padding lg:py-8 print:max-w-none print:p-0">
+          <div className="mx-auto max-w-[1480px] px-4 py-9 sm:px-6 lg:px-8 print:max-w-none print:p-0">
             {children}
           </div>
         </main>

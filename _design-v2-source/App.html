@@ -1,0 +1,2113 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Nexus — Operations</title>
+
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+
+<style>
+/* ===== DASHBOARD v2 ===== */
+.cmd-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 32px;
+  margin-bottom: 36px;
+  padding: 8px 0 32px;
+  border-bottom: 1px solid var(--line);
+  min-height: 460px;
+}
+.cmd-left { display: flex; flex-direction: column; justify-content: center; }
+.cmd-eyebrow { display: inline-flex; align-items: center; gap: 12px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; color: var(--text-2); text-transform: uppercase; margin-bottom: 24px; padding: 6px 12px; border: 1px solid var(--line-2); width: max-content; }
+.cmd-eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent); animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: 0.5; } }
+.cmd-h { font-family: var(--serif); font-size: clamp(48px, 5vw, 76px); line-height: 0.98; letter-spacing: -0.025em; font-weight: 400; }
+.cmd-h em { font-style: italic; color: var(--accent); }
+.cmd-sub { margin-top: 22px; color: var(--text-2); font-size: 16px; line-height: 1.65; max-width: 480px; }
+.cmd-sub b { color: var(--accent); font-weight: 500; }
+.cmd-actions { display: flex; gap: 10px; margin-top: 32px; }
+
+.cmd-mission { margin-top: 36px; padding-top: 24px; border-top: 1px dashed var(--line); }
+.cmd-mission-h { font-family: var(--mono); font-size: 10px; letter-spacing: 0.15em; color: var(--text-3); text-transform: uppercase; margin-bottom: 14px; }
+.cmd-mission ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.cmd-mission li { display: flex; align-items: center; gap: 14px; font-size: 13px; color: var(--text-2); }
+.cmd-mission li .ck { width: 16px; height: 16px; border: 1px solid var(--line-2); display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 10px; color: transparent; }
+.cmd-mission li.done .ck { background: var(--accent); border-color: var(--accent); color: #0A0A0A; }
+.cmd-mission li.done { color: var(--text-3); text-decoration: line-through; text-decoration-color: var(--text-4); }
+.cmd-mission li small { margin-left: auto; font-family: var(--mono); font-size: 10px; color: var(--text-3); letter-spacing: 0.05em; }
+
+/* ----- Command Sphere ----- */
+.sphere-wrap { position: relative; }
+.sphere-canvas { width: 100%; height: 100%; min-height: 460px; }
+.sphere-overlay { position: absolute; inset: 0; pointer-events: none; }
+.sphere-label { position: absolute; font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; color: var(--text-2); text-transform: uppercase; white-space: nowrap; }
+.sphere-label::before { content: ""; display: inline-block; width: 24px; height: 1px; background: var(--accent); vertical-align: middle; margin-right: 8px; }
+.sphere-label b { color: var(--accent); font-weight: 400; margin-right: 8px; }
+.sphere-label .v { color: var(--text-1); font-family: var(--serif); font-style: italic; font-size: 18px; vertical-align: -2px; margin-left: 6px; }
+.sphere-label.l1 { top: 18%; left: 8%; }
+.sphere-label.l2 { top: 32%; right: 4%; }
+.sphere-label.l3 { top: 56%; right: 8%; }
+.sphere-label.l4 { bottom: 22%; left: 6%; }
+.sphere-label.l5 { bottom: 8%; right: 16%; }
+
+/* KPI grid */
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--line); border-left: 1px solid var(--line); margin-bottom: 36px; }
+.kpi { padding: 24px 26px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--bg); position: relative; overflow: hidden; }
+.kpi-l { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; color: var(--text-3); text-transform: uppercase; margin-bottom: 18px; }
+.kpi-v { font-family: var(--serif); font-size: 44px; line-height: 1; letter-spacing: -0.02em; font-weight: 400; color: var(--text-1); font-variant-numeric: tabular-nums; }
+.kpi-v .cur { font-family: var(--mono); font-size: 18px; color: var(--text-3); margin-right: 4px; vertical-align: 6px; }
+.kpi-v.warn { color: var(--accent); font-style: italic; }
+.kpi-v.danger { color: var(--red); font-style: italic; }
+.kpi-meta { margin-top: 18px; display: flex; align-items: center; justify-content: space-between; font-family: var(--mono); font-size: 11px; color: var(--text-3); }
+.kpi-meta .delta.up { color: var(--green); }
+.kpi-meta .delta.down { color: var(--red); }
+.kpi-spark { position: absolute; bottom: 0; right: 0; width: 90px; height: 32px; opacity: 0.7; }
+
+/* Chart */
+.chart-wrap { position: relative; height: 240px; }
+.chart-wrap svg { width: 100%; height: 100%; overflow: visible; }
+.chart-grid line { stroke: var(--line); stroke-width: 1; }
+.chart-axis text { font-family: var(--mono); font-size: 10px; fill: var(--text-3); letter-spacing: 0.05em; }
+.chart-line { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linejoin: round; }
+.chart-line.dashed { stroke: var(--blue); stroke-width: 1; stroke-dasharray: 3 4; }
+.chart-dot { fill: var(--bg); stroke: var(--accent); stroke-width: 1.5; }
+.chart-dot.hl { fill: var(--accent); stroke: var(--bg); stroke-width: 2; }
+.legend { display: flex; gap: 16px; font-family: var(--mono); font-size: 10px; color: var(--text-3); letter-spacing: 0.08em; text-transform: uppercase; }
+.legend span { display: flex; align-items: center; gap: 6px; }
+.legend i { width: 14px; height: 2px; background: var(--accent); }
+.legend i.b { background: var(--blue); }
+
+/* Dept bars */
+.dept-row { display: grid; grid-template-columns: 100px 1fr 90px; gap: 16px; align-items: center; padding: 14px 0; border-bottom: 1px dashed var(--line); font-size: 13px; }
+.dept-row:last-child { border-bottom: none; }
+.dept-row .n { color: var(--text-1); }
+.dept-row .b { height: 4px; background: var(--bg-2); position: relative; }
+.dept-row .b i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); transition: width 1s cubic-bezier(.2,.7,.2,1); }
+.dept-row .v { font-family: var(--mono); font-size: 12px; text-align: right; color: var(--text-2); font-variant-numeric: tabular-nums; }
+
+/* Risk */
+.risk-item { display: grid; grid-template-columns: 14px 1fr auto; gap: 14px; padding: 16px 0; border-bottom: 1px solid var(--line); align-items: flex-start; }
+.risk-item:last-child { border-bottom: none; }
+.risk-item .dot { width: 8px; height: 8px; margin-top: 6px; }
+.risk-item .dot.warn { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+.risk-item .dot.crit { background: var(--red); box-shadow: 0 0 10px var(--red); }
+.risk-item .dot.ok { background: var(--green); }
+.risk-item .t { font-size: 14px; color: var(--text-1); margin-bottom: 4px; }
+.risk-item .law { font-family: var(--mono); font-size: 10px; color: var(--text-3); letter-spacing: 0.08em; text-transform: uppercase; }
+.risk-item .act { font-family: var(--mono); font-size: 11px; color: var(--accent); padding: 4px 10px; border: 1px solid var(--accent-soft); letter-spacing: 0.05em; text-transform: uppercase; cursor: pointer; }
+
+/* ============ PAYROLL VIEW ============ */
+.payroll-grid { display: grid; grid-template-columns: 320px 1fr; gap: 24px; }
+.emp-list { background: var(--bg); border: 1px solid var(--line); max-height: 720px; overflow-y: auto; }
+.emp-list-h { padding: 14px 16px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; color: var(--text-3); text-transform: uppercase; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; position: sticky; top: 0; background: var(--bg); z-index: 2; }
+.emp-row { display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--line); cursor: pointer; transition: background .15s; }
+.emp-row:hover { background: var(--bg-1); }
+.emp-row.sel { background: var(--bg-1); border-left: 2px solid var(--accent); padding-left: 12px; }
+.emp-row .av { width: 32px; height: 32px; background: var(--bg-2); border: 1px solid var(--line-2); display: flex; align-items: center; justify-content: center; font-family: var(--serif); font-style: italic; font-size: 14px; color: var(--accent); }
+.emp-row .n { font-size: 13px; color: var(--text-1); }
+.emp-row .n small { display: block; font-family: var(--mono); font-size: 10px; color: var(--text-3); margin-top: 2px; letter-spacing: 0.05em; }
+.emp-row .s { font-family: var(--mono); font-size: 11px; color: var(--text-2); }
+
+.pay-detail { background: var(--bg); border: 1px solid var(--line); padding: 32px; }
+.pay-head { display: flex; align-items: flex-start; justify-content: space-between; padding-bottom: 24px; border-bottom: 1px solid var(--line); margin-bottom: 28px; }
+.pay-head .av { width: 64px; height: 64px; font-size: 28px; }
+.pay-who { display: flex; gap: 18px; align-items: center; }
+.pay-name { font-family: var(--serif); font-size: 36px; line-height: 1; letter-spacing: -0.02em; }
+.pay-meta { margin-top: 8px; font-family: var(--mono); font-size: 11px; color: var(--text-3); letter-spacing: 0.06em; text-transform: uppercase; }
+.pay-meta b { color: var(--accent); margin-right: 10px; font-weight: 400; }
+.pay-net { text-align: right; }
+.pay-net-l { font-family: var(--mono); font-size: 10px; letter-spacing: 0.15em; color: var(--text-3); text-transform: uppercase; }
+.pay-net-v { font-family: var(--serif); font-size: 56px; font-style: italic; color: var(--accent); line-height: 1; margin-top: 8px; letter-spacing: -0.02em; }
+
+.calc-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.calc-table tr td { padding: 14px 0; border-bottom: 1px solid var(--line); }
+.calc-table tr.total td { padding: 18px 0; border-bottom: 2px solid var(--accent); border-top: 1px solid var(--line-2); }
+.calc-table tr.sub td { color: var(--text-3); padding-left: 24px; font-size: 12px; }
+.calc-table .law { font-family: var(--mono); font-size: 10px; color: var(--text-3); letter-spacing: 0.06em; text-transform: uppercase; }
+.calc-table .v { font-family: var(--mono); font-variant-numeric: tabular-nums; text-align: right; color: var(--text-1); }
+.calc-table .v.neg { color: var(--red); }
+.calc-table .v.total { font-family: var(--serif); font-style: italic; font-size: 22px; color: var(--accent); }
+
+/* ============ APPROVALS KANBAN ============ */
+.kanban { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.kan-col { background: var(--bg); border: 1px solid var(--line); min-height: 600px; display: flex; flex-direction: column; }
+.kan-h { padding: 14px 16px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; }
+.kan-h .t { font-family: var(--serif); font-style: italic; font-size: 18px; }
+.kan-h .c { font-family: var(--mono); font-size: 11px; color: var(--text-3); padding: 2px 8px; border: 1px solid var(--line-2); }
+.kan-body { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.kan-card { background: var(--bg-1); border: 1px solid var(--line-2); padding: 14px; cursor: grab; transition: transform .2s, border-color .2s; }
+.kan-card:hover { border-color: var(--accent-soft); transform: translateY(-2px); }
+.kan-card .h { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10px; color: var(--text-3); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px; }
+.kan-card .h b { color: var(--accent); }
+.kan-card .t { font-size: 14px; color: var(--text-1); margin-bottom: 10px; line-height: 1.3; }
+.kan-card .amt { font-family: var(--serif); font-style: italic; font-size: 22px; color: var(--accent); }
+.kan-card .stage { display: flex; gap: 4px; margin-top: 12px; }
+.kan-card .stage i { flex: 1; height: 3px; background: var(--bg-3); }
+.kan-card .stage i.done { background: var(--accent); }
+.kan-card .stage i.cur { background: var(--accent); animation: pulse 1.5s infinite; }
+.kan-card .f { display: flex; justify-content: space-between; margin-top: 12px; font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+
+/* ============ SIMULATOR ============ */
+.sim-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+.sim-controls { background: var(--bg); border: 1px solid var(--line); padding: 28px; }
+.sim-out { background: var(--bg); border: 1px solid var(--accent-soft); padding: 28px; position: relative; }
+.sim-out::after { content: "LIVE"; position: absolute; top: 16px; right: 16px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em; color: var(--accent); padding: 2px 8px; border: 1px solid var(--accent-soft); animation: pulse 2s infinite; }
+.sim-slider { margin-bottom: 28px; }
+.sim-slider-h { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
+.sim-slider-l { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; color: var(--text-2); text-transform: uppercase; }
+.sim-slider-v { font-family: var(--serif); font-style: italic; font-size: 26px; color: var(--accent); }
+.sim-slider input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 1px; background: var(--line-2); outline: none; }
+.sim-slider input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: var(--accent); border: 2px solid var(--bg); cursor: pointer; box-shadow: 0 0 12px var(--accent); }
+.sim-slider input[type=range]::-moz-range-thumb { width: 14px; height: 14px; background: var(--accent); border: 2px solid var(--bg); cursor: pointer; }
+.sim-slider .ticks { display: flex; justify-content: space-between; margin-top: 6px; font-family: var(--mono); font-size: 9px; color: var(--text-4); letter-spacing: 0.05em; }
+
+.sim-result-row { display: flex; justify-content: space-between; align-items: baseline; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.sim-result-row .l { font-family: var(--mono); font-size: 11px; color: var(--text-2); letter-spacing: 0.08em; text-transform: uppercase; }
+.sim-result-row .v { font-family: var(--serif); font-style: italic; font-size: 26px; color: var(--text-1); }
+.sim-result-row .d { font-family: var(--mono); font-size: 11px; margin-left: 10px; }
+.sim-result-row .d.up { color: var(--red); }
+.sim-result-row .d.down { color: var(--green); }
+.sim-result-big { padding: 24px 0 8px; border-bottom: 2px solid var(--accent); margin-bottom: 16px; }
+.sim-result-big .l { font-family: var(--mono); font-size: 10px; letter-spacing: 0.15em; color: var(--text-3); text-transform: uppercase; }
+.sim-result-big .v { font-family: var(--serif); font-style: italic; font-size: 64px; color: var(--accent); line-height: 1; margin-top: 8px; letter-spacing: -0.02em; }
+
+/* ============ ASK NEXUS FULL ============ */
+.ask-page { max-width: 1100px; margin: 0 auto; padding: 60px 0; }
+.ask-mega { font-family: var(--serif); font-size: clamp(80px, 10vw, 160px); line-height: 0.9; letter-spacing: -0.04em; margin-bottom: 40px; }
+.ask-mega em { font-style: italic; color: var(--accent); }
+.ask-input-wrap { display: flex; align-items: center; gap: 18px; padding: 20px 22px; border: 1px solid var(--line-2); background: var(--bg-1); margin-bottom: 16px; }
+.ask-input-wrap.busy { border-color: var(--accent); animation: pulse 1.2s infinite; }
+.ask-input-wrap .ico { color: var(--accent); font-size: 20px; }
+.ask-input-wrap input { flex: 1; font-size: 19px; color: var(--text-1); }
+.ask-input-wrap input::placeholder { color: var(--text-3); }
+.ask-suggest { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 36px; }
+.ask-suggest button { font-family: var(--mono); font-size: 11px; color: var(--text-2); padding: 8px 14px; border: 1px solid var(--line); text-transform: lowercase; letter-spacing: 0.05em; }
+.ask-suggest button:hover { border-color: var(--accent-soft); color: var(--accent); }
+.ask-output { padding: 32px 0; border-top: 1px solid var(--line); min-height: 240px; }
+.ask-q { font-family: var(--mono); font-size: 12px; color: var(--text-3); letter-spacing: 0.05em; margin-bottom: 18px; }
+.ask-a { font-family: var(--serif); font-size: 26px; line-height: 1.4; color: var(--text-1); white-space: pre-wrap; }
+.ask-a em { font-style: italic; color: var(--accent); }
+.ask-a .cur { display: inline-block; width: 9px; height: 22px; background: var(--accent); vertical-align: -4px; animation: blink 1s steps(2) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ============ RISK MONITOR ============ */
+.risk-grid { display: grid; grid-template-columns: 280px 1fr; gap: 24px; }
+.risk-legend { background: var(--bg); border: 1px solid var(--line); padding: 24px; }
+.risk-legend h4 { font-family: var(--mono); font-size: 10px; letter-spacing: 0.15em; color: var(--text-3); text-transform: uppercase; margin-bottom: 16px; }
+.risk-tot { font-family: var(--serif); font-size: 80px; font-style: italic; color: var(--accent); line-height: 1; margin-bottom: 8px; letter-spacing: -0.02em; }
+.risk-tot-l { font-family: var(--mono); font-size: 11px; color: var(--text-3); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 24px; }
+.risk-bar { display: flex; height: 6px; background: var(--bg-2); margin-bottom: 24px; }
+.risk-bar i { display: block; height: 100%; }
+.risk-legend-row { display: grid; grid-template-columns: 14px 1fr auto; gap: 12px; align-items: center; padding: 10px 0; font-size: 13px; }
+.risk-legend-row .sw { width: 8px; height: 8px; }
+.risk-legend-row .v { font-family: var(--mono); font-size: 12px; color: var(--text-2); }
+.risk-timeline { background: var(--bg); border: 1px solid var(--line); padding: 28px; }
+.tl-h { font-family: var(--mono); font-size: 10px; letter-spacing: 0.15em; color: var(--text-3); text-transform: uppercase; margin-bottom: 24px; display: flex; justify-content: space-between; }
+.tl-row { display: grid; grid-template-columns: 80px 1fr; gap: 18px; padding: 18px 0; border-bottom: 1px solid var(--line); position: relative; }
+.tl-row:last-child { border-bottom: none; }
+.tl-date { font-family: var(--mono); font-size: 11px; color: var(--text-3); letter-spacing: 0.06em; }
+.tl-date b { display: block; color: var(--text-1); font-family: var(--serif); font-style: italic; font-size: 26px; line-height: 1; margin-bottom: 4px; }
+.tl-card { padding: 16px; border: 1px solid var(--line); background: var(--bg-1); }
+.tl-card .law { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+.tl-card.crit .law { color: var(--red); }
+.tl-card.warn .law { color: var(--accent); }
+.tl-card.ok .law { color: var(--green); }
+.tl-card .t { font-size: 15px; color: var(--text-1); margin-bottom: 6px; }
+.tl-card .d { font-size: 13px; color: var(--text-2); line-height: 1.6; }
+.tl-card.crit { border-left: 2px solid var(--red); }
+.tl-card.warn { border-left: 2px solid var(--accent); }
+.tl-card.ok { border-left: 2px solid var(--green); }
+
+/* ============ LIVE OPS — Mission Control ============ */
+.liveops { padding: 0 !important; max-width: none !important; }
+.lo-frame { background: #050608; border-top: 1px solid var(--line); position: relative; min-height: calc(100vh - 56px); overflow: hidden; }
+.lo-frame::before { content: ""; position: absolute; inset: 0; background-image: repeating-linear-gradient(0deg, transparent 0, transparent 3px, rgba(245,194,107,0.012) 3px, rgba(245,194,107,0.012) 4px); pointer-events: none; z-index: 1; }
+.lo-frame::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1px; background: var(--accent); opacity: 0.4; animation: scanline 8s linear infinite; }
+@keyframes scanline { 0% { top: 0; opacity: 0.4; } 90% { opacity: 0.4; } 100% { top: 100%; opacity: 0; } }
+
+.lo-top { display: flex; align-items: center; gap: 28px; padding: 18px 32px; border-bottom: 1px solid var(--line); background: rgba(8,9,11,0.6); position: relative; z-index: 2; font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); }
+.lo-top .stamp { font-family: var(--serif); font-style: italic; font-size: 28px; color: var(--text-1); letter-spacing: -0.01em; text-transform: none; font-variant-numeric: tabular-nums; }
+.lo-top .stamp .ms { color: var(--accent); font-size: 18px; }
+.lo-top .live { display: flex; align-items: center; gap: 8px; color: var(--accent); }
+.lo-top .live i { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 12px var(--accent); animation: pulse 1.4s infinite; }
+.lo-top .sep { color: var(--text-4); }
+.lo-top .rate b { color: var(--accent); font-weight: 400; }
+.lo-top .esc { margin-left: auto; padding: 6px 12px; border: 1px solid var(--line-2); font-family: var(--mono); font-size: 10px; }
+
+.lo-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 1px; background: var(--line); border-bottom: 1px solid var(--line); position: relative; z-index: 2; min-height: calc(100vh - 56px - 64px); }
+.lo-panel { background: #07080A; padding: 22px 24px; position: relative; overflow: hidden; }
+.lo-panel-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.15em; color: var(--text-3); text-transform: uppercase; }
+.lo-panel-h .k { color: var(--accent); margin-right: 8px; }
+.lo-panel-h .st { display: flex; align-items: center; gap: 6px; color: var(--green); }
+.lo-panel-h .st i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; animation: pulse 1.4s infinite; }
+
+/* event stream */
+.lo-events { font-family: var(--mono); font-size: 12px; line-height: 1.7; height: calc(100% - 38px); overflow: hidden; position: relative; }
+.lo-events::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 50px; background: linear-gradient(to bottom, #07080A, transparent); pointer-events: none; }
+.lo-event { display: grid; grid-template-columns: 72px 80px 1fr; gap: 14px; padding: 6px 0; color: var(--text-2); border-bottom: 1px dashed rgba(46,52,62,0.5); animation: eventin .3s; }
+@keyframes eventin { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: translateX(0); } }
+.lo-event .ts { color: var(--text-4); font-size: 11px; letter-spacing: 0.05em; }
+.lo-event .tag { font-size: 10px; letter-spacing: 0.08em; padding: 1px 6px; border: 1px solid var(--line-2); text-align: center; height: max-content; }
+.lo-event.ok .tag { color: var(--green); border-color: rgba(107,203,138,0.4); }
+.lo-event.warn .tag { color: var(--accent); border-color: var(--accent-soft); }
+.lo-event.crit .tag { color: var(--red); border-color: rgba(224,107,95,0.4); }
+.lo-event.info .tag { color: var(--blue); border-color: rgba(143,182,230,0.4); }
+.lo-event .msg { color: var(--text-1); font-family: var(--sans); font-size: 13px; }
+.lo-event .msg b { color: var(--accent); font-weight: 400; }
+.lo-event .cur { display: inline-block; width: 7px; height: 14px; background: var(--accent); vertical-align: -2px; animation: blink 0.7s steps(2) infinite; }
+
+/* burn rate */
+.lo-burn { display: flex; flex-direction: column; gap: 18px; }
+.lo-burn-big { font-family: var(--serif); font-style: italic; font-size: 64px; color: var(--accent); line-height: 1; letter-spacing: -0.025em; font-variant-numeric: tabular-nums; }
+.lo-burn-big .cur { font-family: var(--mono); font-size: 24px; font-style: normal; color: var(--text-3); margin-right: 4px; vertical-align: 14px; }
+.lo-burn-sub { font-family: var(--mono); font-size: 11px; color: var(--text-2); letter-spacing: 0.08em; line-height: 1.6; }
+.lo-burn-sub b { color: var(--text-1); font-weight: 400; }
+.lo-burn-row { display: grid; grid-template-columns: 1fr auto; gap: 12px; padding: 8px 0; border-bottom: 1px dashed var(--line); font-family: var(--mono); font-size: 11px; color: var(--text-3); letter-spacing: 0.06em; text-transform: uppercase; }
+.lo-burn-row b { font-family: var(--serif); font-style: italic; font-size: 16px; color: var(--text-1); text-transform: none; letter-spacing: 0; }
+
+/* presence */
+.lo-presence-c { position: relative; height: 230px; }
+.lo-presence-c canvas { width: 100%; height: 100%; }
+.lo-presence-legend { display: flex; gap: 14px; justify-content: center; margin-top: 12px; font-family: var(--mono); font-size: 10px; color: var(--text-3); letter-spacing: 0.06em; }
+.lo-presence-legend span { display: flex; align-items: center; gap: 5px; }
+.lo-presence-legend i { width: 6px; height: 6px; border-radius: 50%; }
+
+/* gauges */
+.lo-gauges { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.lo-gauge { text-align: center; }
+.lo-gauge svg { width: 100%; max-width: 100px; }
+.lo-gauge .l { font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; color: var(--text-3); text-transform: uppercase; margin-top: 6px; }
+.lo-gauge .v { font-family: var(--serif); font-style: italic; font-size: 22px; color: var(--accent); margin-top: 2px; }
+.lo-gauge.danger .v { color: var(--red); }
+.lo-gauge.ok .v { color: var(--green); }
+
+/* live sparkline */
+.lo-spark-wrap { height: calc(100% - 38px); display: flex; flex-direction: column; }
+.lo-spark { flex: 1; position: relative; }
+.lo-spark svg { width: 100%; height: 100%; }
+.lo-spark-axis line { stroke: var(--line); stroke-width: 1; }
+.lo-spark-axis text { font-family: var(--mono); font-size: 9px; fill: var(--text-4); letter-spacing: 0.05em; }
+.lo-spark-line { fill: none; stroke: var(--accent); stroke-width: 1.4; }
+.lo-spark-area { fill: url(#sparkGrad); }
+.lo-spark-now { font-family: var(--serif); font-style: italic; font-size: 36px; color: var(--accent); line-height: 1; letter-spacing: -0.015em; }
+.lo-spark-now small { font-family: var(--mono); font-size: 11px; color: var(--text-3); margin-left: 8px; letter-spacing: 0.08em; }
+
+/* countdown */
+.lo-cd { display: flex; flex-direction: column; gap: 14px; }
+.lo-cd-row { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; padding: 12px 14px; border: 1px solid var(--line); background: var(--bg-1); }
+.lo-cd-row.urgent { border-left: 2px solid var(--accent); }
+.lo-cd-row.crit { border-left: 2px solid var(--red); }
+.lo-cd .dd { font-family: var(--serif); font-style: italic; font-size: 32px; line-height: 1; color: var(--accent); letter-spacing: -0.02em; }
+.lo-cd .crit .dd { color: var(--red); }
+.lo-cd .t { font-size: 13px; color: var(--text-1); }
+.lo-cd .t small { display: block; font-family: var(--mono); font-size: 10px; color: var(--text-3); margin-top: 2px; letter-spacing: 0.06em; text-transform: uppercase; }
+.lo-cd .sec { font-family: var(--mono); font-size: 11px; color: var(--text-3); letter-spacing: 0.06em; font-variant-numeric: tabular-nums; }
+
+/* ============ BOOT SEQUENCE ============ */
+.boot { position: fixed; inset: 0; background: #050608; z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 32px; font-family: var(--mono); }
+.boot.gone { opacity: 0; pointer-events: none; transition: opacity .6s; }
+.boot::before { content: ""; position: absolute; inset: 0; background-image: repeating-linear-gradient(0deg, transparent 0, transparent 2px, rgba(245,194,107,0.02) 2px, rgba(245,194,107,0.02) 3px); pointer-events: none; }
+.boot-mark { font-family: var(--serif); font-size: 88px; letter-spacing: -0.04em; color: var(--text-1); position: relative; }
+.boot-mark em { font-style: italic; color: var(--accent); }
+.boot-mark::after { content: ""; position: absolute; right: -18px; top: 12px; width: 4px; height: 56px; background: var(--accent); animation: blink 0.6s steps(2) infinite; }
+.boot-sub { font-size: 11px; letter-spacing: 0.24em; color: var(--text-3); text-transform: uppercase; }
+.boot-bar { width: 320px; height: 1px; background: var(--line); position: relative; overflow: hidden; }
+.boot-bar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); width: 0; box-shadow: 0 0 12px var(--accent); transition: width .15s linear; }
+.boot-log { font-size: 11px; color: var(--text-3); letter-spacing: 0.06em; display: flex; flex-direction: column; gap: 4px; min-height: 100px; text-align: center; }
+.boot-log b { color: var(--accent); margin-right: 8px; }
+.boot-log span.ok { color: var(--green); margin-right: 10px; }
+.boot-corner { position: absolute; font-size: 10px; letter-spacing: 0.15em; color: var(--text-4); text-transform: uppercase; }
+.boot-corner.tl { top: 24px; left: 28px; } .boot-corner.tr { top: 24px; right: 28px; }
+.boot-corner.bl { bottom: 24px; left: 28px; } .boot-corner.br { bottom: 24px; right: 28px; }
+.boot-corner b { color: var(--accent); }
+
+/* ============ PULSE SWEEP ============ */
+.pulse-sweep { position: fixed; inset: 0; pointer-events: none; z-index: 90; opacity: 0; }
+.pulse-sweep.go { animation: pulseSweep 1.2s cubic-bezier(.2,.7,.2,1); }
+.pulse-sweep::before { content: ""; position: absolute; left: 0; right: 0; top: -8px; height: 4px; background: linear-gradient(to right, transparent, var(--accent), transparent); box-shadow: 0 0 24px var(--accent); }
+@keyframes pulseSweep { 0% { opacity: 0; transform: translateY(-8px); } 10% { opacity: 1; } 100% { opacity: 0; transform: translateY(110vh); } }
+
+/* toast */
+.toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--bg-1); border: 1px solid var(--accent-soft); padding: 12px 22px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; color: var(--text-1); text-transform: uppercase; z-index: 200; opacity: 0; pointer-events: none; box-shadow: 0 12px 40px rgba(0,0,0,0.6); display: flex; gap: 12px; align-items: center; }
+.toast b { color: var(--accent); }
+.toast.show { animation: toastIn 2.4s; }
+@keyframes toastIn { 0% { opacity: 0; transform: translateX(-50%) translateY(20px); } 12%, 80% { opacity: 1; transform: translateX(-50%) translateY(0); } 100% { opacity: 0; transform: translateX(-50%) translateY(-8px); } }
+
+/* ============ MODALS extras ============ */
+.palette-bar { padding: 18px 22px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 14px; }
+.palette-ico { color: var(--accent); font-family: var(--mono); font-size: 16px; }
+.palette-input { font-family: var(--sans); font-size: 17px; color: var(--text-1); flex: 1; }
+.palette-input::placeholder { color: var(--text-3); }
+.palette-kbd { font-family: var(--mono); font-size: 10px; color: var(--text-3); letter-spacing: 0.08em; padding: 3px 8px; border: 1px solid var(--line); }
+.palette-section { padding: 12px 22px 6px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; color: var(--text-3); text-transform: uppercase; background: var(--bg); border-bottom: 1px solid var(--line); }
+.palette-item { display: grid; grid-template-columns: 28px 1fr auto; gap: 14px; align-items: center; padding: 14px 22px; border-bottom: 1px solid var(--line); cursor: pointer; }
+.palette-item:hover, .palette-item.hi { background: var(--bg-2); }
+.palette-item .k { font-family: var(--mono); font-size: 11px; color: var(--accent); width: 22px; text-align: center; padding: 2px 0; border: 1px solid var(--accent-soft); }
+.palette-item .t { font-size: 14px; color: var(--text-1); }
+.palette-item .t small { display: block; color: var(--text-3); font-family: var(--mono); font-size: 10px; margin-top: 2px; letter-spacing: 0.05em; }
+.palette-item .go { font-family: var(--mono); font-size: 11px; color: var(--text-3); letter-spacing: 0.08em; }
+.palette-foot { padding: 12px 22px; display: flex; justify-content: space-between; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; color: var(--text-3); text-transform: uppercase; }
+
+.expense-modal { width: 880px; }
+.exp-grid { display: grid; grid-template-columns: 1fr 1fr; }
+.exp-left, .exp-right { padding: 28px; }
+.exp-left { border-right: 1px solid var(--line); }
+.exp-h { font-family: var(--serif); font-size: 28px; letter-spacing: -0.015em; margin-bottom: 6px; }
+.exp-h em { font-style: italic; color: var(--accent); }
+.exp-sub { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; color: var(--text-3); text-transform: uppercase; margin-bottom: 24px; }
+.exp-drop { border: 1px dashed var(--line-2); padding: 32px; text-align: center; font-family: var(--mono); font-size: 11px; color: var(--text-3); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 20px; }
+.exp-drop .receipt { width: 140px; margin: 0 auto 18px; background: #F5F2EA; color: #1a1a1a; padding: 14px 12px; font-family: var(--mono); font-size: 10px; text-align: left; line-height: 1.4; transform: rotate(-3deg); box-shadow: 0 12px 28px rgba(0,0,0,0.4); }
+.exp-drop .receipt b { display: block; font-size: 11px; margin-bottom: 4px; }
+.exp-drop .receipt .amt { font-size: 16px; margin-top: 8px; border-top: 1px dashed #999; padding-top: 6px; text-align: right; }
+.exp-scan { padding: 12px; border: 1px solid var(--line); font-family: var(--mono); font-size: 11px; color: var(--text-2); display: flex; align-items: center; gap: 10px; }
+.exp-scan .live { color: var(--accent); animation: blink 1s steps(2) infinite; }
+.exp-field { margin-bottom: 16px; }
+.exp-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; color: var(--text-3); text-transform: uppercase; margin-bottom: 6px; display: flex; justify-content: space-between; }
+.exp-label .ai { color: var(--accent); }
+.exp-input { width: 100%; padding: 12px 14px; background: var(--bg); border: 1px solid var(--line-2); color: var(--text-1); font-family: var(--sans); font-size: 14px; }
+.exp-input.mono { font-family: var(--mono); }
+.exp-input.amount { font-family: var(--serif); font-size: 28px; font-style: italic; color: var(--accent); padding: 14px; }
+.exp-input:focus { border-color: var(--accent); }
+.exp-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.exp-foot { padding: 16px 22px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
+.exp-foot .audit { font-family: var(--mono); font-size: 10px; color: var(--text-3); letter-spacing: 0.08em; text-transform: uppercase; }
+.exp-foot .acts { display: flex; gap: 8px; }
+
+/* ============ EMPLOYEE GRID (M02) ============ */
+.emp-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+.emp-toolbar .search { flex: 1; min-width: 260px; padding: 10px 14px; border: 1px solid var(--line-2); background: var(--bg-1); font-family: var(--mono); font-size: 12px; color: var(--text-1); }
+.emp-toolbar .search::placeholder { color: var(--text-3); }
+.emp-toolbar .seg { display: flex; border: 1px solid var(--line); }
+.emp-toolbar .seg button { padding: 9px 14px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; color: var(--text-3); text-transform: uppercase; border-right: 1px solid var(--line); }
+.emp-toolbar .seg button:last-child { border-right: none; }
+.emp-toolbar .seg button.on { background: var(--bg-2); color: var(--accent); }
+.emp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.emp-card { background: var(--bg); border: 1px solid var(--line); padding: 22px; transition: border-color .2s, transform .2s; cursor: pointer; position: relative; }
+.emp-card:hover { border-color: var(--accent-soft); transform: translateY(-2px); }
+.emp-card .av { width: 48px; height: 48px; background: var(--bg-2); border: 1px solid var(--line-2); display: flex; align-items: center; justify-content: center; font-family: var(--serif); font-style: italic; font-size: 22px; color: var(--accent); margin-bottom: 14px; }
+.emp-card .nm { font-family: var(--serif); font-size: 26px; line-height: 1; letter-spacing: -0.015em; margin-bottom: 6px; }
+.emp-card .ro { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; color: var(--text-3); text-transform: uppercase; margin-bottom: 16px; }
+.emp-card .ro b { color: var(--accent); margin-right: 8px; font-weight: 400; }
+.emp-card .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; padding-top: 14px; border-top: 1px dashed var(--line); font-family: var(--mono); font-size: 11px; }
+.emp-card .stats div { color: var(--text-3); }
+.emp-card .stats div b { display: block; color: var(--text-1); font-family: var(--serif); font-style: italic; font-size: 18px; font-weight: 400; margin-top: 2px; }
+.emp-card .stat-warn b { color: var(--red) !important; }
+.emp-card .badges { position: absolute; top: 18px; right: 18px; display: flex; gap: 4px; }
+
+/* ============ ATTENDANCE CALENDAR (M03) ============ */
+.cal-grid { display: grid; grid-template-columns: 280px 1fr; gap: 24px; }
+.cal-side { background: var(--bg); border: 1px solid var(--line); padding: 22px; }
+.cal-side h4 { font-family: var(--mono); font-size: 10px; letter-spacing: 0.15em; color: var(--text-3); text-transform: uppercase; margin-bottom: 14px; }
+.cal-side h4:not(:first-child) { margin-top: 26px; }
+.cal-stat { display: flex; justify-content: space-between; align-items: baseline; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+.cal-stat:last-child { border-bottom: none; }
+.cal-stat .l { font-family: var(--mono); font-size: 11px; color: var(--text-2); }
+.cal-stat .v { font-family: var(--serif); font-style: italic; font-size: 24px; color: var(--text-1); }
+.cal-stat .v.warn { color: var(--accent); }
+.cal-stat .v.danger { color: var(--red); }
+.cal-legend { display: flex; flex-direction: column; gap: 8px; }
+.cal-legend div { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 11px; color: var(--text-2); }
+.cal-legend i { width: 10px; height: 10px; }
+.cal-main { background: var(--bg); border: 1px solid var(--line); }
+.cal-h { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px; border-bottom: 1px solid var(--line); }
+.cal-h .t { font-family: var(--serif); font-size: 28px; letter-spacing: -0.015em; }
+.cal-h .t em { color: var(--accent); font-style: italic; }
+.cal-h .nav { display: flex; gap: 6px; }
+.cal-h .nav button { width: 32px; height: 32px; border: 1px solid var(--line-2); font-family: var(--mono); color: var(--text-2); }
+.cal-h .nav button:hover { color: var(--accent); border-color: var(--accent-soft); }
+.cal-dow { display: grid; grid-template-columns: repeat(7, 1fr); padding: 12px 0; border-bottom: 1px solid var(--line); font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; color: var(--text-3); text-align: center; text-transform: uppercase; }
+.cal-dow span:first-child { color: var(--red); }
+.cal-dow span:last-child { color: var(--blue); }
+.cal-days { display: grid; grid-template-columns: repeat(7, 1fr); }
+.cal-day { min-height: 88px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 8px 10px; position: relative; cursor: pointer; transition: background .15s; }
+.cal-day:nth-child(7n) { border-right: none; }
+.cal-day:hover { background: var(--bg-1); }
+.cal-day .dn { font-family: var(--mono); font-size: 12px; color: var(--text-2); letter-spacing: 0.02em; }
+.cal-day.weekend .dn { color: var(--text-3); }
+.cal-day.sun .dn { color: var(--red); }
+.cal-day.sat .dn { color: var(--blue); }
+.cal-day.out { background: var(--bg); opacity: 0.35; pointer-events: none; }
+.cal-day.today { background: rgba(245,194,107,0.06); }
+.cal-day.today .dn { color: var(--accent); font-weight: 500; }
+.cal-day .pile { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 3px; }
+.cal-day .pile i { width: 6px; height: 6px; border-radius: 50%; }
+.cal-day .ev { display: block; font-family: var(--mono); font-size: 10px; color: var(--text-1); margin-top: 4px; padding: 2px 5px; background: var(--bg-2); border-left: 2px solid var(--accent); line-height: 1.3; }
+.cal-day .ev.lv { border-left-color: var(--blue); }
+.cal-day .ev.ot { border-left-color: var(--red); }
+.cal-day .ev.ho { border-left-color: var(--red); background: rgba(224,107,95,0.08); color: var(--red); }
+
+/* ============ LEAVE (M05) ============ */
+.lv-top { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 1px; background: var(--line); border: 1px solid var(--line); margin-bottom: 28px; }
+.lv-cell { background: var(--bg); padding: 26px; }
+.lv-cell h4 { font-family: var(--mono); font-size: 10px; letter-spacing: 0.15em; color: var(--text-3); text-transform: uppercase; margin-bottom: 16px; }
+.lv-bar-row { display: grid; grid-template-columns: 70px 1fr 60px; gap: 12px; align-items: center; padding: 9px 0; font-size: 12px; }
+.lv-bar-row .nm { color: var(--text-1); }
+.lv-bar-row .bar { height: 4px; background: var(--bg-2); position: relative; }
+.lv-bar-row .bar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); }
+.lv-bar-row .bar i.danger { background: var(--red); }
+.lv-bar-row .bar i.warn { background: var(--accent); }
+.lv-bar-row .v { font-family: var(--mono); font-variant-numeric: tabular-nums; text-align: right; color: var(--text-2); }
+.lv-big { font-family: var(--serif); font-size: 72px; line-height: 1; letter-spacing: -0.025em; }
+.lv-big em { font-style: italic; color: var(--accent); }
+.lv-big.danger em { color: var(--red); }
+.lv-big small { display: block; font-family: var(--mono); font-size: 11px; color: var(--text-3); margin-top: 12px; letter-spacing: 0.06em; text-transform: uppercase; }
+.lv-req-form { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 12px; align-items: end; padding: 16px; border: 1px solid var(--line); margin-bottom: 18px; background: var(--bg); }
+.lv-req-form label { display: block; font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; color: var(--text-3); text-transform: uppercase; margin-bottom: 6px; }
+.lv-req-form input, .lv-req-form select { width: 100%; padding: 9px 11px; background: var(--bg-1); border: 1px solid var(--line-2); color: var(--text-1); font-family: var(--mono); font-size: 13px; }
+
+/* ============ EXPENSES (M06) ============ */
+.exp-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-bottom: 28px; }
+.exp-summary > div { background: var(--bg); padding: 20px 22px; }
+.exp-summary .l { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; color: var(--text-3); text-transform: uppercase; margin-bottom: 10px; }
+.exp-summary .v { font-family: var(--serif); font-size: 32px; letter-spacing: -0.015em; font-variant-numeric: tabular-nums; }
+.exp-summary .v.warn { color: var(--accent); font-style: italic; }
+.exp-summary .v small { font-family: var(--mono); font-size: 12px; color: var(--text-3); margin-left: 6px; vertical-align: 4px; }
+.exp-cat-row { display: grid; grid-template-columns: 100px 1fr 80px 60px; gap: 14px; align-items: center; padding: 12px 0; border-bottom: 1px dashed var(--line); font-size: 12px; }
+.exp-cat-row .nm { color: var(--text-1); }
+.exp-cat-row .bar { height: 3px; background: var(--bg-2); position: relative; }
+.exp-cat-row .bar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); }
+.exp-cat-row .v { font-family: var(--mono); font-variant-numeric: tabular-nums; text-align: right; color: var(--text-2); }
+.exp-cat-row .pct { font-family: var(--mono); font-size: 11px; color: var(--text-3); text-align: right; }
+.tbl .tag { display: inline-block; padding: 2px 8px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; border: 1px solid var(--line-2); color: var(--text-2); text-transform: uppercase; }
+.tbl .tag.saas { color: var(--blue); border-color: rgba(143,182,230,0.35); }
+.tbl .tag.meal { color: var(--accent); border-color: var(--accent-soft); }
+.tbl .tag.travel { color: var(--purple); border-color: rgba(184,154,224,0.35); }
+.tbl .tag.rent { color: var(--text-2); }
+.tbl .tag.equip { color: var(--green); border-color: rgba(107,203,138,0.35); }
+
+/* ============ VENDORS (M07) ============ */
+.vendor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+.vendor-card { background: var(--bg); border: 1px solid var(--line); padding: 22px 24px; transition: border-color .2s; }
+.vendor-card:hover { border-color: var(--accent-soft); }
+.vendor-card .h { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+.vendor-card .nm { font-family: var(--serif); font-size: 24px; line-height: 1.1; letter-spacing: -0.015em; }
+.vendor-card .nm small { display: block; font-family: var(--mono); font-size: 10px; color: var(--text-3); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 4px; }
+.vendor-card .biz { font-family: var(--mono); font-size: 11px; color: var(--text-2); margin-bottom: 12px; letter-spacing: 0.04em; }
+.vendor-card .biz b { color: var(--text-3); font-weight: 400; margin-right: 6px; }
+.vendor-card .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding-top: 14px; border-top: 1px dashed var(--line); font-family: var(--mono); font-size: 11px; }
+.vendor-card .row div { color: var(--text-3); }
+.vendor-card .row div b { display: block; font-family: var(--serif); font-style: italic; font-size: 19px; color: var(--text-1); font-weight: 400; margin-top: 2px; }
+.vendor-card .row div b.acc { color: var(--accent); }
+
+/* ============ ASSETS (M08) ============ */
+.assets-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-bottom: 28px; }
+.assets-kpis > div { background: var(--bg); padding: 22px; }
+.assets-kpis .l { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; color: var(--text-3); text-transform: uppercase; margin-bottom: 12px; }
+.assets-kpis .v { font-family: var(--serif); font-size: 32px; letter-spacing: -0.015em; }
+.assets-kpis .v em { color: var(--accent); font-style: italic; }
+.depr-bar { display: inline-block; width: 80px; height: 4px; background: var(--bg-2); position: relative; vertical-align: 1px; margin-right: 8px; }
+.depr-bar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); }
+
+/* ============ CLOSE (M09) ============ */
+.close-grid { display: grid; grid-template-columns: 320px 1fr; gap: 24px; }
+.close-side { background: var(--bg); border: 1px solid var(--line); padding: 24px; }
+.close-ring { position: relative; width: 200px; height: 200px; margin: 8px auto 18px; }
+.close-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.close-ring .pct { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+.close-ring .pct b { font-family: var(--serif); font-style: italic; font-size: 56px; color: var(--accent); line-height: 1; }
+.close-ring .pct small { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; color: var(--text-3); text-transform: uppercase; margin-top: 6px; }
+.close-main { background: var(--bg); border: 1px solid var(--line); }
+.close-section { border-bottom: 1px solid var(--line); }
+.close-section:last-child { border-bottom: none; }
+.close-section-h { padding: 14px 22px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.15em; color: var(--text-3); text-transform: uppercase; background: var(--bg-1); display: flex; justify-content: space-between; }
+.close-section-h b { color: var(--accent); margin-right: 10px; font-weight: 400; }
+.close-item { display: grid; grid-template-columns: 28px 1fr auto auto; gap: 16px; align-items: center; padding: 14px 22px; border-bottom: 1px solid var(--line); cursor: pointer; transition: background .15s; }
+.close-item:last-child { border-bottom: none; }
+.close-item:hover { background: var(--bg-1); }
+.close-item .ck { width: 18px; height: 18px; border: 1px solid var(--line-2); display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11px; color: transparent; }
+.close-item.done .ck { background: var(--accent); border-color: var(--accent); color: #0A0A0A; }
+.close-item .t { font-size: 14px; color: var(--text-1); }
+.close-item .t small { display: block; font-family: var(--mono); font-size: 10px; color: var(--text-3); letter-spacing: 0.06em; margin-top: 3px; }
+.close-item.done .t { color: var(--text-3); text-decoration: line-through; text-decoration-color: var(--text-4); }
+.close-item .law { font-family: var(--mono); font-size: 10px; color: var(--text-3); letter-spacing: 0.06em; }
+.close-item .who { font-family: var(--mono); font-size: 11px; color: var(--text-2); }
+
+/* ============ SEVERANCE (M13) ============ */
+.sev-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.sev-emp-list { background: var(--bg); border: 1px solid var(--line); }
+.sev-emp { display: grid; grid-template-columns: 36px 1fr auto auto; gap: 14px; align-items: center; padding: 16px 18px; border-bottom: 1px solid var(--line); cursor: pointer; }
+.sev-emp:last-child { border-bottom: none; }
+.sev-emp:hover, .sev-emp.sel { background: var(--bg-1); }
+.sev-emp.sel { border-left: 2px solid var(--accent); padding-left: 16px; }
+.sev-emp .av { width: 32px; height: 32px; }
+.sev-emp .nm { font-size: 13px; color: var(--text-1); }
+.sev-emp .nm small { display: block; font-family: var(--mono); font-size: 10px; color: var(--text-3); margin-top: 2px; letter-spacing: 0.05em; }
+.sev-emp .yr { font-family: var(--mono); font-size: 11px; color: var(--text-2); text-align: right; }
+.sev-emp .est { font-family: var(--serif); font-style: italic; font-size: 18px; color: var(--accent); }
+.sev-calc { background: var(--bg); border: 1px solid var(--line); padding: 28px; }
+.sev-formula { padding: 14px 16px; background: var(--bg-1); border: 1px dashed var(--line-2); margin-bottom: 22px; font-family: var(--mono); font-size: 12px; color: var(--text-2); line-height: 1.7; }
+.sev-formula b { color: var(--accent); }
+.sev-row { display: flex; justify-content: space-between; align-items: baseline; padding: 13px 0; border-bottom: 1px solid var(--line); }
+.sev-row .l { font-family: var(--mono); font-size: 11px; color: var(--text-2); letter-spacing: 0.06em; text-transform: uppercase; }
+.sev-row .l small { display: block; color: var(--text-3); text-transform: none; letter-spacing: 0.04em; margin-top: 3px; }
+.sev-row .v { font-family: var(--mono); font-size: 14px; color: var(--text-1); font-variant-numeric: tabular-nums; }
+.sev-total { padding: 22px 0 6px; border-top: 1px solid var(--line-2); border-bottom: 2px solid var(--accent); margin-top: 8px; }
+.sev-total .l { font-family: var(--mono); font-size: 10px; letter-spacing: 0.15em; color: var(--text-3); text-transform: uppercase; }
+.sev-total .v { font-family: var(--serif); font-style: italic; font-size: 60px; color: var(--accent); line-height: 1; letter-spacing: -0.02em; margin-top: 8px; }
+
+/* ============ YEAR-END (M14) ============ */
+.ye-progress { display: flex; align-items: center; gap: 18px; padding: 22px 26px; background: var(--bg); border: 1px solid var(--line); margin-bottom: 24px; }
+.ye-progress .stage { display: flex; gap: 6px; flex: 1; }
+.ye-progress .stage i { flex: 1; height: 5px; background: var(--bg-2); position: relative; }
+.ye-progress .stage i.done { background: var(--accent); }
+.ye-progress .stage i.cur { background: var(--accent); animation: pulse 1.5s infinite; }
+.ye-progress .stage i .lb { position: absolute; top: 14px; left: 0; font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; color: var(--text-3); text-transform: uppercase; }
+.ye-progress .stage i.done .lb, .ye-progress .stage i.cur .lb { color: var(--accent); }
+.ye-emp-tbl .stat { width: 90px; display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 11px; }
+.ye-emp-tbl .stat .dot { width: 6px; height: 6px; border-radius: 50%; }
+.ye-emp-tbl .stat.ok .dot { background: var(--green); }
+.ye-emp-tbl .stat.pend .dot { background: var(--accent); }
+.ye-emp-tbl .stat.miss .dot { background: var(--red); }
+.ye-emp-tbl .stat.ok { color: var(--green); }
+.ye-emp-tbl .stat.pend { color: var(--accent); }
+.ye-emp-tbl .stat.miss { color: var(--red); }
+.ye-emp-tbl .refund { color: var(--green); font-weight: 500; }
+.ye-emp-tbl .owed { color: var(--red); font-weight: 500; }
+
+/* ============ AUDIT (M15) ============ */
+.audit-filters { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; align-items: center; }
+.audit-chip { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; color: var(--text-3); padding: 6px 12px; border: 1px solid var(--line); cursor: pointer; text-transform: uppercase; }
+.audit-chip.on { color: var(--accent); border-color: var(--accent-soft); background: rgba(245,194,107,0.04); }
+.audit-tl { position: relative; padding-left: 32px; }
+.audit-tl::before { content: ""; position: absolute; left: 8px; top: 8px; bottom: 8px; width: 1px; background: var(--line); }
+.audit-row { position: relative; padding: 14px 0 14px 8px; border-bottom: 1px dashed var(--line); display: grid; grid-template-columns: 100px 80px 1fr auto; gap: 18px; align-items: center; }
+.audit-row:last-child { border-bottom: none; }
+.audit-row::before { content: ""; position: absolute; left: -29px; top: 22px; width: 9px; height: 9px; border: 1px solid var(--accent); background: var(--bg); }
+.audit-row.warn::before { border-color: var(--accent); background: var(--accent); }
+.audit-row.crit::before { border-color: var(--red); background: var(--red); }
+.audit-row.ok::before { border-color: var(--green); }
+.audit-row .ts { font-family: var(--mono); font-size: 11px; color: var(--text-3); letter-spacing: 0.04em; }
+.audit-row .ts b { display: block; color: var(--text-1); font-family: var(--serif); font-style: italic; font-size: 16px; line-height: 1; }
+.audit-row .who { font-family: var(--mono); font-size: 11px; color: var(--text-2); }
+.audit-row .act { font-family: var(--mono); font-size: 12px; color: var(--text-1); }
+.audit-row .act b { color: var(--accent); font-weight: 400; margin-right: 8px; }
+.audit-row .act small { display: block; font-family: var(--sans); font-size: 12px; color: var(--text-3); margin-top: 3px; }
+.audit-row .ip { font-family: var(--mono); font-size: 10px; color: var(--text-4); letter-spacing: 0.04em; }
+
+/* ============ SETTINGS (M16) ============ */
+.set-grid { display: grid; grid-template-columns: 220px 1fr; gap: 24px; }
+.set-nav { display: flex; flex-direction: column; gap: 2px; border: 1px solid var(--line); background: var(--bg); padding: 8px; height: max-content; }
+.set-nav a { padding: 11px 14px; font-size: 13px; color: var(--text-2); border-left: 1px solid transparent; cursor: pointer; transition: background .15s; }
+.set-nav a:hover { background: var(--bg-1); color: var(--text-1); }
+.set-nav a.on { background: var(--bg-1); color: var(--text-1); border-left-color: var(--accent); }
+.set-nav a small { display: block; font-family: var(--mono); font-size: 10px; color: var(--text-4); margin-top: 2px; letter-spacing: 0.05em; }
+.set-panel { background: var(--bg); border: 1px solid var(--line); padding: 28px 32px; }
+.set-h { font-family: var(--serif); font-size: 32px; letter-spacing: -0.02em; margin-bottom: 4px; }
+.set-h em { font-style: italic; color: var(--accent); }
+.set-sub { font-family: var(--mono); font-size: 11px; color: var(--text-3); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 28px; }
+.set-field { padding: 18px 0; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: 240px 1fr auto; gap: 18px; align-items: center; }
+.set-field:last-child { border-bottom: none; }
+.set-field .lab { font-size: 14px; color: var(--text-1); }
+.set-field .lab small { display: block; font-family: var(--mono); font-size: 11px; color: var(--text-3); margin-top: 3px; letter-spacing: 0.04em; }
+.set-field .ctl { font-family: var(--mono); font-size: 12px; color: var(--text-2); }
+.set-toggle { width: 38px; height: 22px; background: var(--bg-2); border: 1px solid var(--line-2); border-radius: 12px; position: relative; cursor: pointer; transition: background .2s; }
+.set-toggle::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: var(--text-3); border-radius: 50%; transition: transform .2s, background .2s; }
+.set-toggle.on { background: rgba(245,194,107,0.15); border-color: var(--accent-soft); }
+.set-toggle.on::after { transform: translateX(16px); background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+.set-input { padding: 8px 12px; background: var(--bg-1); border: 1px solid var(--line-2); color: var(--text-1); font-family: var(--mono); font-size: 12px; min-width: 220px; }
+
+/* ============ SIGNATURE: WEEKLY HOURS (M03) ============ */
+.wk-chart { margin-top: 24px; padding-top: 18px; border-top: 1px dashed var(--line); }
+.wk-chart h4 { font-family: var(--mono); font-size: 10px; letter-spacing: 0.15em; color: var(--text-3); text-transform: uppercase; margin-bottom: 14px; }
+.wk-row { display: grid; grid-template-columns: 38px 1fr 64px; gap: 10px; align-items: center; padding: 6px 0; font-family: var(--mono); font-size: 11px; }
+.wk-row .lbl { color: var(--text-3); }
+.wk-row .v { font-variant-numeric: tabular-nums; text-align: right; color: var(--text-2); }
+.wk-bar { position: relative; height: 18px; background: var(--bg-2); }
+.wk-bar i { position: absolute; left: 0; top: 0; bottom: 0; }
+.wk-bar i.reg { background: rgba(107,203,138,0.55); }
+.wk-bar i.ot  { background: rgba(245,194,107,0.78); }
+.wk-bar i.nt  { background: rgba(224,107,95,0.85); }
+.wk-bar .limit { position: absolute; top: -4px; bottom: -4px; width: 1px; background: var(--red); }
+.wk-bar .limit::after { content: "52h"; position: absolute; top: -14px; right: -10px; font-family: var(--mono); font-size: 9px; color: var(--red); letter-spacing: 0.04em; }
+
+/* ============ SIGNATURE: FORMULA VIZ (M13) ============ */
+.formula-viz { padding: 22px 0; }
+.fv-row { display: grid; grid-template-columns: 110px 1fr 90px; gap: 14px; align-items: center; padding: 10px 0; }
+.fv-row .lab { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; color: var(--text-3); text-transform: uppercase; }
+.fv-row .lab b { display: block; font-family: var(--serif); font-style: italic; font-size: 17px; color: var(--text-1); font-weight: 400; letter-spacing: -0.01em; text-transform: none; margin-top: 4px; }
+.fv-row .bar { position: relative; height: 6px; background: var(--bg-2); }
+.fv-row .bar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); }
+.fv-row .bar i.dim { background: var(--accent-soft); }
+.fv-row .v { font-family: var(--mono); font-size: 12px; color: var(--text-2); text-align: right; font-variant-numeric: tabular-nums; }
+.fv-op { text-align: center; font-family: var(--serif); font-style: italic; font-size: 18px; color: var(--accent); padding: 4px 0; }
+
+/* ============ SIGNATURE: HASH CHAIN (M15) ============ */
+.audit-row .hash { display: block; font-family: var(--mono); font-size: 9px; color: var(--text-4); letter-spacing: 0.04em; margin-top: 6px; line-height: 1.5; }
+.audit-row .hash b { color: var(--accent); font-weight: 400; }
+.audit-row .hash i { color: var(--text-3); font-style: normal; }
+
+/* ============ SIGNATURE: REFUND DISTRIBUTION (M14) ============ */
+.ye-dist { background: var(--bg); border: 1px solid var(--line); padding: 24px 28px; margin-bottom: 28px; }
+.ye-dist-h { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 18px; }
+.ye-dist-h h4 { font-family: var(--mono); font-size: 10px; letter-spacing: 0.15em; color: var(--text-3); text-transform: uppercase; }
+.ye-dist-h .legend { display: flex; gap: 16px; font-family: var(--mono); font-size: 11px; color: var(--text-2); }
+.ye-dist-h .legend span { display: flex; align-items: center; gap: 6px; }
+.ye-dist-h .legend i { width: 10px; height: 10px; display: inline-block; }
+.ye-dist-bar { position: relative; height: 50px; display: flex; background: var(--bg-1); border: 1px solid var(--line); margin-bottom: 12px; }
+.ye-dist-bar .axis { position: absolute; left: 50%; top: -6px; bottom: -6px; width: 1px; background: var(--text-3); }
+.ye-dist-bar .axis::after { content: "₩ 0"; position: absolute; top: -16px; left: -14px; font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.ye-tick { position: absolute; top: 4px; bottom: 4px; width: 3px; border-radius: 1px; cursor: pointer; transition: transform .15s; }
+.ye-tick:hover { transform: scaleY(1.3); }
+.ye-tick.r { background: var(--green); }
+.ye-tick.o { background: var(--red); }
+.ye-tick .tip { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-6px); background: var(--bg); border: 1px solid var(--line-2); padding: 5px 8px; font-family: var(--mono); font-size: 10px; color: var(--text-1); white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity .15s; }
+.ye-tick:hover .tip { opacity: 1; }
+
+/* ============ DRAWER ============ */
+.drawer-back { position: fixed; inset: 0; background: rgba(10,10,11,0.55); z-index: 200; opacity: 0; pointer-events: none; transition: opacity .25s; backdrop-filter: blur(4px); }
+.drawer-back.on { opacity: 1; pointer-events: auto; }
+.drawer { position: fixed; right: 0; top: 0; bottom: 0; width: 520px; max-width: 100vw; background: var(--bg); border-left: 1px solid var(--line-2); z-index: 201; transform: translateX(100%); transition: transform .35s cubic-bezier(.22,.61,.36,1); display: flex; flex-direction: column; box-shadow: -30px 0 60px rgba(0,0,0,0.4); }
+.drawer.on { transform: translateX(0); }
+.drawer-h { padding: 22px 26px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: flex-start; }
+.drawer-h .eyebrow { font-family: var(--mono); font-size: 10px; letter-spacing: 0.15em; color: var(--text-3); text-transform: uppercase; margin-bottom: 6px; }
+.drawer-h .nm { font-family: var(--serif); font-size: 32px; letter-spacing: -0.02em; line-height: 1; }
+.drawer-h .nm em { font-style: italic; color: var(--accent); }
+.drawer-h .x { width: 30px; height: 30px; border: 1px solid var(--line-2); font-family: var(--mono); font-size: 14px; color: var(--text-3); cursor: pointer; }
+.drawer-body { padding: 24px 26px; overflow-y: auto; flex: 1; }
+.drawer-sec { margin-bottom: 26px; }
+.drawer-sec h5 { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; color: var(--text-3); text-transform: uppercase; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px dashed var(--line); }
+.drawer-kv { display: flex; justify-content: space-between; padding: 8px 0; font-family: var(--mono); font-size: 12px; }
+.drawer-kv .k { color: var(--text-3); }
+.drawer-kv .v { color: var(--text-1); font-variant-numeric: tabular-nums; }
+.drawer-kv .v em { font-family: var(--serif); font-style: italic; color: var(--accent); font-size: 15px; }
+.drawer-foot { padding: 18px 26px; border-top: 1px solid var(--line); display: flex; gap: 8px; }
+
+/* journal viewer specifics */
+.journal-line { display: grid; grid-template-columns: 30px 1fr 1fr; gap: 12px; padding: 8px 0; font-family: var(--mono); font-size: 12px; border-bottom: 1px dashed var(--line); }
+.journal-line .acct { color: var(--text-1); }
+.journal-line .debit, .journal-line .credit { font-variant-numeric: tabular-nums; text-align: right; color: var(--text-2); }
+.journal-line .debit b, .journal-line .credit b { color: var(--accent); font-weight: 400; }
+.journal-tot { display: grid; grid-template-columns: 30px 1fr 1fr; gap: 12px; padding: 10px 0; font-family: var(--mono); font-size: 13px; border-top: 2px solid var(--accent); margin-top: 4px; color: var(--text-1); font-weight: 500; }
+.journal-tot div:nth-child(2), .journal-tot div:nth-child(3) { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 1100px) {
+  .app { grid-template-columns: 56px 1fr; }
+  .sidebar .side-brand em, .side-section, .side-item span:not(.ico), .side-foot .who, .side-search { display: none; }
+  .side-item { justify-content: center; padding: 12px 0; }
+  .side-item .ico { width: auto; }
+  .bg-canvas { left: 56px; }
+  .cmd-hero, .payroll-grid, .sim-grid, .risk-grid, .cal-grid, .close-grid, .sev-grid, .set-grid { grid-template-columns: 1fr !important; }
+  .kanban { grid-template-columns: repeat(2, 1fr); }
+  .lo-grid { grid-template-columns: 1fr 1fr; }
+  .kpis, .assets-kpis, .exp-summary { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .bg-canvas { left: 0; }
+  .view { padding: 24px 16px 60px; }
+  .page-h { font-size: 40px; }
+  .kanban, .kpis, .assets-kpis, .exp-summary, .lo-grid { grid-template-columns: 1fr; }
+  .top-actions .presence, .ask-btn kbd { display: none; }
+}
+
+/* ============ PRINT (명세서) ============ */
+@media print {
+  body, html { background: #fff; color: #000; }
+  .sidebar, .topbar, .demo-banner, .bg-canvas, .toast, .pulse-sweep, .boot, .modal-back, .page-head .period-tabs, .pay-detail > div:last-child { display: none !important; }
+  .app { display: block; }
+  .view { display: none !important; padding: 0; max-width: none; }
+  .view[data-view="payroll"] { display: block !important; }
+  .payroll-grid { grid-template-columns: 1fr; }
+  .emp-list { display: none; }
+  .pay-detail { border: 2px solid #000; padding: 32px; box-shadow: none; }
+  .pay-name, .pay-net-v, .calc-table .v.total { color: #000 !important; }
+  .pay-net-v { font-size: 36px; }
+  .calc-table tr td { border-bottom: 1px solid #ccc; }
+  .calc-table tr.total td { border-bottom: 2px solid #000; }
+  .law { color: #666 !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- BOOT SEQUENCE -->
+<div class="boot" id="boot">
+  <div class="boot-corner tl"><b>NEXUS</b> · operations os</div>
+  <div class="boot-corner tr">v1.4.0 · build 26.05.11</div>
+  <div class="boot-corner bl">tenant · acme-corp</div>
+  <div class="boot-corner br">region · ap-northeast-2</div>
+  <div class="boot-mark">NE<em>X</em>US</div>
+  <div class="boot-sub">Operations OS · authenticating</div>
+  <div class="boot-bar"><i id="bootBar"></i></div>
+  <div class="boot-log" id="bootLog"></div>
+</div>
+
+<div class="pulse-sweep" id="pulseSweep"></div>
+<div class="toast" id="toast"></div>
+
+<div class="app">
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar">
+    <div class="side-brand"><span class="brand-mark"></span><span>NEXUS</span><em>v1.4</em></div>
+    <button class="side-search" onclick="openAsk()">
+      <span style="color:var(--accent)">✦</span><span>Ask Nexus…</span><span>⌃J</span>
+    </button>
+
+    <div class="side-section">Operations</div>
+    <nav class="side-nav">
+      <a class="side-item active" data-view="dashboard"><span class="ico">M01</span>대시보드<span class="badge dot"></span></a>
+      <a class="side-item" data-view="payroll"><span class="ico">M04</span>급여<span class="badge">15</span></a>
+      <a class="side-item" data-view="approvals"><span class="ico">M10</span>전자결재<span class="badge warn">7</span></a>
+      <a class="side-item" data-view="risk"><span class="ico">M11</span>법적 리스크<span class="badge warn">2</span></a>
+      <a class="side-item" data-view="simulator"><span class="ico">M12</span>인건비 시뮬</a>
+      <a class="side-item" data-view="ask"><span class="ico">AI</span>Ask Nexus</a>
+      <a class="side-item" data-view="liveops"><span class="ico" style="color:var(--accent)">●</span>Live Ops<span class="badge" style="color:var(--accent);border-color:var(--accent-soft)">LIVE</span></a>
+
+      <div class="side-section">Records</div>
+      <a class="side-item" data-view="employees"><span class="ico">M02</span>직원 정보<span class="badge">15</span></a>
+      <a class="side-item" data-view="attendance"><span class="ico">M03</span>근태<span class="badge">2.7k</span></a>
+      <a class="side-item" data-view="leave"><span class="ico">M05</span>연차<span class="badge">4</span></a>
+      <a class="side-item" data-view="expenses"><span class="ico">M06</span>지출<span class="badge warn">OCR</span></a>
+      <a class="side-item" data-view="vendors"><span class="ico">M07</span>거래처</a>
+      <a class="side-item" data-view="assets"><span class="ico">M08</span>자산</a>
+
+      <div class="side-section">Cycle</div>
+      <a class="side-item" data-view="close"><span class="ico">M09</span>월말결산</a>
+      <a class="side-item" data-view="severance"><span class="ico">M13</span>퇴직급여</a>
+      <a class="side-item" data-view="yearend"><span class="ico">M14</span>연말정산</a>
+      <a class="side-item" data-view="audit"><span class="ico">M15</span>감사 로그</a>
+      <a class="side-item" data-view="settings"><span class="ico">M16</span>설정</a>
+    </nav>
+
+    <div class="side-foot">
+      <div class="avatar">N</div>
+      <div class="who">남윤서<small>admin · 총무</small></div>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main class="main">
+    <div class="demo-banner">
+      <span class="pill">DEMO</span><b>데모 모드</b>
+      1년치 시나리오 데이터로 둘러보고 있어요. 24시간마다 초기화됩니다.
+      <span class="x">✕</span>
+    </div>
+
+    <header class="topbar">
+      <div class="bread" id="bread">
+        <span>NEXUS</span><span class="sep">/</span><span>Operations</span><span class="sep">/</span><b id="bread-cur">대시보드</b>
+      </div>
+      <div class="top-actions">
+        <div class="presence">
+          <div class="avatar" title="박서연">B</div>
+          <div class="avatar" title="이민준">L</div>
+          <div class="avatar" title="김지원">K</div>
+        </div>
+        <button class="ask-btn" onclick="openAsk()"><span>✦</span>Ask Nexus<kbd>⌃ J</kbd></button>
+        <button class="icon-btn" title="System Pulse · P" onclick="firePulse()" style="color:var(--accent)">⊙</button>
+        <button class="icon-btn" title="알림">◐<span class="pulse"></span></button>
+        <button class="icon-btn" title="설정">⚙</button>
+      </div>
+    </header>
+
+    <canvas class="bg-canvas" id="bgCanvas"></canvas>
+
+    <!-- ============ VIEW: DASHBOARD ============ -->
+    <section class="view on" data-view="dashboard">
+      <div class="cmd-hero">
+        <div class="cmd-left">
+          <div class="cmd-eyebrow">
+            <span class="dot"></span>2026.05.11 · 14:22 KST · Operations live
+          </div>
+          <h1 class="cmd-h">안녕하세요,<br><em>남윤서</em>님.</h1>
+          <p class="cmd-sub">
+            이번 주 미결 결재 <b>7건</b>, 법적 리스크 <b>2건</b>이 대기 중입니다.
+            오늘 마감해야 할 것은 <b>4대보험 EDI 파일</b>이에요.
+          </p>
+          <div class="cmd-actions">
+            <a class="btn btn-primary" onclick="goView('approvals')">결재 처리 →</a>
+            <a class="btn" onclick="goView('risk')">리스크 검토</a>
+          </div>
+
+          <div class="cmd-mission">
+            <div class="cmd-mission-h">오늘의 미션 · 3 / 5</div>
+            <ul>
+              <li class="done"><span class="ck">✓</span>5월 근태 마감<small>09:02 완료</small></li>
+              <li class="done"><span class="ck">✓</span>최저임금 점검<small>10:14 완료</small></li>
+              <li class="done"><span class="ck">✓</span>김지원 연장근로 통보<small>11:30 완료</small></li>
+              <li><span class="ck"></span>4대보험 EDI CSV 생성<small style="color:var(--accent)">D-5</small></li>
+              <li><span class="ck"></span>5월 결산 체크리스트 점검<small>D-21</small></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Command Sphere -->
+        <div class="sphere-wrap">
+          <canvas class="sphere-canvas" id="sphereCanvas"></canvas>
+          <div class="sphere-overlay">
+            <div class="sphere-label l1"><b>HEAD</b>직원 <span class="v">15</span></div>
+            <div class="sphere-label l2"><b>MTD</b>인건비 <span class="v">₩84.2M</span></div>
+            <div class="sphere-label l3"><b>PEND</b>결재 <span class="v">7</span></div>
+            <div class="sphere-label l4"><b>RISK</b>리스크 <span class="v" style="color:var(--red)">2</span></div>
+            <div class="sphere-label l5"><b>EDI</b>D-5 <span class="v">대기</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPIs -->
+      <div class="kpis">
+        <div class="kpi">
+          <div class="kpi-l">총 인건비 · MTD</div>
+          <div class="kpi-v" data-num="84210000" data-prefix="₩"><span class="cur">₩</span>0</div>
+          <div class="kpi-meta"><span class="delta up">▲ 2.4% MoM</span><span>15명</span></div>
+          <svg class="kpi-spark" viewBox="0 0 90 32" preserveAspectRatio="none"><polyline points="0,24 12,20 24,22 36,16 48,18 60,12 72,14 90,8" fill="none" stroke="#F5C26B" stroke-width="1"/></svg>
+        </div>
+        <div class="kpi">
+          <div class="kpi-l">월 지출 · MTD</div>
+          <div class="kpi-v" data-num="12480500" data-prefix="₩"><span class="cur">₩</span>0</div>
+          <div class="kpi-meta"><span class="delta down">▼ 8.1% MoM</span><span>150건</span></div>
+          <svg class="kpi-spark" viewBox="0 0 90 32" preserveAspectRatio="none"><polyline points="0,8 12,14 24,12 36,18 48,16 60,22 72,20 90,24" fill="none" stroke="#8FB6E6" stroke-width="1"/></svg>
+        </div>
+        <div class="kpi">
+          <div class="kpi-l">미결 결재</div>
+          <div class="kpi-v warn" data-num="7">0</div>
+          <div class="kpi-meta"><span style="color:var(--accent)">평균 대기 2.1일</span><span>5단 결재</span></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-l">법적 리스크</div>
+          <div class="kpi-v danger" data-num="2">0</div>
+          <div class="kpi-meta"><span style="color:var(--red)">주 52h 초과</span><span>근기법 §53</span></div>
+        </div>
+      </div>
+
+      <!-- Chart row -->
+      <div class="row" style="grid-template-columns: 1.5fr 1fr">
+        <div class="panel">
+          <div class="panel-h">
+            <div class="t"><em>월별 인건비</em> 추세 · 6M</div>
+            <div class="legend"><span><i></i>2026</span><span><i class="b"></i>2025</span></div>
+          </div>
+          <div class="chart-wrap">
+            <svg viewBox="0 0 720 240" preserveAspectRatio="none">
+              <defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#F5C26B" stop-opacity="0.28"/>
+                <stop offset="1" stop-color="#F5C26B" stop-opacity="0"/>
+              </linearGradient></defs>
+              <g class="chart-grid">
+                <line x1="0" y1="40" x2="720" y2="40"/><line x1="0" y1="90" x2="720" y2="90"/>
+                <line x1="0" y1="140" x2="720" y2="140"/><line x1="0" y1="190" x2="720" y2="190"/>
+              </g>
+              <g class="chart-axis">
+                <text x="0" y="34">90M</text><text x="0" y="84">80M</text>
+                <text x="0" y="134">70M</text><text x="0" y="184">60M</text>
+              </g>
+              <path fill="url(#ag)" d="M30 160 L150 140 L270 154 L390 110 L510 122 L630 70 L690 60 L690 220 L30 220 Z"/>
+              <path class="chart-line" d="M30 160 L150 140 L270 154 L390 110 L510 122 L630 70 L690 60"/>
+              <path class="chart-line dashed" d="M30 180 L150 168 L270 174 L390 152 L510 144 L630 116 L690 104"/>
+              <circle class="chart-dot" cx="30" cy="160" r="3"/><circle class="chart-dot" cx="150" cy="140" r="3"/>
+              <circle class="chart-dot" cx="270" cy="154" r="3"/><circle class="chart-dot" cx="390" cy="110" r="3"/>
+              <circle class="chart-dot" cx="510" cy="122" r="3"/><circle class="chart-dot hl" cx="630" cy="70" r="4"/>
+              <g class="chart-axis">
+                <text x="22" y="232">12월</text><text x="142" y="232">01월</text><text x="262" y="232">02월</text>
+                <text x="382" y="232">03월</text><text x="502" y="232">04월</text><text x="618" y="232">05월</text>
+              </g>
+              <g transform="translate(630, 70)">
+                <line x1="0" y1="0" x2="0" y2="150" stroke="#F5C26B" stroke-width="1" stroke-dasharray="2 3"/>
+                <rect x="-44" y="-32" width="88" height="22" fill="#14171C" stroke="#2E343E"/>
+                <text x="0" y="-17" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#F5C26B">₩84.2M</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-h"><div class="t"><em>부서별</em> 인건비</div><div class="meta">2026 · 05</div></div>
+          <div class="dept-row"><div class="n">개발팀</div><div class="b"><i style="width:92%"></i></div><div class="v">₩38.4M</div></div>
+          <div class="dept-row"><div class="n">영업팀</div><div class="b"><i style="width:64%"></i></div><div class="v">₩21.8M</div></div>
+          <div class="dept-row"><div class="n">디자인팀</div><div class="b"><i style="width:42%"></i></div><div class="v">₩14.2M</div></div>
+          <div class="dept-row"><div class="n">경영지원</div><div class="b"><i style="width:28%"></i></div><div class="v">₩9.8M</div></div>
+        </div>
+      </div>
+      <!-- Recent activity strip -->
+      <div class="section-rule"><span class="l"><b>04</b>Recent Activity · live</span><span class="line"></span></div>
+      <div class="kpis" style="grid-template-columns: repeat(3, 1fr)">
+        <div class="kpi" style="display:flex;flex-direction:column;gap:8px;cursor:pointer" onclick="goView('approvals')">
+          <div class="kpi-l" style="margin-bottom:0;display:flex;justify-content:space-between"><span>방금 · APPROVAL</span><span style="color:var(--green)">●</span></div>
+          <div style="font-family:var(--serif);font-size:22px;line-height:1.2;color:var(--text-1)">EX-237 AWS 5월 청구 <em style="color:var(--accent)">2단계 승인</em></div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-3);letter-spacing:0.05em">박서연 · ₩520,000 · 14:21</div>
+        </div>
+        <div class="kpi" style="display:flex;flex-direction:column;gap:8px;cursor:pointer;border-color:var(--accent-soft)" onclick="goView('risk')">
+          <div class="kpi-l" style="margin-bottom:0;display:flex;justify-content:space-between;color:var(--accent)"><span>2분 전 · RISK ⚠</span><span>§53</span></div>
+          <div style="font-family:var(--serif);font-size:22px;line-height:1.2;color:var(--text-1)">김지원 주52h <em style="color:var(--red);font-style:italic">초과 임박</em></div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-3);letter-spacing:0.05em">잔여 −2.2h · 본인+관리자 알림 전송</div>
+        </div>
+        <div class="kpi" style="display:flex;flex-direction:column;gap:8px;cursor:pointer" onclick="openExpense()">
+          <div class="kpi-l" style="margin-bottom:0;display:flex;justify-content:space-between"><span>5분 전 · OCR</span><span style="color:var(--blue)">●</span></div>
+          <div style="font-family:var(--serif);font-size:22px;line-height:1.2;color:var(--text-1)">영수증 1건 <em style="color:var(--accent)">자동 분류</em></div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-3);letter-spacing:0.05em">스타벅스 · ₩142,500 · 신뢰도 98.4%</div>
+        </div>
+      </div>
+    </section>
+    <section class="view" data-view="payroll">
+      <div class="page-head">
+        <div class="l">
+          <div class="eyebrow"><b>M04</b>2026 · 05 · 정기 급여</div>
+          <h1 class="page-h">급여 <em>명세서.</em></h1>
+          <p class="page-sub">근기법 §56 기준 자동 산정. 직원 선택 시 분개·공제까지 라이브 계산.</p>
+        </div>
+        <div class="period-tabs"><button class="on">2026.05</button><button>04</button><button>03</button><button>02</button><button>01</button></div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:16px;margin-top:-12px">
+        <a class="btn" href="Payslip.html" target="_blank">A4 명세서 PDF →</a>
+        <button class="btn btn-primary" onclick="document.querySelector('.side-item[data-view=approvals]')?.click()">결재 상신</button>
+      </div>
+
+      <div class="payroll-grid">
+        <div class="emp-list">
+          <div class="emp-list-h"><span>직원 15</span><span>기본급</span></div>
+          <div class="emp-row sel" data-emp="0"><div class="av">김</div><div class="n">김지원<small>DEV · 시니어</small></div><div class="s">₩5,200K</div></div>
+          <div class="emp-row" data-emp="1"><div class="av">박</div><div class="n">박서연<small>DEV · 시니어</small></div><div class="s">₩4,800K</div></div>
+          <div class="emp-row" data-emp="2"><div class="av">이</div><div class="n">이민준<small>DEV · 미드</small></div><div class="s">₩3,950K</div></div>
+          <div class="emp-row" data-emp="3"><div class="av">최</div><div class="n">최유진<small>DSGN · 주니어</small></div><div class="s">₩2,780K</div></div>
+          <div class="emp-row" data-emp="4"><div class="av">한</div><div class="n">한도윤<small>SALES · 시니어</small></div><div class="s">₩4,500K</div></div>
+          <div class="emp-row" data-emp="5"><div class="av">송</div><div class="n">송지아<small>OPS · 매니저</small></div><div class="s">₩4,100K</div></div>
+          <div class="emp-row" data-emp="6"><div class="av">정</div><div class="n">정현우<small>DEV · 미드</small></div><div class="s">₩3,800K</div></div>
+          <div class="emp-row" data-emp="7"><div class="av">윤</div><div class="n">윤채린<small>DSGN · 미드</small></div><div class="s">₩3,600K</div></div>
+          <div class="emp-row" data-emp="8"><div class="av">강</div><div class="n">강민서<small>SALES · 주니어</small></div><div class="s">₩2,900K</div></div>
+          <div class="emp-row" data-emp="9"><div class="av">조</div><div class="n">조태현<small>OPS · 주니어</small></div><div class="s">₩2,750K</div></div>
+        </div>
+
+        <div class="pay-detail">
+          <div class="pay-head">
+            <div class="pay-who">
+              <div class="avatar av">김</div>
+              <div>
+                <div class="pay-name">김지원</div>
+                <div class="pay-meta"><b>EMP-001</b>개발팀 · 시니어 엔지니어 · 입사 2022.03</div>
+              </div>
+            </div>
+            <div class="pay-net">
+              <div class="pay-net-l">실수령액 · 2026.05</div>
+              <div class="pay-net-v">₩4,427,830</div>
+            </div>
+          </div>
+
+          <table class="calc-table">
+            <tr><td><b>기본급</b><div class="law">근기법 §56 · 월 209h</div></td><td class="v">₩5,200,000</td></tr>
+            <tr><td>연장근로 12h <span style="color:var(--text-3);font-family:var(--mono);font-size:11px;">× 1.5</span></td><td class="v">₩447,800</td></tr>
+            <tr><td>야간근로 4h <span style="color:var(--text-3);font-family:var(--mono);font-size:11px;">+ 0.5 가산</span></td><td class="v">₩49,756</td></tr>
+            <tr><td>식대 비과세</td><td class="v">₩200,000</td></tr>
+            <tr class="total"><td><b>총 지급액</b></td><td class="v total">₩5,897,556</td></tr>
+
+            <tr><td><b>공제</b><div class="law">4대보험 · 소득세 누진 7단계</div></td><td></td></tr>
+            <tr class="sub"><td>국민연금 4.5%</td><td class="v neg">−₩234,000</td></tr>
+            <tr class="sub"><td>건강보험 3.545%</td><td class="v neg">−₩184,340</td></tr>
+            <tr class="sub"><td>장기요양 12.95%</td><td class="v neg">−₩23,872</td></tr>
+            <tr class="sub"><td>고용보험 0.9%</td><td class="v neg">−₩46,800</td></tr>
+            <tr class="sub"><td>소득세 (간이세액표)</td><td class="v neg">−₩892,400</td></tr>
+            <tr class="sub"><td>지방소득세 10%</td><td class="v neg">−₩89,240</td></tr>
+            <tr class="total"><td><b>실수령액</b></td><td class="v total">₩4,427,830</td></tr>
+          </table>
+
+          <div style="display:flex;justify-content:space-between;margin-top:24px;align-items:center">
+            <div style="font-family:var(--mono);font-size:11px;color:var(--text-3);letter-spacing:0.08em;text-transform:uppercase">audit_log · payroll.confirm · 기록됨</div>
+            <div style="display:flex;gap:8px"><button class="btn">엑셀</button><button class="btn">PDF 명세서</button><button class="btn btn-primary">결재 상신</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VIEW: APPROVALS ============ -->
+    <section class="view" data-view="approvals">
+      <div class="page-head">
+        <div class="l">
+          <div class="eyebrow"><b>M10</b>전자결재 · 다단</div>
+          <h1 class="page-h">결재 <em>플로우.</em></h1>
+          <p class="page-sub">발의 → 검토 → 승인 → 완료. 단계마다 감사 로그와 이메일 자동 알림.</p>
+        </div>
+        <div class="period-tabs"><button>전체</button><button class="on">대기 7</button><button>완료 24</button><button>반려 2</button></div>
+      </div>
+
+      <div class="kanban">
+        <div class="kan-col">
+          <div class="kan-h"><div class="t">발의</div><div class="c">2</div></div>
+          <div class="kan-body">
+            <div class="kan-card">
+              <div class="h"><b>EX-241</b><span>지출 결의</span></div>
+              <div class="t">5월 법인카드 사용 내역 결의</div>
+              <div class="amt">₩1,248,500</div>
+              <div class="stage"><i class="cur"></i><i></i><i></i><i></i></div>
+              <div class="f"><span>박서연 · 5분 전</span><span>1 / 4</span></div>
+            </div>
+            <div class="kan-card">
+              <div class="h"><b>HR-118</b><span>인사 변경</span></div>
+              <div class="t">한도윤 · 직책 변경 (매니저 → 시니어)</div>
+              <div class="amt" style="font-size:14px;color:var(--text-2)">급여 +₩300K/월</div>
+              <div class="stage"><i class="cur"></i><i></i><i></i><i></i><i></i></div>
+              <div class="f"><span>남윤서 · 22분 전</span><span>1 / 5</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="kan-col">
+          <div class="kan-h"><div class="t">검토</div><div class="c">3</div></div>
+          <div class="kan-body">
+            <div class="kan-card">
+              <div class="h"><b>LV-079</b><span>연차 신청</span></div>
+              <div class="t">이민준 · 연차 2일 (05.20 ~ 05.21)</div>
+              <div class="amt" style="font-size:14px;color:var(--text-2)">잔여 11일 → 9일</div>
+              <div class="stage"><i class="done"></i><i class="cur"></i></div>
+              <div class="f"><span>이민준 · 1시간 전</span><span>2 / 2</span></div>
+            </div>
+            <div class="kan-card">
+              <div class="h"><b>EX-238</b><span>접대비</span></div>
+              <div class="t">스타벅스 · 거래처 미팅</div>
+              <div class="amt">₩45,000</div>
+              <div class="stage"><i class="done"></i><i class="cur"></i><i></i></div>
+              <div class="f"><span>박서연 · 2시간 전</span><span>2 / 3</span></div>
+            </div>
+            <div class="kan-card">
+              <div class="h"><b>EX-237</b><span>SaaS 정기</span></div>
+              <div class="t">AWS 5월 청구</div>
+              <div class="amt">₩520,000</div>
+              <div class="stage"><i class="done"></i><i class="cur"></i><i></i></div>
+              <div class="f"><span>최유진 · 어제</span><span>2 / 3</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="kan-col">
+          <div class="kan-h"><div class="t">승인 대기</div><div class="c">2</div></div>
+          <div class="kan-body">
+            <div class="kan-card" style="border-color:var(--accent-soft)">
+              <div class="h"><b style="color:var(--red)">URG</b><span style="color:var(--red)">긴급</span></div>
+              <div class="t">송지아 · 퇴직 정산</div>
+              <div class="amt">₩8,420,000</div>
+              <div class="stage"><i class="done"></i><i class="done"></i><i class="cur"></i><i></i></div>
+              <div class="f"><span>D-2 · 결재 마감</span><span>3 / 4</span></div>
+            </div>
+            <div class="kan-card">
+              <div class="h"><b>EX-235</b><span>출장비</span></div>
+              <div class="t">한도윤 · 부산 출장 정산</div>
+              <div class="amt">₩320,000</div>
+              <div class="stage"><i class="done"></i><i class="done"></i><i class="cur"></i></div>
+              <div class="f"><span>1일 전</span><span>3 / 3</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="kan-col">
+          <div class="kan-h"><div class="t">완료</div><div class="c">24</div></div>
+          <div class="kan-body">
+            <div class="kan-card" style="opacity:0.7">
+              <div class="h"><b style="color:var(--green)">DONE</b><span>지출 결의</span></div>
+              <div class="t">법인카드 4월 정산</div>
+              <div class="amt" style="color:var(--green)">₩1,180,200</div>
+              <div class="stage"><i class="done"></i><i class="done"></i><i class="done"></i></div>
+              <div class="f"><span>05.09 처리</span><span>3 / 3</span></div>
+            </div>
+            <div class="kan-card" style="opacity:0.7">
+              <div class="h"><b style="color:var(--green)">DONE</b><span>연차</span></div>
+              <div class="t">최유진 · 연차 1일</div>
+              <div class="amt" style="font-size:14px;color:var(--text-3)">05.07 사용</div>
+              <div class="stage"><i class="done"></i><i class="done"></i></div>
+              <div class="f"><span>05.06 처리</span><span>2 / 2</span></div>
+            </div>
+            <div class="kan-card" style="opacity:0.7">
+              <div class="h"><b style="color:var(--red)">REJ</b><span>반려</span></div>
+              <div class="t">강민서 · 도서구입비</div>
+              <div class="amt" style="color:var(--red)">₩48,000</div>
+              <div class="stage"><i class="done"></i><i style="background:var(--red)"></i></div>
+              <div class="f"><span>증빙 불충분</span><span>반려</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VIEW: SIMULATOR ============ -->
+    <section class="view" data-view="simulator">
+      <div class="page-head">
+        <div class="l">
+          <div class="eyebrow"><b>M12</b>What-if · 인건비 시뮬레이터</div>
+          <h1 class="page-h">시뮬레이터 <em>What-if.</em></h1>
+          <p class="page-sub">슬라이더를 움직이면 월·연 인건비가 실시간 재계산됩니다. 근기법 §56 적용.</p>
+        </div>
+      </div>
+
+      <div class="sim-grid">
+        <div class="sim-controls">
+          <div class="section-rule"><span class="l"><b>01</b>Inputs</span><span class="line"></span></div>
+          <div class="sim-slider">
+            <div class="sim-slider-h"><div class="sim-slider-l">신규 채용 인원</div><div class="sim-slider-v"><span id="sv-hire">0</span>명</div></div>
+            <input type="range" id="sl-hire" min="0" max="10" value="0" step="1">
+            <div class="ticks"><span>0</span><span>2</span><span>4</span><span>6</span><span>8</span><span>10</span></div>
+          </div>
+          <div class="sim-slider">
+            <div class="sim-slider-h"><div class="sim-slider-l">일괄 인상률</div><div class="sim-slider-v"><span id="sv-raise">0.0</span>%</div></div>
+            <input type="range" id="sl-raise" min="-5" max="15" value="0" step="0.5">
+            <div class="ticks"><span>-5%</span><span>0</span><span>+5</span><span>+10</span><span>+15%</span></div>
+          </div>
+          <div class="sim-slider">
+            <div class="sim-slider-h"><div class="sim-slider-l">최저임금 변동</div><div class="sim-slider-v">₩<span id="sv-min">10,030</span></div></div>
+            <input type="range" id="sl-min" min="9860" max="10500" value="10030" step="10">
+            <div class="ticks"><span>2025</span><span>2026</span><span>+5%</span></div>
+          </div>
+          <div class="sim-slider">
+            <div class="sim-slider-h"><div class="sim-slider-l">평균 야간근로 / 월</div><div class="sim-slider-v"><span id="sv-night">8</span>h</div></div>
+            <input type="range" id="sl-night" min="0" max="40" value="8" step="1">
+            <div class="ticks"><span>0h</span><span>10</span><span>20</span><span>30</span><span>40h</span></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:8px">
+            <button class="btn btn-ghost" id="resetSim">기본값 복원</button>
+            <button class="btn btn-primary">시나리오 저장</button>
+          </div>
+        </div>
+
+        <div class="sim-out">
+          <div class="section-rule"><span class="l"><b>02</b>Projection</span><span class="line"></span></div>
+          <div class="sim-result-big">
+            <div class="l">예상 월 인건비</div>
+            <div class="v">₩<span id="rv-month">84.2</span>M</div>
+          </div>
+          <div class="sim-result-row">
+            <span class="l">월 차이</span>
+            <span><span class="v">₩<span id="rv-diff">0</span></span><span class="d" id="rv-diff-pct">±0%</span></span>
+          </div>
+          <div class="sim-result-row">
+            <span class="l">연 예상</span>
+            <span class="v">₩<span id="rv-year">1,010</span>M</span>
+          </div>
+          <div class="sim-result-row">
+            <span class="l">총 인원</span>
+            <span class="v"><span id="rv-head">15</span>명</span>
+          </div>
+          <div class="sim-result-row">
+            <span class="l">1인당 평균</span>
+            <span class="v">₩<span id="rv-avg">5.61</span>M</span>
+          </div>
+          <div class="sim-result-row" style="border-bottom:none">
+            <span class="l">최저임금 위반</span>
+            <span class="v" id="rv-violation" style="color:var(--green)">없음</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VIEW: ASK NEXUS FULL ============ -->
+    <section class="view" data-view="ask">
+      <div class="ask-page">
+        <div class="eyebrow" style="margin-bottom:24px"><b>AI</b>schema-context whitelist 통과 · 회사 데이터 전용</div>
+        <h1 class="ask-mega">물어보세요,<br><em>SQL 없이.</em></h1>
+
+        <div class="ask-input-wrap" id="askInputWrap">
+          <span class="ico">✦</span>
+          <input id="askMega" placeholder="예: 개발팀 평균 기본급은? · 이번 달 카테고리별 지출 TOP 3는?">
+          <span class="palette-kbd">⌃ ↵</span>
+        </div>
+
+        <div class="ask-suggest" id="askSuggest">
+          <button>개발팀 평균 기본급은?</button>
+          <button>연차 잔여 5일 이하 직원</button>
+          <button>5월 카테고리별 지출 TOP 3</button>
+          <button>야간근로 발생 직원 (7일)</button>
+          <button>2025년 대비 인건비 증감률</button>
+        </div>
+
+        <div class="ask-output">
+          <div class="ask-q" id="askQ">// 응답을 기다리는 중입니다. 위 입력창에 질문을 입력하거나, 제안 칩을 클릭하세요.</div>
+          <div class="ask-a" id="askA"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VIEW: RISK ============ -->
+    <section class="view" data-view="risk">
+      <div class="page-head">
+        <div class="l">
+          <div class="eyebrow"><b>M11</b>법적 리스크 · 자동 점검</div>
+          <h1 class="page-h">리스크 <em>모니터.</em></h1>
+          <p class="page-sub">근로기준법 5종 · 최저임금법 · 4대보험 신고 마감을 24시간 모니터링.</p>
+        </div>
+      </div>
+
+      <div class="risk-grid">
+        <div class="risk-legend">
+          <div class="risk-tot">2</div>
+          <div class="risk-tot-l">활성 리스크</div>
+          <div class="risk-bar">
+            <i style="background:var(--red);width:20%"></i>
+            <i style="background:var(--accent);width:30%"></i>
+            <i style="background:var(--green);width:50%"></i>
+          </div>
+          <h4>분포</h4>
+          <div class="risk-legend-row"><span class="sw" style="background:var(--red)"></span><span>위반 (즉시 조치)</span><span class="v">1</span></div>
+          <div class="risk-legend-row"><span class="sw" style="background:var(--accent)"></span><span>주의 (사전 점검)</span><span class="v">1</span></div>
+          <div class="risk-legend-row"><span class="sw" style="background:var(--green)"></span><span>정상</span><span class="v">3</span></div>
+
+          <h4 style="margin-top:32px">근거 법령</h4>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-2);line-height:2">
+            근로기준법 §53<br>근로기준법 §56<br>근로기준법 §60 / §61<br>최저임금법<br>4대보험법
+          </div>
+        </div>
+
+        <div class="risk-timeline">
+          <div class="tl-h"><span>2026 · 05 · 11 KST</span><span>last check · 14:22</span></div>
+
+          <div class="tl-row">
+            <div class="tl-date"><b>14:18</b>지금</div>
+            <div class="tl-card crit">
+              <div class="law">CRITICAL · 근로기준법 §53</div>
+              <div class="t">개발팀 김지원 · 주 52시간 초과 예상 (54.2h)</div>
+              <div class="d">이번 주 잔여 가능 시간 <b style="color:var(--red)">−2.2h</b>. 즉시 조정하지 않으면 위반. 자동으로 본인·관리자 알림 전송 완료.</div>
+            </div>
+          </div>
+
+          <div class="tl-row">
+            <div class="tl-date"><b>11:30</b>오늘</div>
+            <div class="tl-card warn">
+              <div class="law">WARN · 근로기준법 §61</div>
+              <div class="t">연차 촉진 미통보 직원 3명</div>
+              <div class="d">사용권 소멸 30일 전 통보 필요. 박서연 · 정현우 · 송지아.<br>자동 이메일 템플릿 준비됨.</div>
+            </div>
+          </div>
+
+          <div class="tl-row">
+            <div class="tl-date"><b>09:14</b>오늘</div>
+            <div class="tl-card ok">
+              <div class="law">OK · 최저임금법</div>
+              <div class="t">전 직원 최저임금 통과 (₩10,030 / 시급)</div>
+              <div class="d">2026년 시급 기준 · 15명 전원 시급 환산 ₩12,400 이상.</div>
+            </div>
+          </div>
+
+          <div class="tl-row">
+            <div class="tl-date"><b>D−5</b>05.16</div>
+            <div class="tl-card warn">
+              <div class="law">UPCOMING · 4대보험법</div>
+              <div class="t">4대보험 신고 마감</div>
+              <div class="d">매월 10일 → 16일 마감. EDI CSV 파일 자동 생성 준비됨. 1클릭 다운로드.</div>
+            </div>
+          </div>
+
+          <div class="tl-row">
+            <div class="tl-date"><b>D−12</b>05.23</div>
+            <div class="tl-card ok">
+              <div class="law">SCHEDULED · 근로기준법 §60</div>
+              <div class="t">연차 분기 재계산</div>
+              <div class="d">근속 1년 도래 직원 2명 · 자동 발생 처리 예정.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VIEW: LIVE OPS ============ -->
+    <section class="view liveops" data-view="liveops">
+      <div class="lo-frame">
+        <div class="lo-top">
+          <span class="live"><i></i>LIVE</span>
+          <span class="stamp" id="lo-stamp">2026.05.11 · 14:22:08<span class="ms">.142</span></span>
+          <span class="sep">|</span>
+          <span class="rate">throughput · <b id="lo-rate">42.7</b> events/min</span>
+          <span class="sep">|</span>
+          <span>uptime <b style="color:var(--text-1);font-weight:400">99.998%</b></span>
+          <button class="esc" onclick="goView('dashboard')">ESC ↩</button>
+        </div>
+
+        <div class="lo-grid">
+          <!-- 1. Event stream (large) -->
+          <div class="lo-panel" style="grid-row: span 2">
+            <div class="lo-panel-h"><span><b class="k">01</b>EVENT STREAM</span><span class="st"><i></i>STREAMING</span></div>
+            <div class="lo-events" id="lo-events"></div>
+          </div>
+
+          <!-- 2. Burn rate -->
+          <div class="lo-panel">
+            <div class="lo-panel-h"><span><b class="k">02</b>PAYROLL · BURN RATE</span><span class="st" style="color:var(--accent)"><i></i>ACCRUING</span></div>
+            <div class="lo-burn">
+              <div>
+                <div class="lo-burn-sub" style="margin-bottom:6px">MTD 누적 인건비</div>
+                <div class="lo-burn-big"><span class="cur">₩</span><span id="lo-burn">84,210,000</span></div>
+              </div>
+              <div>
+                <div class="lo-burn-row"><span>초당 발생률</span><b id="lo-bps">₩47</b></div>
+                <div class="lo-burn-row"><span>시간당</span><b id="lo-bhr">₩170,160</b></div>
+                <div class="lo-burn-row"><span>연 환산</span><b>₩1,010M</b></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Risk gauges -->
+          <div class="lo-panel">
+            <div class="lo-panel-h"><span><b class="k">03</b>RISK GAUGES</span><span class="st" style="color:var(--red)"><i></i>1 CRIT</span></div>
+            <div class="lo-gauges">
+              <div class="lo-gauge danger">
+                <svg viewBox="0 0 60 60"><circle cx="30" cy="30" r="24" fill="none" stroke="#242932" stroke-width="3"/><circle cx="30" cy="30" r="24" fill="none" stroke="#E06B5F" stroke-width="3" stroke-dasharray="135 150" stroke-linecap="round" transform="rotate(-90 30 30)"/></svg>
+                <div class="l">주 52H</div><div class="v">54.2h</div>
+              </div>
+              <div class="lo-gauge">
+                <svg viewBox="0 0 60 60"><circle cx="30" cy="30" r="24" fill="none" stroke="#242932" stroke-width="3"/><circle cx="30" cy="30" r="24" fill="none" stroke="#F5C26B" stroke-width="3" stroke-dasharray="68 150" stroke-linecap="round" transform="rotate(-90 30 30)"/></svg>
+                <div class="l">연차 촉진</div><div class="v">3</div>
+              </div>
+              <div class="lo-gauge ok">
+                <svg viewBox="0 0 60 60"><circle cx="30" cy="30" r="24" fill="none" stroke="#242932" stroke-width="3"/><circle cx="30" cy="30" r="24" fill="none" stroke="#6BCB8A" stroke-width="3" stroke-dasharray="148 150" stroke-linecap="round" transform="rotate(-90 30 30)"/></svg>
+                <div class="l">최저시급</div><div class="v">PASS</div>
+              </div>
+            </div>
+            <div style="margin-top:18px;font-family:var(--mono);font-size:11px;color:var(--text-3);letter-spacing:0.06em;line-height:1.7">
+              근기법 §53 · §60 · §61 · 최저임금법<br>
+              <span style="color:var(--text-2)">자동 모니터링 활성 · 5초마다 재평가</span>
+            </div>
+          </div>
+
+          <!-- 4. Presence radar -->
+          <div class="lo-panel">
+            <div class="lo-panel-h"><span><b class="k">04</b>PRESENCE</span><span class="st"><i></i>12 / 15 ACTIVE</span></div>
+            <div class="lo-presence-c"><canvas id="loRadar"></canvas></div>
+            <div class="lo-presence-legend">
+              <span><i style="background:var(--green)"></i>active 12</span>
+              <span><i style="background:var(--accent)"></i>idle 1</span>
+              <span><i style="background:var(--text-4)"></i>offline 2</span>
+            </div>
+          </div>
+
+          <!-- 5. Approval throughput -->
+          <div class="lo-panel">
+            <div class="lo-panel-h"><span><b class="k">05</b>APPROVAL FLOW · 60s</span><span class="st"><i></i>HEALTHY</span></div>
+            <div class="lo-spark-wrap">
+              <div class="lo-spark-now"><span id="lo-flow-now">0.84</span><small>/sec avg</small></div>
+              <div class="lo-spark">
+                <svg viewBox="0 0 300 120" preserveAspectRatio="none">
+                  <defs><linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F5C26B" stop-opacity="0.3"/><stop offset="1" stop-color="#F5C26B" stop-opacity="0"/></linearGradient></defs>
+                  <g class="lo-spark-axis">
+                    <line x1="0" y1="30" x2="300" y2="30"/>
+                    <line x1="0" y1="60" x2="300" y2="60"/>
+                    <line x1="0" y1="90" x2="300" y2="90"/>
+                    <text x="2" y="28">2.0</text><text x="2" y="58">1.0</text><text x="2" y="88">0.0</text>
+                  </g>
+                  <path class="lo-spark-area" id="loSparkArea" d=""/>
+                  <path class="lo-spark-line" id="loSparkLine" d=""/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- 6. Countdown -->
+          <div class="lo-panel">
+            <div class="lo-panel-h"><span><b class="k">06</b>DEADLINES</span><span class="st" style="color:var(--accent)"><i></i>2 UPCOMING</span></div>
+            <div class="lo-cd">
+              <div class="lo-cd-row urgent">
+                <div class="dd">D−5</div>
+                <div class="t">4대보험 EDI 마감<small>2026.05.16 · 자동 CSV 생성됨</small></div>
+                <div class="sec" id="cd1">04d 21h 38m</div>
+              </div>
+              <div class="lo-cd-row crit">
+                <div class="dd">D−2</div>
+                <div class="t">송지아 퇴직 정산 결재<small>3 / 4 단계 · 1명 대기</small></div>
+                <div class="sec" id="cd2">01d 14h 22m</div>
+              </div>
+              <div class="lo-cd-row">
+                <div class="dd">D−12</div>
+                <div class="t">연차 분기 재계산<small>근속 1년 도래 2명</small></div>
+                <div class="sec">11d 09h 16m</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VIEW: EMPLOYEES (M02) ============ -->
+    <section class="view" data-view="employees">
+      <div class="page-head">
+        <div class="l">
+          <div class="eyebrow"><b>M02</b>인사 마스터 · HRIS</div>
+          <h1 class="page-h">직원 <em>15.</em></h1>
+          <p class="page-sub">근속·연차·주52h 모니터링이 카드 하나에 라이브로 연결됩니다.</p>
+        </div>
+        <div class="period-tabs"><button class="on">전체 15</button><button>재직 14</button><button>휴직 1</button><button>퇴직</button></div>
+      </div>
+
+      <div class="emp-toolbar">
+        <input class="search" placeholder="이름 · 부서 · 직책 검색…">
+        <div class="seg"><button class="on">전체</button><button>개발 6</button><button>영업 3</button><button>디자인 2</button><button>경영지원 2</button><button>운영 2</button></div>
+      </div>
+
+      <div class="emp-grid" id="empGrid"></div>
+    </section>
+
+    <!-- ============ VIEW: ATTENDANCE (M03) ============ -->
+    <section class="view" data-view="attendance">
+      <div class="page-head">
+        <div class="l">
+          <div class="eyebrow"><b>M03</b>근태 · 일간 집계 · §53 / §56</div>
+          <h1 class="page-h">근태 <em>캘린더.</em></h1>
+          <p class="page-sub">주 52시간 한도와 연장·야간근로 가산을 일자별로 자동 추적.</p>
+        </div>
+        <div class="period-tabs"><button>일</button><button>주</button><button class="on">월</button><button>연</button></div>
+      </div>
+
+      <div class="cal-grid">
+        <div class="cal-side">
+          <h4>2026.05 · 요약</h4>
+          <div class="cal-stat"><span class="l">총 근무일</span><span class="v">11<small style="font-family:var(--mono);font-size:11px;color:var(--text-3);margin-left:4px">/ 21</small></span></div>
+          <div class="cal-stat"><span class="l">정상</span><span class="v">9</span></div>
+          <div class="cal-stat"><span class="l">연장근로</span><span class="v warn">12h</span></div>
+          <div class="cal-stat"><span class="l">야간근로</span><span class="v warn">4h</span></div>
+          <div class="cal-stat"><span class="l">주 52h 초과 위험</span><span class="v danger">1</span></div>
+          <div class="cal-stat"><span class="l">지각</span><span class="v">0</span></div>
+
+          <h4>범례</h4>
+          <div class="cal-legend">
+            <div><i style="background:var(--green)"></i>정상 출근</div>
+            <div><i style="background:var(--accent)"></i>연장근로</div>
+            <div><i style="background:var(--red)"></i>야간 / 휴일</div>
+            <div><i style="background:var(--blue)"></i>연차</div>
+            <div><i style="background:var(--text-4)"></i>공휴일</div>
+          </div>
+
+          <div class="wk-chart">
+            <h4>주별 누적 · 김지원</h4>
+            <div class="wk-row"><span class="lbl">W18</span><div class="wk-bar"><i class="reg" style="width:78%"></i><i class="ot" style="left:78%;width:8%"></i><div class="limit" style="left:100%"></div></div><span class="v">44.6</span></div>
+            <div class="wk-row"><span class="lbl">W19</span><div class="wk-bar"><i class="reg" style="width:78%"></i><i class="ot" style="left:78%;width:14%"></i><div class="limit" style="left:100%"></div></div><span class="v">47.8</span></div>
+            <div class="wk-row"><span class="lbl">W20</span><div class="wk-bar"><i class="reg" style="width:78%"></i><i class="ot" style="left:78%;width:18%"></i><i class="nt" style="left:96%;width:8%"></i><div class="limit" style="left:100%"></div></div><span class="v" style="color:var(--red)">54.2</span></div>
+            <div class="wk-row"><span class="lbl">W21</span><div class="wk-bar" style="opacity:.5"><i class="reg" style="width:40%"></i><div class="limit" style="left:100%"></div></div><span class="v" style="color:var(--text-3)">22.0</span></div>
+            <div style="font-family:var(--mono);font-size:10px;color:var(--text-3);margin-top:10px;letter-spacing:0.04em;line-height:1.6"><span style="color:var(--red)">W20 +2.2h 초과 위험</span> · 자동 알림 전송됨</div>
+          </div>
+
+          <h4 style="margin-top:20px">근거</h4>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-2);line-height:1.9">
+            근기법 §53 · 주 52시간<br>근기법 §56 · 가산수당<br><span style="color:var(--text-3)">5월 기준 잔여 23.8h</span>
+          </div>
+        </div>
+
+        <div class="cal-main">
+          <div class="cal-h">
+            <div class="t"><em>김지원</em> · 2026 . 05</div>
+            <div class="nav"><button>‹</button><button>›</button><button class="btn sm" style="margin-left:8px">오늘</button></div>
+          </div>
+          <div class="cal-dow"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
+          <div class="cal-days" id="calDays"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VIEW: LEAVE (M05) ============ -->
+    <section class="view" data-view="leave">
+      <div class="page-head">
+        <div class="l">
+          <div class="eyebrow"><b>M05</b>연차 · 근기법 §60 / §61</div>
+          <h1 class="page-h">연차 <em>잔여.</em></h1>
+          <p class="page-sub">근속별 자동 발생·이월·촉진 통보까지 한 화면에서.</p>
+        </div>
+        <div class="period-tabs"><button class="on">2026</button><button>2025</button><button>2024</button></div>
+      </div>
+
+      <div class="lv-top">
+        <div class="lv-cell">
+          <h4>전사 · 잔여 분포</h4>
+          <div class="lv-bar-row"><div class="nm">김지원</div><div class="bar"><i style="width:80%"></i></div><div class="v">12 / 15</div></div>
+          <div class="lv-bar-row"><div class="nm">박서연</div><div class="bar"><i style="width:53%"></i></div><div class="v">8 / 15</div></div>
+          <div class="lv-bar-row"><div class="nm">이민준</div><div class="bar"><i class="danger" style="width:17%"></i></div><div class="v">2 / 12</div></div>
+          <div class="lv-bar-row"><div class="nm">최유진</div><div class="bar"><i class="warn" style="width:30%"></i></div><div class="v">3 / 10</div></div>
+          <div class="lv-bar-row"><div class="nm">한도윤</div><div class="bar"><i class="warn" style="width:36%"></i></div><div class="v">5 / 14</div></div>
+          <div class="lv-bar-row"><div class="nm">송지아</div><div class="bar"><i style="width:67%"></i></div><div class="v">10 / 15</div></div>
+          <div class="lv-bar-row"><div class="nm">정현우</div><div class="bar"><i style="width:75%"></i></div><div class="v">9 / 12</div></div>
+          <div class="lv-bar-row"><div class="nm">윤채린</div><div class="bar"><i style="width:64%"></i></div><div class="v">7 / 11</div></div>
+        </div>
+        <div class="lv-cell">
+          <h4>본인 · 잔여</h4>
+          <div class="lv-big">11<em>일</em><small>총 15 · 사용 4 · 발생 §60 ①</small></div>
+          <div style="margin-top:24px;display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--text-2);padding:8px 0;border-bottom:1px dashed var(--line)"><span>이월</span><b style="color:var(--text-1);font-weight:400">2일</b></div>
+            <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--text-2);padding:8px 0;border-bottom:1px dashed var(--line)"><span>발생</span><b style="color:var(--text-1);font-weight:400">15일</b></div>
+            <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--text-2);padding:8px 0"><span>소멸 예정</span><b style="color:var(--accent)">2026.12.31</b></div>
+          </div>
+        </div>
+        <div class="lv-cell">
+          <h4>촉진 통보 대상 · §61</h4>
+          <div class="lv-big danger">3<em>명</em><small>30일 전 자동 통보 필요</small></div>
+          <div style="margin-top:24px;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px dashed var(--line)"><span>박서연</span><span style="font-family:var(--mono);color:var(--accent)">8일 미사용</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px dashed var(--line)"><span>정현우</span><span style="font-family:var(--mono);color:var(--accent)">9일 미사용</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0"><span>송지아</span><span style="font-family:var(--mono);color:var(--accent)">10일 미사용</span></div>
+            <button class="btn btn-primary" style="margin-top:14px;width:100%;justify-content:center">자동 이메일 발송 →</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-rule"><span class="l"><b>02</b>신규 신청</span><span class="line"></span></div>
+      <div class="lv-req-form">
+        <div><label>신청자</label><select><option>김지원</option><option>박서연</option></select></div>
+        <div><label>시작일</label><input type="date" value="2026-05-20"></div>
+        <div><label>종료일</label><input type="date" value="2026-05-21"></div>
+        <div><button class="btn btn-primary">신청 ↵</button></div>
+      </div>
+
+      <table class="tbl">
+        <thead><tr><th>신청자</th><th>유형</th><th>기간</th><th>일수</th><th>사유</th><th>상태</th><th>승인</th></tr></thead>
+        <tbody>
+          <tr><td>이민준</td><td><span class="tag">연차</span></td><td>05.20 ~ 05.21</td><td class="n">2</td><td>개인 사정</td><td><span class="chip pend"><i></i>검토</span></td><td><span class="who" style="font-family:var(--mono);color:var(--text-3)">남윤서 대기</span></td></tr>
+          <tr><td>최유진</td><td><span class="tag">반차</span></td><td>05.07 오후</td><td class="n">0.5</td><td>병원 진료</td><td><span class="chip ok"><i></i>완료</span></td><td><span style="font-family:var(--mono);color:var(--text-3)">05.06 승인</span></td></tr>
+          <tr><td>한도윤</td><td><span class="tag travel">출장연계</span></td><td>05.13 ~ 05.14</td><td class="n">2</td><td>부산 거래처</td><td><span class="chip ok"><i></i>완료</span></td><td><span style="font-family:var(--mono);color:var(--text-3)">05.10 승인</span></td></tr>
+          <tr><td>강민서</td><td><span class="tag">연차</span></td><td>04.29 ~ 05.02</td><td class="n">3</td><td>가족 행사</td><td><span class="chip ok"><i></i>완료</span></td><td><span style="font-family:var(--mono);color:var(--text-3)">04.22 승인</span></td></tr>
+          <tr><td>박서연</td><td><span class="tag" style="color:var(--red);border-color:rgba(224,107,95,0.35)">반려</span></td><td>05.15</td><td class="n">1</td><td>—</td><td><span class="chip rej"><i></i>반려</span></td><td><span style="font-family:var(--mono);color:var(--text-3)">사유 미기재</span></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ============ VIEW: EXPENSES (M06) ============ -->
+    <section class="view" data-view="expenses">
+      <div class="page-head">
+        <div class="l">
+          <div class="eyebrow"><b>M06</b>지출 · OCR 자동 분류</div>
+          <h1 class="page-h">지출 <em>장부.</em></h1>
+          <p class="page-sub">법인카드·영수증·세금계산서까지 한 곳에서. Gemini Vision으로 99%대 정확도.</p>
+        </div>
+        <div style="display:flex;gap:8px"><button class="btn" onclick="openExpense()">영수증 업로드</button><button class="btn btn-primary">지출 결의 상신</button></div>
+      </div>
+
+      <div class="exp-summary">
+        <div><div class="l">MTD 합계</div><div class="v">₩12.48<small>M</small></div></div>
+        <div><div class="l">건수</div><div class="v">150<small>건</small></div></div>
+        <div><div class="l">미결재</div><div class="v warn">3<small>건</small></div></div>
+        <div><div class="l">VAT 매입</div><div class="v">₩1.13<small>M</small></div></div>
+      </div>
+
+      <div class="section-rule"><span class="l"><b>01</b>카테고리별</span><span class="line"></span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-bottom:32px">
+        <div>
+          <div class="exp-cat-row"><div class="nm">SaaS</div><div class="bar"><i style="width:96%"></i></div><div class="v">₩4.20M</div><div class="pct">33.6%</div></div>
+          <div class="exp-cat-row"><div class="nm">임대료</div><div class="bar"><i style="width:80%"></i></div><div class="v">₩3.50M</div><div class="pct">28.0%</div></div>
+          <div class="exp-cat-row"><div class="nm">접대비</div><div class="bar"><i style="width:28%"></i></div><div class="v">₩1.20M</div><div class="pct">9.6%</div></div>
+          <div class="exp-cat-row"><div class="nm">식대</div><div class="bar"><i style="width:21%"></i></div><div class="v">₩0.90M</div><div class="pct">7.2%</div></div>
+        </div>
+        <div>
+          <div class="exp-cat-row"><div class="nm">출장</div><div class="bar"><i style="width:18%"></i></div><div class="v">₩0.78M</div><div class="pct">6.3%</div></div>
+          <div class="exp-cat-row"><div class="nm">장비</div><div class="bar"><i style="width:16%"></i></div><div class="v">₩0.68M</div><div class="pct">5.4%</div></div>
+          <div class="exp-cat-row"><div class="nm">통신</div><div class="bar"><i style="width:10%"></i></div><div class="v">₩0.42M</div><div class="pct">3.4%</div></div>
+          <div class="exp-cat-row"><div class="nm">기타</div><div class="bar"><i style="width:18%"></i></div><div class="v">₩0.80M</div><div class="pct">6.5%</div></div>
+        </div>
+      </div>
+
+      <div class="section-rule"><span class="l"><b>02</b>거래 내역</span><span class="line"></span></div>
+      <table class="tbl">
+        <thead><tr><th>일자</th><th>거래처</th><th>카테고리</th><th>금액</th><th>VAT</th><th>증빙</th><th>결재</th></tr></thead>
+        <tbody>
+          <tr><td>05.11 09:14</td><td>Amazon Web Services</td><td><span class="tag saas">SaaS</span></td><td class="n">₩520,000</td><td class="n">₩47,272</td><td><span class="chip ok"><i></i>세금계산서</span></td><td><span class="chip pend"><i></i>2/3</span></td></tr>
+          <tr><td>05.10 14:22</td><td>스타벅스 강남</td><td><span class="tag meal">접대비</span></td><td class="n">₩45,000</td><td class="n">₩4,091</td><td><span class="chip ok"><i></i>카드매출</span></td><td><span class="chip pend"><i></i>2/3</span></td></tr>
+          <tr><td>05.09 11:42</td><td>현대카드 법인</td><td><span class="tag meal">접대비</span></td><td class="n">₩142,500</td><td class="n">₩12,954</td><td><span class="chip info"><i></i>OCR</span></td><td><span class="chip pend"><i></i>1/3</span></td></tr>
+          <tr><td>05.09 09:00</td><td>SK텔레콤</td><td><span class="tag">통신</span></td><td class="n">₩384,200</td><td class="n">₩34,927</td><td><span class="chip ok"><i></i>세금계산서</span></td><td><span class="chip ok"><i></i>완료</span></td></tr>
+          <tr><td>05.08 17:30</td><td>김포공항 주차</td><td><span class="tag travel">출장</span></td><td class="n">₩18,000</td><td class="n">₩1,636</td><td><span class="chip ok"><i></i>카드매출</span></td><td><span class="chip ok"><i></i>완료</span></td></tr>
+          <tr><td>05.07 12:08</td><td>본죽 강남</td><td><span class="tag meal">식대</span></td><td class="n">₩28,000</td><td class="n">₩2,545</td><td><span class="chip info"><i></i>OCR</span></td><td><span class="chip ok"><i></i>완료</span></td></tr>
+          <tr><td>05.06 10:00</td><td>한국전력 (5월)</td><td><span class="tag rent">임대료</span></td><td class="n">₩3,500,000</td><td class="n">₩318,181</td><td><span class="chip ok"><i></i>세금계산서</span></td><td><span class="chip ok"><i></i>완료</span></td></tr>
+          <tr><td>05.05 어제</td><td>Notion Labs</td><td><span class="tag saas">SaaS</span></td><td class="n">₩96,000</td><td class="n">₩8,727</td><td><span class="chip ok"><i></i>매출전표</span></td><td><span class="chip ok"><i></i>완료</span></td></tr>
+          <tr><td>05.04</td><td>당근 마이비즈</td><td><span class="tag">기타</span></td><td class="n">₩200,000</td><td class="n">₩18,181</td><td><span class="chip ok"><i></i>세금계산서</span></td><td><span class="chip ok"><i></i>완료</span></td></tr>
+          <tr><td>05.03</td><td>마우스컴퓨터</td><td><span class="tag equip">장비</span></td><td class="n">₩680,000</td><td class="n">₩61,818</td><td><span class="chip ok"><i></i>세금계산서</span></td><td><span class="chip rej"><i></i>반려</span></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ============ VIEW: VENDORS (M07) ============ -->
+    <section class="view" data-view="vendors">
+      <div class="page-head">
+        <div class="l">
+          <div class="eyebrow"><b>M07</b>거래처 · 매입처 마스터</div>
+          <h1 class="page-h">거래처 <em>24.</em></h1>
+          <p class="page-sub">사업자번호·계좌·세금계산서 발행처를 일원화. 매월 자동 대사.</p>
+        </div>
+        <div style="display:flex;gap:8px"><button class="btn">CSV 내보내기</button><button class="btn btn-primary">+ 신규 거래처</button></div>
+      </div>
+
+      <div class="vendor-grid">
+        <div class="vendor-card">
+          <div class="h"><div class="nm">Amazon Web Services<small>cloud · SaaS</small></div><span class="chip ok"><i></i>활성</span></div>
+          <div class="biz"><b>사업자</b>120-81-12345 &nbsp; <b>대표</b>Tracy Daniels</div>
+          <div class="row"><div>월 평균<b class="acc">₩4.2M</b></div><div>YTD<b>₩18.6M</b></div><div>최근 결제<b style="font-family:var(--mono);font-size:13px">05.05</b></div><div>주기<b style="font-family:var(--mono);font-size:13px">월 1회</b></div></div>
+        </div>
+        <div class="vendor-card">
+          <div class="h"><div class="nm">스타벅스 코리아<small>F&B · 접대비</small></div><span class="chip ok"><i></i>활성</span></div>
+          <div class="biz"><b>사업자</b>201-86-72085 &nbsp; <b>법인카드 매입처</b></div>
+          <div class="row"><div>월 평균<b class="acc">₩240K</b></div><div>YTD<b>₩1.08M</b></div><div>최근 결제<b style="font-family:var(--mono);font-size:13px">05.10</b></div><div>방문 횟수<b style="font-family:var(--mono);font-size:13px">14회</b></div></div>
+        </div>
+        <div class="vendor-card">
+          <div class="h"><div class="nm">SK텔레콤<small>통신 · 인프라</small></div><span class="chip ok"><i></i>활성</span></div>
+          <div class="biz"><b>사업자</b>104-81-37193 &nbsp; <b>대표</b>김영섭</div>
+          <div class="row"><div>월 평균<b class="acc">₩384K</b></div><div>YTD<b>₩1.92M</b></div><div>최근 결제<b style="font-family:var(--mono);font-size:13px">05.09</b></div><div>주기<b style="font-family:var(--mono);font-size:13px">월 1회</b></div></div>
+        </div>
+        <div class="vendor-card">
+          <div class="h"><div class="nm">Notion Labs<small>productivity · SaaS</small></div><span class="chip ok"><i></i>활성</span></div>
+          <div class="biz"><b>VAT-ID</b>EU372054624 &nbsp; <b>해외 직판</b></div>
+          <div class="row"><div>월 평균<b class="acc">₩96K</b></div><div>YTD<b>₩480K</b></div><div>최근 결제<b style="font-family:var(--mono);font-size:13px">05.05</b></div><div>좌석<b style="font-family:var(--mono);font-size:13px">15</b></div></div>
+        </div>
+        <div class="vendor-card">
+          <div class="h"><div class="nm">현대카드 (법인)<small>금융 · 카드</small></div><span class="chip ok"><i></i>활성</span></div>
+          <div class="biz"><b>사업자</b>104-81-37196 &nbsp; <b>4445-•••-1289</b></div>
+          <div class="row"><div>한도<b>₩50M</b></div><div>MTD 사용<b class="acc">₩7.4M</b></div><div>결제일<b style="font-family:var(--mono);font-size:13px">매월 25일</b></div><div>실적<b style="font-family:var(--mono);font-size:13px">15%</b></div></div>
+        </div>
+        <div class="vendor-card">
+          <div class="h"><div class="nm">우리은행<small>금융 · 주거래</small></div><span class="chip ok"><i></i>활성</span></div>
+          <div class="biz"><b>법인계좌</b>1005-•••-32847 &nbsp; <b>FX</b>USD/KRW</div>
+          <div class="row"><div>잔액<b class="acc">₩148M</b></div><div>월 거래<b>312건</b></div><div>실시간 동기화<b style="font-family:var(--mono);font-size:13px;color:var(--green)">● 활성</b></div><div>API<b style="font-family:var(--mono);font-size:13px">openbanking</b></div></div>
+        </div>
+        <div class="vendor-card">
+          <div class="h"><div class="nm">위워크 강남<small>임대 · 사무공간</small></div><span class="chip ok"><i></i>활성</span></div>
+          <div class="biz"><b>사업자</b>120-87-65487 &nbsp; <b>2년 계약</b></div>
+          <div class="row"><div>월 임대료<b class="acc">₩3.5M</b></div><div>보증금<b>₩35M</b></div><div>만료일<b style="font-family:var(--mono);font-size:13px">2027.02.28</b></div><div>좌석<b style="font-family:var(--mono);font-size:13px">18</b></div></div>
+        </div>
+        <div class="vendor-card">
+          <div class="h"><div class="nm">마우스컴퓨터<small>장비 · IT</small></div><span class="chip pend"><i></i>대기</span></div>
+          <div class="biz"><b>사업자</b>220-81-71920 &nbsp; <b>세금계산서 처</b></div>
+          <div class="row"><div>YTD<b class="acc">₩4.2M</b></div><div>건수<b>6건</b></div><div>최근<b style="font-family:var(--mono);font-size:13px">05.03</b></div><div>여신<b style="font-family:var(--mono);font-size:13px">30일</b></div></div>
+        </div>
+        <div class="vendor-card">
+          <div class="h"><div class="nm">법무법인 광장<small>법무 · 자문</small></div><span class="chip ok"><i></i>활성</span></div>
+          <div class="biz"><b>사업자</b>104-86-15123 &nbsp; <b>월 자문료</b></div>
+          <div class="row"><div>월 자문료<b class="acc">₩1.2M</b></div><div>YTD<b>₩6.0M</b></div><div>담당<b style="font-family:var(--mono);font-size:13px">박변호사</b></div><div>계약<b style="font-family:var(--mono);font-size:13px">2026.12까지</b></div></div>
+        </div>
+        <div class="vendor-card">
+          <div class="h"><div class="nm">Google Workspace<small>productivity · SaaS</small></div><span class="chip ok"><i></i>활성</span></div>
+          <div class="biz"><b>VAT-ID</b>IE6388047V &nbsp; <b>해외 직판</b></div>
+          <div class="row"><div>월 평균<b class="acc">₩228K</b></div><div>YTD<b>₩1.14M</b></div><div>최근 결제<b style="font-family:var(--mono);font-size:13px">05.05</b></div><div>좌석<b style="font-family:var(--mono);font-size:13px">18</b></div></div>
+        </div>
+        <div class="vendor-card">
+          <div class="h"><div class="nm">GitHub Enterprise<small>devtool · SaaS</small></div><span class="chip ok"><i></i>활성</span></div>
+          <div class="biz"><b>VAT-ID</b>EU826044832 &nbsp; <b>해외 직판</b></div>
+          <div class="row"><div>월 평균<b class="acc">₩396K</b></div><div>YTD<b>₩1.98M</b></div><div>최근 결제<b style="font-family:var(--mono);font-size:13px">05.05</b></div><div>좌석<b style="font-family:var(--mono);font-size:13px">12</b></div></div>
+        </div>
+        <div class="vendor-card">
+          <div class="h"><div class="nm">삼정회계법인<small>회계 · 감사</small></div><span class="chip ok"><i></i>활성</span></div>
+          <div class="biz"><b>사업자</b>104-81-71193 &nbsp; <b>분기 자문</b></div>
+          <div class="row"><div>분기 자문료<b class="acc">₩2.4M</b></div><div>YTD<b>₩4.8M</b></div><div>담당<b style="font-family:var(--mono);font-size:13px">최회계사</b></div><div>다음 미팅<b style="font-family:var(--mono);font-size:13px">06.18</b></div></div>
+        </div>
+        <div class="vendor-card">
+          <div class="h"><div class="nm">카카오스튜디오<small>고객사 · 매출처</small></div><span class="chip pend"><i></i>30일 초과</span></div>
+          <div class="biz"><b>사업자</b>120-81-47521 &nbsp; <b>매출처 · AR</b></div>
+          <div class="row"><div>미수금<b class="acc" style="color:var(--red)">₩2.4M</b></div><div>YTD 매출<b>₩28.8M</b></div><div>마지막 입금<b style="font-family:var(--mono);font-size:13px">04.10</b></div><div>D+32<b style="font-family:var(--mono);font-size:13px;color:var(--red)">독촉 필요</b></div></div>
+        </div>
+        <div class="vendor-card">
+          <div class="h"><div class="nm">네이버클라우드<small>cloud · 부수 SaaS</small></div><span class="chip ok"><i></i>활성</span></div>
+          <div class="biz"><b>사업자</b>220-81-62517 &nbsp; <b>월 정기 결제</b></div>
+          <div class="row"><div>월 평균<b class="acc">₩148K</b></div><div>YTD<b>₩740K</b></div><div>최근 결제<b style="font-family:var(--mono);font-size:13px">05.06</b></div><div>주기<b style="font-family:var(--mono);font-size:13px">월 1회</b></div></div>
+        </div>
+        <div class="vendor-card">
+          <div class="h"><div class="nm">Slack Technologies<small>productivity · SaaS</small></div><span class="chip ok"><i></i>활성</span></div>
+          <div class="biz"><b>VAT-ID</b>IE3336494EH &nbsp; <b>해외 직판</b></div>
+          <div class="row"><div>월 평균<b class="acc">₩168K</b></div><div>YTD<b>₩840K</b></div><div>최근 결제<b style="font-family:var(--mono);font-size:13px">05.05</b></div><div>좌석<b style="font-family:var(--mono);font-size:13px">16</b></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VIEW: ASSETS (M08) ============ -->
+    <section class="view" data-view="assets">
+      <div class="page-head">
+        <div class="l">
+          <div class="eyebrow"><b>M08</b>고정자산 · 감가상각 자동</div>
+          <h1 class="page-h">자산 <em>대장.</em></h1>
+          <p class="page-sub">취득 → 감가 → 폐기까지. 매월 1일 정액법으로 자동 분개.</p>
+        </div>
+        <div style="display:flex;gap:8px"><button class="btn">감가상각표</button><button class="btn btn-primary">+ 자산 등록</button></div>
+      </div>
+
+      <div class="assets-kpis">
+        <div><div class="l">총 자산 (취득가)</div><div class="v">₩<em>78.4</em>M</div></div>
+        <div><div class="l">장부가 (현재)</div><div class="v">₩<em>48.2</em>M</div></div>
+        <div><div class="l">월 감가상각</div><div class="v">₩<em>1.96</em>M</div></div>
+        <div><div class="l">등록 자산</div><div class="v"><em>34</em>건</div></div>
+      </div>
+
+      <table class="tbl">
+        <thead><tr><th>분류</th><th>자산명</th><th>취득일</th><th>취득가</th><th>내용연수</th><th>감가상각</th><th>장부가</th><th>사용자</th></tr></thead>
+        <tbody>
+          <tr><td><span class="tag equip">노트북</span></td><td>MacBook Pro 16" M3 Max</td><td>2024.03.12</td><td class="n">₩5,890,000</td><td class="n">4년</td><td><span class="depr-bar"><i style="width:54%"></i></span><span style="font-family:var(--mono)">54%</span></td><td class="n">₩2,710,000</td><td>김지원</td></tr>
+          <tr><td><span class="tag equip">노트북</span></td><td>MacBook Pro 14" M3</td><td>2024.06.20</td><td class="n">₩3,290,000</td><td class="n">4년</td><td><span class="depr-bar"><i style="width:46%"></i></span><span style="font-family:var(--mono)">46%</span></td><td class="n">₩1,776,000</td><td>박서연</td></tr>
+          <tr><td><span class="tag equip">모니터</span></td><td>LG UltraFine 5K</td><td>2024.03.12</td><td class="n">₩1,650,000</td><td class="n">5년</td><td><span class="depr-bar"><i style="width:43%"></i></span><span style="font-family:var(--mono)">43%</span></td><td class="n">₩940,500</td><td>김지원</td></tr>
+          <tr><td><span class="tag">가구</span></td><td>허먼밀러 에어론 ×8</td><td>2023.11.04</td><td class="n">₩18,400,000</td><td class="n">8년</td><td><span class="depr-bar"><i style="width:31%"></i></span><span style="font-family:var(--mono)">31%</span></td><td class="n">₩12,696,000</td><td>공용</td></tr>
+          <tr><td><span class="tag travel">차량</span></td><td>현대 아이오닉 5 (법인)</td><td>2024.01.15</td><td class="n">₩52,800,000</td><td class="n">5년</td><td><span class="depr-bar"><i style="width:47%"></i></span><span style="font-family:var(--mono)">47%</span></td><td class="n">₩27,984,000</td><td>법인 공용</td></tr>
+          <tr><td><span class="tag saas">SW</span></td><td>Adobe Creative Cloud ×3</td><td>2025.01.01</td><td class="n">₩2,160,000</td><td class="n">1년</td><td><span class="depr-bar"><i style="width:42%"></i></span><span style="font-family:var(--mono)">42%</span></td><td class="n">₩1,260,000</td><td>디자인팀</td></tr>
+          <tr><td><span class="tag equip">노트북</span></td><td>ThinkPad X1 Carbon</td><td>2025.04.02</td><td class="n">₩2,890,000</td><td class="n">4년</td><td><span class="depr-bar"><i style="width:27%"></i></span><span style="font-family:var(--mono)">27%</span></td><td class="n">₩2,109,700</td><td>한도윤</td></tr>
+          <tr><td><span class="tag">가구</span></td><td>스탠딩 데스크 ×15</td><td>2023.11.04</td><td class="n">₩9,000,000</td><td class="n">8년</td><td><span class="depr-bar"><i style="width:31%"></i></span><span style="font-family:var(--mono)">31%</span></td><td class="n">₩6,210,000</td><td>공용</td></tr>
+          <tr><td><span class="tag equip">모니터</span></td><td>Dell U3223QE 32" 4K ×4</td><td>2024.06.20</td><td class="n">₩4,400,000</td><td class="n">5년</td><td><span class="depr-bar"><i style="width:38%"></i></span><span style="font-family:var(--mono)">38%</span></td><td class="n">₩2,728,000</td><td>개발팀</td></tr>
+          <tr><td><span class="tag equip">노트북</span></td><td>MacBook Air 15" M3</td><td>2025.02.14</td><td class="n">₩2,690,000</td><td class="n">4년</td><td><span class="depr-bar"><i style="width:31%"></i></span><span style="font-family:var(--mono)">31%</span></td><td class="n">₩1,856,100</td><td>최유진</td></tr>
+          <tr><td><span class="tag equip">서버</span></td><td>NAS Synology DS1823+</td><td>2024.09.12</td><td class="n">₩2,800,000</td><td class="n">5년</td><td><span class="depr-bar"><i style="width:33%"></i></span><span style="font-family:var(--mono)">33%</span></td><td class="n">₩1,876,000</td><td>인프라</td></tr>
+          <tr><td><span class="tag">가구</span></td><td>회의실 테이블 (6인)</td><td>2023.11.04</td><td class="n">₩4,200,000</td><td class="n">8년</td><td><span class="depr-bar"><i style="width:31%"></i></span><span style="font-family:var(--mono)">31%</span></td><td class="n">₩2,898,000</td><td>공용</td></tr>
+          <tr><td><span class="tag equip">화상회의</span></td><td>Logitech Rally Bar</td><td>2024.04.18</td><td class="n">₩4,890,000</td><td class="n">5년</td><td><span class="depr-bar"><i style="width:42%"></i></span><span style="font-family:var(--mono)">42%</span></td><td class="n">₩2,836,200</td><td>회의실 A</td></tr>
+          <tr><td><span class="tag saas">SW</span></td><td>JetBrains All Products ×6</td><td>2025.01.01</td><td class="n">₩2,940,000</td><td class="n">1년</td><td><span class="depr-bar"><i style="width:42%"></i></span><span style="font-family:var(--mono)">42%</span></td><td class="n">₩1,705,000</td><td>개발팀</td></tr>
+          <tr><td><span class="tag equip">노트북</span></td><td>MacBook Pro 14" M3 ×2</td><td>2024.11.20</td><td class="n">₩6,580,000</td><td class="n">4년</td><td><span class="depr-bar"><i style="width:38%"></i></span><span style="font-family:var(--mono)">38%</span></td><td class="n">₩4,079,600</td><td>이민준·정현우</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ============ VIEW: MONTH-END CLOSE (M09) ============ -->
+    <section class="view" data-view="close">
+      <div class="page-head">
+        <div class="l">
+          <div class="eyebrow"><b>M09</b>월말 결산 · 4단계 체크리스트</div>
+          <h1 class="page-h">월말 <em>결산.</em></h1>
+          <p class="page-sub">분개 → 마감 → 신고 → 보고. 미완 항목은 다음 달 첫 영업일 D-2에 자동 알림.</p>
+        </div>
+        <div class="period-tabs"><button class="on">2026.05</button><button>04 ✓</button><button>03 ✓</button></div>
+      </div>
+
+      <div class="close-grid">
+        <div class="close-side">
+          <h4 style="font-family:var(--mono);font-size:10px;letter-spacing:0.15em;color:var(--text-3);text-transform:uppercase;text-align:center">진행률 · 5월</h4>
+          <div class="close-ring">
+            <svg viewBox="0 0 200 200">
+              <circle cx="100" cy="100" r="84" fill="none" stroke="var(--bg-2)" stroke-width="8"/>
+              <circle cx="100" cy="100" r="84" fill="none" stroke="var(--accent)" stroke-width="8" stroke-dasharray="370 528" stroke-linecap="round"/>
+            </svg>
+            <div class="pct"><b>73<span style="font-size:24px;color:var(--text-3)">%</span></b><small>17 / 23 완료</small></div>
+          </div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-2);line-height:1.9;padding-top:18px;border-top:1px dashed var(--line)">
+            <div style="display:flex;justify-content:space-between;padding:6px 0"><span>분개</span><span style="color:var(--green)">7 / 7 ✓</span></div>
+            <div style="display:flex;justify-content:space-between;padding:6px 0"><span>마감</span><span style="color:var(--accent)">6 / 8</span></div>
+            <div style="display:flex;justify-content:space-between;padding:6px 0"><span>세무 신고</span><span style="color:var(--text-3)">3 / 5</span></div>
+            <div style="display:flex;justify-content:space-between;padding:6px 0"><span>보고</span><span style="color:var(--text-3)">1 / 3</span></div>
+          </div>
+          <div style="margin-top:22px;padding:12px 14px;border:1px solid var(--accent-soft);background:rgba(245,194,107,0.05);font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:0.06em;line-height:1.6">
+            <b>D-5</b> · 4대보험 EDI 마감<br><span style="color:var(--text-2);text-transform:none">2026.05.16 · 자동 CSV 생성됨</span>
+          </div>
+        </div>
+
+        <div class="close-main">
+          <div class="close-section">
+            <div class="close-section-h"><span><b>01</b>분개 (JOURNAL ENTRY)</span><span style="color:var(--green)">7 / 7 완료</span></div>
+            <div class="close-item done"><span class="ck">✓</span><div class="t">5월 매출 분개<small>SaaS 구독 14건 · ₩42.8M</small></div><span class="law">FAS-606</span><span class="who">남윤서 · 05.10</span></div>
+            <div class="close-item done"><span class="ck">✓</span><div class="t">매입 분개 (150건)<small>법인카드·세금계산서·현금영수증</small></div><span class="law">VAT</span><span class="who">남윤서 · 05.10</span></div>
+            <div class="close-item done"><span class="ck">✓</span><div class="t">감가상각 자동 분개<small>고정자산 34건 · ₩1.96M</small></div><span class="law">정액법</span><span class="who">시스템 · 05.01</span></div>
+            <div class="close-item done"><span class="ck">✓</span><div class="t">급여 분개<small>15명 · 지급일 05.25 예정</small></div><span class="law">근기법 §43</span><span class="who">남윤서 · 05.09</span></div>
+          </div>
+
+          <div class="close-section">
+            <div class="close-section-h"><span><b>02</b>마감 (CLOSE)</span><span style="color:var(--accent)">6 / 8 진행</span></div>
+            <div class="close-item done"><span class="ck">✓</span><div class="t">은행 대사<small>우리은행 312건 · 자동 매칭 99.2%</small></div><span class="law">openbanking</span><span class="who">시스템 · 05.10</span></div>
+            <div class="close-item done"><span class="ck">✓</span><div class="t">법인카드 대사<small>현대카드 매입 ₩7.4M · 미매칭 0</small></div><span class="law">카드 API</span><span class="who">시스템 · 05.10</span></div>
+            <div class="close-item"><span class="ck"></span><div class="t">미수금 · 연령분석 (AR Aging)<small>30일 초과 1건 · ₩2.4M · 카카오스튜디오</small></div><span class="law" style="color:var(--accent)">D-3</span><span class="who">대기</span></div>
+            <div class="close-item"><span class="ck"></span><div class="t">재고자산 실사<small>장비 34건 · 위치·사용자 확인</small></div><span class="law" style="color:var(--accent)">D-7</span><span class="who">대기</span></div>
+          </div>
+
+          <div class="close-section">
+            <div class="close-section-h"><span><b>03</b>세무 신고 (TAX)</span><span style="color:var(--text-3)">3 / 5 진행</span></div>
+            <div class="close-item done"><span class="ck">✓</span><div class="t">원천세 신고 (간이세액표)<small>15명 · ₩4.2M · 홈택스 전송</small></div><span class="law">소득세법</span><span class="who">남윤서 · 05.10</span></div>
+            <div class="close-item"><span class="ck"></span><div class="t">4대보험 EDI CSV 생성<small>국민·건강·고용·산재 · 자동 생성됨</small></div><span class="law" style="color:var(--accent)">D-5</span><span class="who">대기</span></div>
+            <div class="close-item"><span class="ck"></span><div class="t">부가가치세 예정신고 (2분기)<small>매출 ₩128M · 매입 ₩68M · 환급 0</small></div><span class="law">VAT §48</span><span class="who">D-44</span></div>
+          </div>
+
+          <div class="close-section">
+            <div class="close-section-h"><span><b>04</b>보고 (REPORT)</span><span style="color:var(--text-3)">1 / 3 진행</span></div>
+            <div class="close-item done"><span class="ck">✓</span><div class="t">월간 인건비 리포트 발송<small>대표·CFO 메일 · 자동 PDF</small></div><span class="law">자동</span><span class="who">시스템 · 05.10</span></div>
+            <div class="close-item"><span class="ck"></span><div class="t">손익계산서 작성 (월간)<small>매출 vs 비용 · 영업이익 계산</small></div><span class="law" style="color:var(--accent)">D-10</span><span class="who">대기</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VIEW: SEVERANCE (M13) ============ -->
+    <section class="view" data-view="severance">
+      <div class="page-head">
+        <div class="l">
+          <div class="eyebrow"><b>M13</b>퇴직급여 · 근로자퇴직급여보장법</div>
+          <h1 class="page-h">퇴직급여 <em>산정.</em></h1>
+          <p class="page-sub">평균임금 × 30일 × (재직일수 / 365). DC형·DB형 자동 안내.</p>
+        </div>
+      </div>
+
+      <div class="sev-grid">
+        <div class="sev-emp-list">
+          <div class="close-section-h"><span><b>EMP</b>대상 직원 (재직 1년 이상)</span><span>10명</span></div>
+          <div class="sev-emp sel"><div class="avatar av">김</div><div class="nm">김지원<small>DEV · 시니어 · 2022.03 입사</small></div><div class="yr">4.2년</div><div class="est">₩28.4M</div></div>
+          <div class="sev-emp"><div class="avatar av">박</div><div class="nm">박서연<small>DEV · 시니어 · 2022.07 입사</small></div><div class="yr">3.8년</div><div class="est">₩24.6M</div></div>
+          <div class="sev-emp"><div class="avatar av">이</div><div class="nm">이민준<small>DEV · 미드 · 2023.05 입사</small></div><div class="yr">3.0년</div><div class="est">₩15.2M</div></div>
+          <div class="sev-emp"><div class="avatar av">최</div><div class="nm">최유진<small>DSGN · 주니어 · 2024.02 입사</small></div><div class="yr">2.3년</div><div class="est">₩8.4M</div></div>
+          <div class="sev-emp"><div class="avatar av">한</div><div class="nm">한도윤<small>SALES · 시니어 · 2023.01 입사</small></div><div class="yr">3.3년</div><div class="est">₩19.8M</div></div>
+          <div class="sev-emp"><div class="avatar av">송</div><div class="nm">송지아<small>OPS · 매니저 · 2021.11 입사</small></div><div class="yr">4.5년</div><div class="est" style="color:var(--red)">₩22.7M *</div></div>
+          <div class="sev-emp"><div class="avatar av">정</div><div class="nm">정현우<small>DEV · 미드 · 2023.08 입사</small></div><div class="yr">2.7년</div><div class="est">₩13.5M</div></div>
+          <div class="sev-emp"><div class="avatar av">윤</div><div class="nm">윤채린<small>DSGN · 미드 · 2024.04 입사</small></div><div class="yr">2.1년</div><div class="est">₩9.2M</div></div>
+        </div>
+
+        <div class="sev-calc">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px"><div style="font-family:var(--serif);font-size:32px">김지원</div><span class="chip pend"><i></i>퇴직 시뮬</span></div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-3);letter-spacing:0.06em;margin-bottom:22px">EMP-001 · 개발팀 · 입사 2022.03.14 · 재직 1,520일</div>
+
+          <div class="sev-formula">
+            <b>퇴직금</b> = 평균임금 × 30일 × (재직일수 / 365)<br>
+            <span style="color:var(--text-3)">근로자퇴직급여보장법 §8 · 최종 3개월 임금 기준</span>
+          </div>
+
+          <div class="formula-viz">
+            <div class="fv-row">
+              <div class="lab">평균임금<b>192,311</b></div>
+              <div class="bar"><i style="width:100%"></i></div>
+              <div class="v">₩ / 일</div>
+            </div>
+            <div class="fv-op">×</div>
+            <div class="fv-row">
+              <div class="lab">30일<b>30</b></div>
+              <div class="bar"><i style="width:30%"></i></div>
+              <div class="v">고정</div>
+            </div>
+            <div class="fv-op">×</div>
+            <div class="fv-row">
+              <div class="lab">재직비율<b>4.16</b></div>
+              <div class="bar"><i class="dim" style="width:100%"></i><i style="width:83%"></i></div>
+              <div class="v">1520 / 365</div>
+            </div>
+          </div>
+
+          <div class="sev-row"><div class="l">최종 3개월 총임금<small>3·4·5월 합계 (상여 포함)</small></div><div class="v">₩17,692,668</div></div>
+          <div class="sev-row"><div class="l">최종 3개월 일수<small>92일</small></div><div class="v">92</div></div>
+          <div class="sev-row"><div class="l">평균임금 · 1일<small>17,692,668 ÷ 92</small></div><div class="v">₩192,311</div></div>
+          <div class="sev-row"><div class="l">통상임금 1일<small>비교용 · 더 큰 값 채택</small></div><div class="v" style="color:var(--text-3)">₩171,200</div></div>
+          <div class="sev-row"><div class="l">재직일수<small>2022.03.14 → 2026.05.11</small></div><div class="v">1,520</div></div>
+          <div class="sev-row"><div class="l">계산<small>192,311 × 30 × (1,520 / 365)</small></div><div class="v">192,311 × 124.93</div></div>
+
+          <div class="sev-total">
+            <div class="l">예상 퇴직금</div>
+            <div class="v">₩24,025,210</div>
+          </div>
+
+          <div style="margin-top:24px;display:flex;justify-content:space-between;align-items:center">
+            <div style="font-family:var(--mono);font-size:11px;color:var(--text-3);letter-spacing:0.06em;line-height:1.7">
+              <b style="color:var(--accent)">DC형</b> 가입 · 매월 1/12 적립 중<br>
+              <span>퇴직소득세 별도 · 약 ₩1.2M 예상</span>
+            </div>
+            <div style="display:flex;gap:8px"><button class="btn">DB ↔ DC 비교</button><button class="btn btn-primary">정산서 생성</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VIEW: YEAR-END TAX (M14) ============ -->
+    <section class="view" data-view="yearend">
+      <div class="page-head">
+        <div class="l">
+          <div class="eyebrow"><b>M14</b>연말정산 · 2025 귀속 · 2026년 2월 신고</div>
+          <h1 class="page-h">연말 <em>정산.</em></h1>
+          <p class="page-sub">국세청 간소화 자료 PDF 일괄 처리 · 13월의 월급 vs 토해내기 한눈에.</p>
+        </div>
+        <div class="period-tabs"><button class="on">2025 귀속</button><button>2024 ✓</button><button>2023 ✓</button></div>
+      </div>
+
+      <div class="ye-progress">
+        <div style="font-family:var(--mono);font-size:10px;letter-spacing:0.1em;color:var(--text-3);text-transform:uppercase;min-width:120px">진행 단계 · 3 / 5</div>
+        <div class="stage">
+          <i class="done"><span class="lb">자료수집 ✓</span></i>
+          <i class="done"><span class="lb">검토 ✓</span></i>
+          <i class="cur"><span class="lb">의견조회</span></i>
+          <i><span class="lb">홈택스 전송</span></i>
+          <i><span class="lb">정산</span></i>
+        </div>
+      </div>
+
+      <div class="exp-summary">
+        <div><div class="l">신고 대상</div><div class="v">15<small>명</small></div></div>
+        <div><div class="l">자료 수신</div><div class="v">12<small style="color:var(--green)">/ 15</small></div></div>
+        <div><div class="l">환급 예정</div><div class="v" style="color:var(--green);font-style:italic">₩8.2M</div></div>
+        <div><div class="l">추가 납부</div><div class="v" style="color:var(--red);font-style:italic">₩1.4M</div></div>
+      </div>
+
+      <div class="ye-dist">
+        <div class="ye-dist-h">
+          <h4>환급 · 추가납부 분포 · 15명</h4>
+          <div class="legend"><span><i style="background:var(--green)"></i>환급 9명 · 합계 +₩8.2M</span><span><i style="background:var(--red)"></i>추가납부 3명 · 합계 −₩1.4M</span></div>
+        </div>
+        <div class="ye-dist-bar">
+          <div class="axis"></div>
+          <div class="ye-tick r" style="left:88%"><div class="tip">한도윤 +₩1,911,600</div></div>
+          <div class="ye-tick r" style="left:73%"><div class="tip">김지원 +₩884,400</div></div>
+          <div class="ye-tick r" style="left:71%"><div class="tip">박서연 +₩791,600</div></div>
+          <div class="ye-tick r" style="left:67%"><div class="tip">강민서 +₩482,200</div></div>
+          <div class="ye-tick r" style="left:64%"><div class="tip">송지아 +₩333,800</div></div>
+          <div class="ye-tick r" style="left:62%"><div class="tip">이민준 +₩297,800</div></div>
+          <div class="ye-tick r" style="left:61%"><div class="tip">조태현 +₩231,600</div></div>
+          <div class="ye-tick r" style="left:58%"><div class="tip">임도현 +₩184,200</div></div>
+          <div class="ye-tick r" style="left:56%"><div class="tip">백은지 +₩140,400</div></div>
+          <div class="ye-tick o" style="left:46%"><div class="tip">최유진 −₩263,700</div></div>
+          <div class="ye-tick o" style="left:45%"><div class="tip">정현우 −₩259,200</div></div>
+          <div class="ye-tick o" style="left:39%"><div class="tip">윤채린 −₩448,400</div></div>
+        </div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-4);display:flex;justify-content:space-between;letter-spacing:0.04em"><span>−₩1M</span><span>−₩500K</span><span style="color:var(--text-3)">0</span><span>+₩1M</span><span>+₩2M</span></div>
+      </div>
+
+      <div class="section-rule"><span class="l"><b>01</b>직원별 정산 결과</span><span class="line"></span></div>
+      <table class="tbl ye-emp-tbl">
+        <thead><tr><th>직원</th><th>총급여</th><th>근로소득공제</th><th>인적공제</th><th>특별공제</th><th>결정세액</th><th>기납부세액</th><th>차이</th><th>자료</th></tr></thead>
+        <tbody>
+          <tr><td>김지원</td><td class="n">₩64,200,000</td><td class="n">₩12,030,000</td><td class="n">₩4,500,000</td><td class="n">₩6,820,000</td><td class="n">₩4,820,400</td><td class="n">₩5,704,800</td><td class="n refund">+₩884,400</td><td><span class="stat ok"><i class="dot"></i>완료</span></td></tr>
+          <tr><td>박서연</td><td class="n">₩58,400,000</td><td class="n">₩11,560,000</td><td class="n">₩4,500,000</td><td class="n">₩5,920,000</td><td class="n">₩4,220,800</td><td class="n">₩5,012,400</td><td class="n refund">+₩791,600</td><td><span class="stat ok"><i class="dot"></i>완료</span></td></tr>
+          <tr><td>이민준</td><td class="n">₩48,400,000</td><td class="n">₩10,560,000</td><td class="n">₩4,500,000</td><td class="n">₩2,820,000</td><td class="n">₩3,650,200</td><td class="n">₩3,948,000</td><td class="n refund">+₩297,800</td><td><span class="stat pend"><i class="dot"></i>의견 대기</span></td></tr>
+          <tr><td>최유진</td><td class="n">₩33,400,000</td><td class="n">₩9,040,000</td><td class="n">₩1,500,000</td><td class="n">₩2,180,000</td><td class="n">₩1,684,500</td><td class="n">₩1,420,800</td><td class="n owed">−₩263,700</td><td><span class="stat ok"><i class="dot"></i>완료</span></td></tr>
+          <tr><td>한도윤</td><td class="n">₩55,200,000</td><td class="n">₩11,240,000</td><td class="n">₩6,000,000</td><td class="n">₩7,440,000</td><td class="n">₩2,816,400</td><td class="n">₩4,728,000</td><td class="n refund">+₩1,911,600</td><td><span class="stat ok"><i class="dot"></i>완료</span></td></tr>
+          <tr><td>송지아</td><td class="n">₩49,800,000</td><td class="n">₩10,720,000</td><td class="n">₩4,500,000</td><td class="n">₩3,820,000</td><td class="n">₩3,250,600</td><td class="n">₩3,584,400</td><td class="n refund">+₩333,800</td><td><span class="stat miss"><i class="dot"></i>자료 부족</span></td></tr>
+          <tr><td>정현우</td><td class="n">₩46,200,000</td><td class="n">₩10,400,000</td><td class="n">₩1,500,000</td><td class="n">₩2,400,000</td><td class="n">₩4,212,000</td><td class="n">₩3,952,800</td><td class="n owed">−₩259,200</td><td><span class="stat ok"><i class="dot"></i>완료</span></td></tr>
+          <tr><td>윤채린</td><td class="n">₩43,200,000</td><td class="n">₩10,080,000</td><td class="n">₩1,500,000</td><td class="n">₩1,820,000</td><td class="n">₩4,180,400</td><td class="n">₩3,732,000</td><td class="n owed">−₩448,400</td><td><span class="stat miss"><i class="dot"></i>자료 부족</span></td></tr>
+          <tr><td>강민서</td><td class="n">₩35,200,000</td><td class="n">₩9,220,000</td><td class="n">₩1,500,000</td><td class="n">₩2,640,000</td><td class="n">₩1,938,200</td><td class="n">₩2,420,400</td><td class="n refund">+₩482,200</td><td><span class="stat pend"><i class="dot"></i>의견 대기</span></td></tr>
+          <tr><td>조태현</td><td class="n">₩33,000,000</td><td class="n">₩9,020,000</td><td class="n">₩1,500,000</td><td class="n">₩1,920,000</td><td class="n">₩1,952,400</td><td class="n">₩2,184,000</td><td class="n refund">+₩231,600</td><td><span class="stat ok"><i class="dot"></i>완료</span></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ============ VIEW: AUDIT LOG (M15) ============ -->
+    <section class="view" data-view="audit">
+      <div class="page-head">
+        <div class="l">
+          <div class="eyebrow"><b>M15</b>감사 로그 · 변경 불가 · WORM</div>
+          <h1 class="page-h">감사 <em>로그.</em></h1>
+          <p class="page-sub">모든 데이터 변경·로그인·결재가 시간순으로 기록됩니다. 외부 SIEM 연동 가능.</p>
+        </div>
+        <div style="display:flex;gap:8px"><button class="btn">CSV 내보내기</button><button class="btn">SIEM 동기화</button></div>
+      </div>
+
+      <div class="audit-filters">
+        <span style="font-family:var(--mono);font-size:11px;color:var(--text-3);letter-spacing:0.08em;text-transform:uppercase;margin-right:8px">필터</span>
+        <span class="audit-chip on">전체</span>
+        <span class="audit-chip">PAYROLL</span>
+        <span class="audit-chip">APPROVAL</span>
+        <span class="audit-chip">EXPENSE</span>
+        <span class="audit-chip">AUTH</span>
+        <span class="audit-chip">RISK</span>
+        <span class="audit-chip">CONFIG</span>
+        <input class="search" style="margin-left:auto;min-width:240px;padding:8px 12px;border:1px solid var(--line-2);background:var(--bg-1);font-family:var(--mono);font-size:11px" placeholder="키워드·사용자·IP 검색…">
+      </div>
+
+      <div class="audit-tl">
+        <div class="audit-row warn"><div class="ts"><b>14:18</b>05.11</div><div class="who">시스템</div><div class="act"><b>RISK.detect</b>김지원 주52h 초과 임박 감지<small>잔여 −2.2h · 본인+관리자에게 알림 전송 · 근기법 §53</small><span class="hash"><i>prev</i> <b>8f4a…21c9</b> &nbsp;→&nbsp; <i>this</i> <b>e72d…44a1</b> &nbsp;<i>sig</i> sha256:hmac</span></div><div class="ip">10.0.4.21</div></div>
+        <div class="audit-row ok"><div class="ts"><b>14:14</b>05.11</div><div class="who">박서연</div><div class="act"><b>APPROVAL.approve</b>EX-237 AWS 5월 청구 · 2단계 승인<small>금액 ₩520,000 · 결재선 박서연 → 남윤서 → 대표</small><span class="hash"><i>prev</i> <b>e72d…44a1</b> &nbsp;→&nbsp; <i>this</i> <b>3a91…b8f7</b> &nbsp;<i>kid</i> hsm-2025-q2</span></div><div class="ip">192.168.4.21</div></div>
+        <div class="audit-row ok"><div class="ts"><b>14:09</b>05.11</div><div class="who">시스템</div><div class="act"><b>EXPENSE.ocr</b>영수증 자동 분류 · 신뢰도 98.4%<small>거래처 스타벅스 강남 · 금액 ₩142,500 · 카테고리 접대비</small><span class="hash"><i>prev</i> <b>3a91…b8f7</b> &nbsp;→&nbsp; <i>this</i> <b>c5e4…12d0</b></span></div><div class="ip">gemini-vision</div></div>
+        <div class="audit-row"><div class="ts"><b>13:52</b>05.11</div><div class="who">남윤서</div><div class="act"><b>PAYROLL.calc</b>김지원 · 5월 명세서 자동 산정<small>기본 ₩5,200K + 연장 12h + 야간 4h · 실수령 ₩4,427,830</small></div><div class="ip">192.168.4.10</div></div>
+        <div class="audit-row ok"><div class="ts"><b>11:30</b>05.11</div><div class="who">시스템</div><div class="act"><b>LEAVE.promote</b>연차촉진 통보 메일 발송<small>박서연·정현우·송지아 · 근기법 §61 · 사용권 소멸 30일 전</small></div><div class="ip">smtp-relay</div></div>
+        <div class="audit-row ok"><div class="ts"><b>09:14</b>05.11</div><div class="who">시스템</div><div class="act"><b>RISK.check</b>최저임금 정기점검 · 통과<small>최저시급 ₩10,030 · 15명 전원 시급 환산 ₩12,400 이상 · 최저임금법</small></div><div class="ip">scheduler</div></div>
+        <div class="audit-row ok"><div class="ts"><b>08:42</b>05.11</div><div class="who">남윤서</div><div class="act"><b>AUTH.login</b>관리자 로그인 · 2FA 통과<small>device · MacBook Pro / Chrome 134 / KR</small></div><div class="ip">192.168.4.10</div></div>
+        <div class="audit-row"><div class="ts"><b>23:51</b>05.10</div><div class="who">시스템</div><div class="act"><b>CLOSE.bank_match</b>은행 대사 자동 완료<small>우리은행 312건 · 매칭 99.2% (3건 수동 검토 필요)</small></div><div class="ip">openbanking</div></div>
+        <div class="audit-row crit"><div class="ts"><b>22:48</b>05.10</div><div class="who">정현우</div><div class="act"><b>WORK.night_start</b>야간근로 시작 · 자동 0.5 가산<small>22:00–06:00 · 근기법 §56 ③ · 본인 동의 기록 있음</small></div><div class="ip">192.168.4.34</div></div>
+        <div class="audit-row ok"><div class="ts"><b>17:14</b>05.10</div><div class="who">대표</div><div class="act"><b>APPROVAL.approve</b>한도윤 출장비 · 3/3 최종 승인<small>금액 ₩320,000 · 부산 1박2일</small></div><div class="ip">220.117.21.84</div></div>
+        <div class="audit-row"><div class="ts"><b>15:30</b>05.10</div><div class="who">남윤서</div><div class="act"><b>CONFIG.update</b>4대보험 EDI 자동 생성 · 활성화<small>이전 값 manual → auto</small></div><div class="ip">192.168.4.10</div></div>
+        <div class="audit-row ok"><div class="ts"><b>10:14</b>05.10</div><div class="who">시스템</div><div class="act"><b>TAX.report</b>원천세 신고 전송 · 홈택스<small>15명 · ₩4,217,200 · 접수번호 H2026-05-001284</small></div><div class="ip">hometax-api</div></div>
+        <div class="audit-row"><div class="ts"><b>09:32</b>05.10</div><div class="who">남윤서</div><div class="act"><b>PAYROLL.draft</b>5월 급여 초안 생성 · 15명<small>총 지급액 ₩68,742,000 · 4대보험 ₩5,670,000 · 원천세 ₩4,217,200</small></div><div class="ip">192.168.4.10</div></div>
+        <div class="audit-row"><div class="ts"><b>17:48</b>05.09</div><div class="who">백은지</div><div class="act"><b>EXPENSE.submit</b>지출결의 상신 · EX-235<small>현대카드 5월 분 ₩7.42M · 결재선 3단계</small></div><div class="ip">192.168.4.41</div></div>
+        <div class="audit-row ok"><div class="ts"><b>14:22</b>05.09</div><div class="who">시스템</div><div class="act"><b>VENDOR.aging</b>매출처 연령분석 자동 실행<small>30일 초과 1건 · 카카오스튜디오 ₩2.4M · 독촉 메일 초안 작성됨</small></div><div class="ip">scheduler</div></div>
+        <div class="audit-row crit"><div class="ts"><b>11:08</b>05.09</div><div class="who">시스템</div><div class="act"><b>AUTH.fail</b>로그인 실패 5회 · 계정 잠금<small>대상 임도현 · 위치 KR/Seoul · 30분 자동 잠금 · 본인 알림 전송</small></div><div class="ip">211.45.•••.218</div></div>
+        <div class="audit-row ok"><div class="ts"><b>10:36</b>05.09</div><div class="who">송지아</div><div class="act"><b>LEAVE.submit</b>연차 신청 · 05.20-21<small>유형 연차 · 2일 · 잔여 10/15 · 매니저 승인 대기</small></div><div class="ip">192.168.4.28</div></div>
+        <div class="audit-row ok"><div class="ts"><b>09:00</b>05.09</div><div class="who">시스템</div><div class="act"><b>ASSET.depreciate</b>5월 감가상각 자동 분개<small>고정자산 34건 · 합계 ₩1,960,000 · 정액법</small></div><div class="ip">scheduler</div></div>
+        <div class="audit-row warn"><div class="ts"><b>16:14</b>05.08</div><div class="who">시스템</div><div class="act"><b>RISK.minwage</b>최저임금 점검 정기 실행<small>최저시급 ₩10,030 · 전 직원 통과 · 시급 환산 ₩12,400 이상</small></div><div class="ip">scheduler</div></div>
+        <div class="audit-row ok"><div class="ts"><b>14:55</b>05.08</div><div class="who">남윤서</div><div class="act"><b>CONFIG.update</b>결재선 변경 · 지출 ₩500K 이상<small>2단계 → 3단계 · 대표 최종승인 추가</small></div><div class="ip">192.168.4.10</div></div>
+        <div class="audit-row"><div class="ts"><b>11:42</b>05.08</div><div class="who">시스템</div><div class="act"><b>EXPENSE.match</b>법인카드 자동 매칭 완료<small>현대카드 매입 ₩7.4M · 영수증 47/47 · 미매칭 0</small></div><div class="ip">card-api</div></div>
+        <div class="audit-row ok"><div class="ts"><b>09:14</b>05.08</div><div class="who">박서연</div><div class="act"><b>EXPORT.csv</b>지출 내역 CSV 다운로드<small>2026.04 · 142건 · 워터마크 EMP-002</small></div><div class="ip">192.168.4.21</div></div>
+        <div class="audit-row"><div class="ts"><b>17:22</b>05.07</div><div class="who">한도윤</div><div class="act"><b>EXPENSE.submit</b>출장비 청구 · EX-228<small>부산 1박2일 · ₩320,000 · OCR 영수증 4건</small></div><div class="ip">192.168.4.32</div></div>
+        <div class="audit-row ok"><div class="ts"><b>13:08</b>05.07</div><div class="who">시스템</div><div class="act"><b>BANK.sync</b>우리은행 거래 자동 동기화<small>312건 · openbanking API · 매칭 99.2% (3건 보류)</small></div><div class="ip">openbanking</div></div>
+        <div class="audit-row"><div class="ts"><b>08:42</b>05.07</div><div class="who">시스템</div><div class="act"><b>BACKUP.daily</b>일일 백업 완료 · S3 ap-northeast-2<small>23.4 GiB · 무결성 검증 통과 · 보관 90일</small></div><div class="ip">backup-svc</div></div>
+      </div>
+    </section>
+
+    <!-- ============ VIEW: SETTINGS (M16) ============ -->
+    <section class="view" data-view="settings">
+      <div class="page-head">
+        <div class="l">
+          <div class="eyebrow"><b>M16</b>설정 · 워크스페이스</div>
+          <h1 class="page-h">설정 <em>· 관리.</em></h1>
+          <p class="page-sub">회사 정보 · 권한 · 결재선 · 연동까지. 변경 시 감사 로그에 자동 기록.</p>
+        </div>
+      </div>
+
+      <div class="set-grid">
+        <nav class="set-nav">
+          <a class="on" data-tab="company">회사 정보<small>company profile</small></a>
+          <a data-tab="payroll">급여 정책<small>payroll policy</small></a>
+          <a data-tab="approval">결재선<small>approval flow</small></a>
+          <a data-tab="integration">연동<small>integrations</small></a>
+          <a data-tab="security">보안<small>2FA · IP</small></a>
+          <a data-tab="billing">구독<small>billing</small></a>
+        </nav>
+
+        <div class="set-panel">
+          <div class="set-h">회사 <em>정보.</em></div>
+          <div class="set-sub">법인등록·사업자번호·대표자 · 분기 1회 자동 검증</div>
+
+          <div class="set-field"><div class="lab">법인명<small>한글 / 영문</small></div><div class="ctl"><input class="set-input" value="(주) 아크미 코퍼레이션"></div><span class="chip ok"><i></i>검증됨</span></div>
+          <div class="set-field"><div class="lab">사업자등록번호</div><div class="ctl"><input class="set-input" value="123-86-12345"></div><span class="chip ok"><i></i>국세청 ✓</span></div>
+          <div class="set-field"><div class="lab">법인등록번호</div><div class="ctl"><input class="set-input" value="110111-1234567"></div><span class="chip ok"><i></i>확인</span></div>
+          <div class="set-field"><div class="lab">대표자</div><div class="ctl"><input class="set-input" value="박대표"></div><span class="ctl">since 2021.03</span></div>
+          <div class="set-field"><div class="lab">업태 / 종목</div><div class="ctl"><input class="set-input" value="서비스 / 응용 소프트웨어 개발 및 공급업"></div><span class="ctl">코드 62010</span></div>
+          <div class="set-field"><div class="lab">소재지</div><div class="ctl"><input class="set-input" value="서울 강남구 테헤란로 123, 위워크 12층" style="min-width:360px"></div><span class="ctl">우 06234</span></div>
+          <div class="set-field"><div class="lab">결산월</div><div class="ctl"><input class="set-input" value="12월 (역년제)"></div><span class="ctl">변경 시 세무사 협의</span></div>
+          <div class="set-field"><div class="lab">데모 데이터 표시<small>운영 전환 시 자동 비활성</small></div><div class="ctl">실제 회사 데이터로 전환 전까지 시드 시나리오 사용</div><span class="set-toggle on" onclick="this.classList.toggle('on')"></span></div>
+          <div class="set-field"><div class="lab">감사 로그 외부 SIEM 전송<small>Datadog · Splunk</small></div><div class="ctl">로그 영수 시 평균 220ms · 무손실 큐</div><span class="set-toggle" onclick="this.classList.toggle('on')"></span></div>
+
+          <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:24px;padding-top:18px;border-top:1px solid var(--line)">
+            <button class="btn">취소</button><button class="btn btn-primary">변경사항 저장</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- DRAWER -->
+<div class="drawer-back" id="drawerBack" onclick="closeDrawer()"></div>
+<aside class="drawer" id="drawer">
+  <div class="drawer-h">
+    <div>
+      <div class="eyebrow" id="drawerEyebrow">EMP-001 · DEV</div>
+      <div class="nm" id="drawerName">김지원 <em>·</em></div>
+    </div>
+    <button class="x" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+  <div class="drawer-foot" id="drawerFoot">
+    <button class="btn" style="flex:1;justify-content:center">CSV 내보내기</button>
+    <button class="btn btn-primary" style="flex:1;justify-content:center">상세 페이지로 →</button>
+  </div>
+</aside>
+
+<!-- ASK MODAL -->
+<div class="modal-back" id="askBack" onclick="if(event.target===this)closeAsk()">
+  <div class="modal">
+    <button class="close-x" onclick="closeAsk()">✕</button>
+    <div class="palette-bar"><span class="palette-ico">✦</span><input class="palette-input" id="askInput" placeholder="질문하세요…" autofocus><span class="palette-kbd">⌃ J</span></div>
+    <div class="palette-section">제안</div>
+    <div class="palette-item hi" onclick="askFull('개발팀 평균 기본급은?')"><span class="k">↵</span><div class="t">개발팀 평균 기본급은?<small>payroll · employees · WHERE department='개발팀'</small></div><span class="go">→</span></div>
+    <div class="palette-item" onclick="askFull('연차 잔여 5일 이하 직원')"><span class="k">↑</span><div class="t">연차 잔여 5일 이하 직원<small>leave_balances · WHERE remaining ≤ 5</small></div><span class="go">→</span></div>
+    <div class="palette-item" onclick="askFull('이번 달 카테고리별 지출 TOP 3')"><span class="k">↓</span><div class="t">이번 달 카테고리별 지출 TOP 3<small>expenses · GROUP BY category</small></div><span class="go">→</span></div>
+    <div class="palette-foot"><span>schema-context 화이트리스트</span><span>↵ 실행 · esc 닫기</span></div>
+  </div>
+</div>
+
+<!-- EXPENSE MODAL -->
+<div class="modal-back" id="expBack" onclick="if(event.target===this)closeExpense()">
+  <div class="modal expense-modal">
+    <button class="close-x" onclick="closeExpense()">✕</button>
+    <div class="exp-grid">
+      <div class="exp-left">
+        <div class="exp-h">영수증 한 장으로,<br><em>지출 등록 끝.</em></div>
+        <div class="exp-sub">Dual-mode OCR · Gemini Vision → Tesseract fallback</div>
+        <div class="exp-drop">
+          <div class="receipt"><b>현대카드</b>법인 / 매입<br>2026.05.08 14:22<br>강남구 역삼동<br>매입처: 스타벅스<div class="amt">₩142,500</div></div>
+          이미지를 드래그하거나 클릭하여 업로드
+        </div>
+        <div class="exp-scan"><span class="live">●</span><span>Gemini Vision 분석 중 · 약 0.4초</span><span style="margin-left:auto;color:var(--text-3)">신뢰도 98.4%</span></div>
+      </div>
+      <div class="exp-right">
+        <div class="exp-field"><div class="exp-label">거래처 <span class="ai">✦ AI</span></div><input class="exp-input" value="현대카드"></div>
+        <div class="exp-field"><div class="exp-label">카테고리</div><input class="exp-input" value="운영비 / 접대비"></div>
+        <div class="exp-grid-2">
+          <div class="exp-field"><div class="exp-label">일자 <span class="ai">✦</span></div><input class="exp-input mono" value="2026.05.08"></div>
+          <div class="exp-field"><div class="exp-label">시각</div><input class="exp-input mono" value="14:22"></div>
+        </div>
+        <div class="exp-field"><div class="exp-label">금액 <span class="ai">✦ AI</span></div><input class="exp-input amount" value="₩142,500"></div>
+        <div class="exp-grid-2">
+          <div class="exp-field"><div class="exp-label">VAT 자동</div><input class="exp-input mono" value="₩12,954"></div>
+          <div class="exp-field"><div class="exp-label">공급가</div><input class="exp-input mono" value="₩129,546"></div>
+        </div>
+      </div>
+    </div>
+    <div class="exp-foot"><span class="audit">audit_log · expenses.create · 기록됨</span><div class="acts"><button class="btn" onclick="closeExpense()">취소</button><button class="btn">결재 상신</button><button class="btn btn-primary">저장 ↵</button></div></div>
+  </div>
+</div>
+
+<script src="background.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>

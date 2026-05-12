@@ -1,219 +1,398 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* ============================================================
- * Design tokens — stitch "Executive Command" (CLAUDE.md §14 준수)
- * HSL 변수는 shadcn/ui 호환. HEX 값은 tailwind.config.ts 토큰 참조.
+ * Nexus ERP v2 — Editorial / 금융지 디자인 토큰
+ *
+ * 핵심:
+ *  - Champagne Gold accent (#F5C26B)
+ *  - Instrument Serif (헤드라인) + Pretendard (본문) + JetBrains Mono (메타/숫자)
+ *  - Sharp borders (radius 0)
+ *  - 다크 배경 #08090B
+ *
+ * Pretendard 는 layout.tsx 의 head 에서 CDN 임포트.
+ * Instrument Serif / JetBrains Mono 는 next/font/google.
  * ============================================================ */
 @layer base {
   :root {
-    /* Deep Midnight Navy 기반 다크 테마. 라이트는 v1.1. */
-    --background: 224 46% 10%; /* #0b1326 */
-    --foreground: 225 93% 93%; /* #dae2fd */
+    /* shadcn 호환 HSL — v2 champagne 팔레트 */
+    --background: 220 12% 5%; /* #08090B */
+    --foreground: 220 6% 93%; /* #EDEEF0 */
 
-    --card: 225 36% 15%; /* #171f33 */
-    --card-foreground: 225 93% 93%;
+    --card: 222 14% 8%; /* #14171C */
+    --card-foreground: 220 6% 93%;
 
-    --popover: 225 36% 15%;
-    --popover-foreground: 225 93% 93%;
+    --popover: 222 14% 8%;
+    --popover-foreground: 220 6% 93%;
 
-    /* Electric Indigo — primary action */
-    --primary: 239 100% 88%; /* #c0c1ff */
-    --primary-foreground: 247 100% 33%; /* #1000a9 */
+    /* Champagne Gold — primary action */
+    --primary: 37 88% 69%; /* #F5C26B */
+    --primary-foreground: 0 0% 4%; /* #0A0A0A */
 
-    --secondary: 215 30% 20%; /* soft slate container */
-    --secondary-foreground: 225 93% 93%;
+    --secondary: 220 11% 11%; /* #1C2027 */
+    --secondary-foreground: 220 6% 93%;
 
-    --muted: 225 24% 17%;
-    --muted-foreground: 240 16% 81%; /* #c7c4d7 */
+    --muted: 222 14% 8%;
+    --muted-foreground: 218 10% 63%; /* #9098A6 */
 
-    --accent: 196 100% 74%; /* #7bd0ff — sky tertiary */
-    --accent-foreground: 197 100% 15%;
+    --accent: 37 88% 69%; /* #F5C26B */
+    --accent-foreground: 0 0% 4%;
 
-    --destructive: 7 100% 83%; /* #ffb4ab */
-    --destructive-foreground: 355 100% 21%;
+    --destructive: 4 67% 63%; /* #E06B5F */
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 240 10% 30%; /* outline-variant #464554 */
-    --input: 225 36% 12%;
-    --ring: 239 100% 88%;
+    --border: 217 14% 17%; /* #232830 */
+    --input: 222 14% 8%;
+    --ring: 37 88% 69%;
 
-    --radius: 0.5rem;
+    --radius: 0;
   }
-
-  /* 라이트 테마는 v1.1 로드맵. 현재는 다크 전용. */
 
   * {
     @apply border-border;
+    box-sizing: border-box;
   }
+
   html {
     color-scheme: dark;
   }
+
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-bg text-text-1 font-sans antialiased;
+    font-family: "Pretendard Variable", Pretendard, -apple-system,
+      BlinkMacSystemFont, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.45;
     min-height: 100vh;
-    background-image:
-      radial-gradient(ellipse 80% 60% at 50% -10%, rgba(128, 131, 255, 0.08), transparent 60%),
-      radial-gradient(ellipse 50% 40% at 95% 100%, rgba(123, 208, 255, 0.05), transparent 60%);
   }
 
-  /* 숫자 정렬 — 급여 테이블/명세서용 */
+  /* 스크롤바 — 얇고 미니멀 */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #232830;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #2e343e;
+  }
+
+  /* 숫자 정렬 */
   .tabular,
   .tabular-nums,
   table.data-table {
     font-feature-settings: "tnum" 1;
     font-variant-numeric: tabular-nums;
   }
+
+  /* 입력 필드 기본 — v2 는 underline 스타일 */
+  input,
+  textarea {
+    background: transparent;
+    border: none;
+    outline: none;
+    font: inherit;
+    color: inherit;
+  }
 }
 
 /* ============================================================
- * Glass panel — 카드 기본 스타일 (CLAUDE.md §14.5)
+ * v2 컴포넌트 프리미티브
  * ============================================================ */
 @layer components {
-  .glass-panel {
-    background: rgba(23, 31, 51, 0.6);
-    -webkit-backdrop-filter: blur(12px);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(199, 196, 215, 0.1);
-    border-top-color: rgba(255, 255, 255, 0.1);
-    border-radius: 1rem;
+  /* ----- TYPE PRIMITIVES ----- */
+  .eyebrow {
+    font-family: theme("fontFamily.mono");
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: theme("colors.text.3");
+    text-transform: uppercase;
+  }
+  .eyebrow b {
+    color: theme("colors.gold.DEFAULT");
+    margin-right: 12px;
+    font-weight: 400;
+  }
+  .page-h {
+    font-family: theme("fontFamily.serif");
+    font-size: 56px;
+    line-height: 1;
+    letter-spacing: -0.025em;
+    font-weight: 400;
+  }
+  .page-h em {
+    font-style: italic;
+    color: theme("colors.gold.DEFAULT");
+  }
+  .page-sub {
+    margin-top: 12px;
+    color: theme("colors.text.2");
+    font-size: 14px;
+  }
+  .section-rule {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 32px 0 20px;
+  }
+  .section-rule .l {
+    font-family: theme("fontFamily.mono");
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: theme("colors.text.3");
+    text-transform: uppercase;
+  }
+  .section-rule .l b {
+    color: theme("colors.gold.DEFAULT");
+    margin-right: 10px;
+  }
+  .section-rule .line {
+    flex: 1;
+    height: 1px;
+    background: theme("colors.line.DEFAULT");
   }
 
-  .glass-panel-hover {
-    @apply transition-shadow duration-200 ease-in-out;
+  /* ----- BUTTON ----- */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    padding: 0 16px;
+    font-family: theme("fontFamily.mono");
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: theme("colors.text.1");
+    border: 1px solid theme("colors.line.2");
+    text-transform: uppercase;
+    transition:
+      background 0.15s,
+      border-color 0.15s;
+    cursor: pointer;
   }
-  .glass-panel-hover:hover {
-    box-shadow: 0 0 20px -5px rgba(192, 193, 255, 0.15);
+  .btn:hover {
+    background: theme("colors.bg.2");
+    border-color: theme("colors.line.3");
   }
-
-  .rim-light {
-    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+  .btn-primary {
+    background: theme("colors.gold.DEFAULT");
+    color: #0a0a0a;
+    border-color: theme("colors.gold.DEFAULT");
+    font-weight: 500;
   }
-
-  /* 사이드바 네비게이션 링크 (stitch code.html 참조) */
-  .nav-link {
-    @apply flex items-center gap-3 rounded-lg px-3 py-2 text-on-surface-variant transition-colors duration-200 hover:bg-surface-container-high hover:text-on-surface;
-    min-height: 44px; /* 모바일 터치 타겟 (CLAUDE.md §15.4) */
+  .btn-primary:hover {
+    background: theme("colors.gold.2");
+    border-color: theme("colors.gold.2");
+    color: #0a0a0a;
   }
-  .nav-link[data-active="true"] {
-    @apply bg-surface-container-high text-on-surface;
+  .btn-ghost {
+    border-color: transparent;
   }
-
-  /* KPI 카드 수치 */
-  .kpi-value {
-    @apply text-display-xl tabular-nums;
-    background: linear-gradient(180deg, #ffffff 0%, #dae2fd 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+  .btn-ghost:hover {
+    border-color: theme("colors.line.2");
   }
-
-  /* ============================================================
-   * Avant-garde 디자인 유틸리티 (랜딩·대시보드 stitch v2)
-   * ============================================================ */
-
-  /* 50px 격자 — 랜딩 ambient background */
-  .grid-bg {
-    background-image:
-      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-    background-size: 50px 50px;
-  }
-
-  /* 20px 인디고 격자 — 대시보드 main canvas */
-  .hologram-grid {
-    background-image:
-      linear-gradient(rgba(99, 102, 241, 0.08) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(99, 102, 241, 0.08) 1px, transparent 1px);
-    background-size: 20px 20px;
+  .btn.sm {
+    height: 28px;
+    padding: 0 10px;
+    font-size: 10px;
   }
 
-  /* 카드 내부 림 라이트 (인덱스 위에 absolute로 깔아 사용) */
-  .glass-panel-inner {
-    background: linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.05) 0%,
-      rgba(255, 255, 255, 0) 100%
-    );
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    border-left: 1px solid rgba(255, 255, 255, 0.05);
+  /* ----- CHIP ----- */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 9px;
+    font-family: theme("fontFamily.mono");
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    border: 1px solid theme("colors.line.2");
+    color: theme("colors.text.2");
+    text-transform: uppercase;
+  }
+  .chip.ok {
+    color: #6bcb8a;
+    border-color: rgba(107, 203, 138, 0.35);
+  }
+  .chip.pend {
+    color: theme("colors.gold.DEFAULT");
+    border-color: theme("colors.gold.soft");
+  }
+  .chip.rej {
+    color: #e06b5f;
+    border-color: rgba(224, 107, 95, 0.35);
+  }
+  .chip.info {
+    color: #8fb6e6;
+    border-color: rgba(143, 182, 230, 0.35);
+  }
+  .chip i {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
   }
 
-  /* 깊은 글래스 패널 (랜딩 전용 — blur 강화·border 약화) */
-  .glass-panel-deep {
-    background: rgba(13, 17, 30, 0.4);
-    -webkit-backdrop-filter: blur(20px);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+  /* ----- PANEL ----- */
+  .panel {
+    background: theme("colors.bg.DEFAULT");
+    padding: 24px 26px;
+  }
+  .panel-h {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .panel-h .t {
+    font-family: theme("fontFamily.serif");
+    font-size: 24px;
+    letter-spacing: -0.015em;
+  }
+  .panel-h .t em {
+    color: theme("colors.gold.DEFAULT");
+    font-style: italic;
+  }
+  .panel-h .meta {
+    font-family: theme("fontFamily.mono");
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: theme("colors.text.3");
+    text-transform: uppercase;
+  }
+  .row-grid {
+    display: grid;
+    gap: 1px;
+    background: theme("colors.line.DEFAULT");
+    border: 1px solid theme("colors.line.DEFAULT");
   }
 
-  /* 모서리 ㄱ-자 테두리 — 카드/배지 hover 강조 */
-  .tech-border {
+  /* ----- TABLE ----- */
+  .tbl {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .tbl thead th {
+    text-align: left;
+    padding: 12px 14px;
+    font-family: theme("fontFamily.mono");
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: theme("colors.text.3");
+    text-transform: uppercase;
+    border-bottom: 1px solid theme("colors.line.DEFAULT");
+    font-weight: 400;
+    background: theme("colors.bg.1");
+  }
+  .tbl tbody td {
+    padding: 14px;
+    border-bottom: 1px solid theme("colors.line.DEFAULT");
+    color: theme("colors.text.2");
+  }
+  .tbl tbody tr:hover td {
+    background: theme("colors.bg.1");
+    color: theme("colors.text.1");
+  }
+  .tbl .n {
+    font-family: theme("fontFamily.mono");
+    font-variant-numeric: tabular-nums;
+    color: theme("colors.text.1");
+    text-align: right;
+  }
+
+  /* ----- KPI CARD ----- */
+  .kpi-card {
+    padding: 24px 26px;
+    border-right: 1px solid theme("colors.line.DEFAULT");
+    border-bottom: 1px solid theme("colors.line.DEFAULT");
+    background: theme("colors.bg.DEFAULT");
     position: relative;
+    overflow: hidden;
   }
-  .tech-border::before,
-  .tech-border::after {
+  .kpi-l {
+    font-family: theme("fontFamily.mono");
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: theme("colors.text.3");
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  .kpi-v {
+    font-family: theme("fontFamily.serif");
+    font-size: 44px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-weight: 400;
+    color: theme("colors.text.1");
+    font-variant-numeric: tabular-nums;
+  }
+  .kpi-v .cur {
+    font-family: theme("fontFamily.mono");
+    font-size: 18px;
+    color: theme("colors.text.3");
+    margin-right: 4px;
+    vertical-align: 6px;
+  }
+  .kpi-v.warn {
+    color: theme("colors.gold.DEFAULT");
+    font-style: italic;
+  }
+  .kpi-v.danger {
+    color: #e06b5f;
+    font-style: italic;
+  }
+  .kpi-meta {
+    margin-top: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: theme("fontFamily.mono");
+    font-size: 11px;
+    color: theme("colors.text.3");
+  }
+
+  /* ----- BRAND MARK (NEXUS 다이아) ----- */
+  .brand-mark {
+    width: 18px;
+    height: 18px;
+    position: relative;
+    display: inline-block;
+  }
+  .brand-mark::before,
+  .brand-mark::after {
     content: "";
     position: absolute;
-    width: 10px;
-    height: 10px;
-    border: 1px solid rgba(99, 102, 241, 0.5);
-    transition: all 0.3s ease;
-    pointer-events: none;
+    inset: 0;
+    border: 1px solid theme("colors.gold.DEFAULT");
   }
-  .tech-border::before {
-    top: 0;
-    left: 0;
-    border-right: none;
-    border-bottom: none;
-  }
-  .tech-border::after {
-    bottom: 0;
-    right: 0;
-    border-left: none;
-    border-top: none;
-  }
-  .tech-border:hover::before,
-  .tech-border:hover::after {
-    width: 20px;
-    height: 20px;
-    border-color: rgba(99, 102, 241, 1);
+  .brand-mark::after {
+    transform: rotate(45deg);
   }
 
-  /* 800px 회전 지구 — 랜딩 hero. translate를 keyframe에 포함해야 회전축이 중심에 고정 */
-  .earth-sphere {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 800px;
-    height: 800px;
-    border-radius: 50%;
-    background:
-      url("https://images.unsplash.com/photo-1614730321146-b6fa6a46bcb4?q=80&w=2574&auto=format&fit=crop")
-      center/cover;
-    box-shadow:
-      inset -50px -50px 100px rgba(0, 0, 0, 0.9),
-      inset 20px 20px 60px rgba(255, 255, 255, 0.2),
-      0 0 100px rgba(99, 102, 241, 0.3);
-    opacity: 0.8;
-    mix-blend-mode: screen;
-    animation: earth-spin 120s linear infinite;
+  /* ----- v1 호환 — glass-panel 점진적 마이그레이션용 ----- */
+  /* 기존 컴포넌트가 .glass-panel 클래스를 쓰는 동안 임시로 v2 panel 처럼 보이게 */
+  .glass-panel {
+    background: theme("colors.bg.DEFAULT");
+    border: 1px solid theme("colors.line.DEFAULT");
+    padding: 0;
   }
-  @keyframes earth-spin {
-    0% {
-      transform: translate(-50%, -50%) rotate(0deg);
-    }
-    100% {
-      transform: translate(-50%, -50%) rotate(360deg);
-    }
+  .glass-panel-deep {
+    background: theme("colors.bg.1");
+    border: 1px solid theme("colors.line.DEFAULT");
+  }
+  .rim-light {
+    border-top: 1px solid theme("colors.line.2");
   }
 }
 
 /* ============================================================
- * Safe area utilities — 모바일 하단탭 + iOS notch 대응 (CLAUDE.md §15.5)
+ * 유틸리티
  * ============================================================ */
 @layer utilities {
   .pb-safe {
@@ -228,13 +407,14 @@
   .scroll-hide {
     scrollbar-width: none;
   }
+  .font-serif-italic {
+    font-family: theme("fontFamily.serif");
+    font-style: italic;
+  }
 }
 
 /* ============================================================
- * Print stylesheet — 급여명세서 등 인쇄/PDF 출력용
- * - A4 + 1cm 마진
- * - 각 섹션 페이지 분할 방지
- * - 다크 배경 → 흰 배경 강제
+ * Print stylesheet — 급여명세서 등
  * ============================================================ */
 @media print {
   @page {
@@ -248,24 +428,20 @@
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
-  /* 글래스 패널의 테두리·그림자·배경 전부 제거 → 종이에 깔끔히 */
-  .glass-panel {
+  .glass-panel,
+  .panel,
+  .kpi-card {
     background: transparent !important;
-    backdrop-filter: none !important;
     box-shadow: none !important;
-    border: none !important;
   }
-  /* 모든 잔여 테두리는 연한 회색으로 통일 (검정 강조선 방지) */
   *,
   *::before,
   *::after {
-    border-color: #d1d5db !important; /* gray-300 */
+    border-color: #d1d5db !important;
   }
-  /* 명세서 wrapper 여백 0: @page 마진이 종이 여백을 책임짐 */
   main {
     padding: 0 !important;
   }
-  /* 인쇄용 본문은 단조로운 흰 배경 + 어두운 텍스트 */
   .print-paper {
     background: #ffffff !important;
     color: #111111 !important;

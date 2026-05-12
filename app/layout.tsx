@@ -1,10 +1,27 @@
 import type { Metadata, Viewport } from "next";
+import { Instrument_Serif, JetBrains_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import { NextIntlClientProvider } from "next-intl";
 import { PWARegister } from "@/components/shared/PWARegister";
 import { getLocale } from "@/i18n/get-locale";
 import { getMessages } from "@/i18n/get-messages";
 import "./globals.css";
+
+// v2 디자인 — Editorial / 금융지 스타일
+const instrumentSerif = Instrument_Serif({
+  subsets: ["latin"],
+  weight: "400",
+  style: ["normal", "italic"],
+  variable: "--font-serif",
+  display: "swap",
+});
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600"],
+  variable: "--font-mono",
+  display: "swap",
+});
+// Pretendard 는 globals.css 에서 CDN 임포트 (next/font 미지원)
 
 export const metadata: Metadata = {
   title: {
@@ -33,7 +50,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
-  themeColor: "#0b1326",
+  themeColor: "#08090B",
 };
 
 // cookies() 를 통해 locale 결정 → 모든 route dynamic 강제
@@ -50,8 +67,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     console.error("[i18n] failed to load:", err);
   }
   return (
-    <html lang={locale} className="dark" suppressHydrationWarning>
+    <html
+      lang={locale}
+      className={`dark ${instrumentSerif.variable} ${jetbrainsMono.variable}`}
+      suppressHydrationWarning
+    >
       <head>
+        {/* Pretendard Variable — Korean sans serif */}
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
+        />
         {/* 이전 ThemeToggle 사용자의 localStorage 잔여 라이트 모드 클래스 즉시 제거 */}
         <script
           dangerouslySetInnerHTML={{
