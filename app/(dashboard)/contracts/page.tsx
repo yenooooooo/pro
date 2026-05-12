@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { FileSignature, Plus, AlertTriangle } from "lucide-react";
 import { getTranslations } from "next-intl/server";
+import { cn } from "@/lib/utils/cn";
 import { createClient } from "@/lib/supabase/server";
 import { differenceInDays } from "date-fns";
 
@@ -13,14 +13,6 @@ const TYPE_LABEL: Record<string, string> = {
   employment: "근로",
   nda: "비밀유지",
   other: "기타",
-};
-
-const STATUS_TONE: Record<string, string> = {
-  active: "border-emerald-500/40 bg-emerald-500/10 text-emerald-300",
-  expired: "border-error-soft/40 bg-error-soft/10 text-error-soft",
-  terminated:
-    "border-outline-variant/40 bg-surface-container-high text-on-surface-variant",
-  draft: "border-amber-500/40 bg-amber-500/10 text-amber-300",
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -59,6 +51,8 @@ export default async function ContractsPage() {
     daysToExpiry: c.end_date ? differenceInDays(new Date(c.end_date), today) : null,
   }));
 
+  const totalCount = contracts.length;
+  const activeCount = contracts.filter((c) => c.status === "active").length;
   const expiringSoon = contracts.filter(
     (c) =>
       c.daysToExpiry !== null && c.daysToExpiry >= 0 && c.daysToExpiry <= 30,
@@ -70,150 +64,189 @@ export default async function ContractsPage() {
   const t = await getTranslations("contracts");
 
   return (
-    <div className="space-y-stack-lg">
-      <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div className="space-y-2">
-          <p className="inline-flex items-center gap-2 text-label-sm uppercase tracking-widest text-primary">
-            <FileSignature aria-hidden className="h-4 w-4" />
-            Contract Management
-          </p>
-          <h1 className="text-headline-lg font-semibold tracking-tight text-on-surface">
-            {t("title")}
+    <div className="animate-view-in">
+      {/* ===== Page Head ===== */}
+      <header className="mb-9 flex flex-col items-start justify-between gap-8 border-b border-line pb-6 sm:flex-row sm:items-end">
+        <div>
+          <div className="eyebrow mb-3">
+            <b>M07</b>Records · Contracts
+          </div>
+          <h1 className="page-h">
+            계약 <em>관리.</em>
           </h1>
-          <p className="text-body-md text-on-surface-variant">
-            계약서 PDF/이미지를 업로드하면 AI 가 만료일·당사자·금액을 자동 추출.
-            만료 30일 전 자동 알림.
+          <p className="page-sub">
+            {t("title")} · 계약서 PDF/이미지를 업로드하면 AI가 만료일·당사자·금액을
+            자동 추출합니다. 만료 30일 전 자동 알림.
           </p>
         </div>
-        <Link
-          href={"/contracts/new" as never}
-          className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-gradient-to-b from-primary-electric to-primary-container px-4 py-2 text-label-sm font-semibold text-on-primary transition-opacity hover:opacity-90"
-        >
-          <Plus aria-hidden className="h-4 w-4" />
-          {t("add")}
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href={"/contracts/new" as never} className="btn btn-primary">
+            + 계약 추가
+          </Link>
+        </div>
       </header>
 
-      {/* 알림 박스 */}
-      {expiringSoon.length > 0 || expired.length > 0 ? (
-        <div className="space-y-2">
-          {expired.length > 0 && (
-            <div className="glass-panel flex items-start gap-3 rounded-xl border border-error-soft/40 bg-error-soft/5 p-4">
-              <AlertTriangle
-                aria-hidden
-                className="mt-0.5 h-5 w-5 flex-shrink-0 text-error-soft"
-              />
-              <div>
-                <p className="font-semibold text-error-soft">
-                  만료된 계약 {expired.length}건
-                </p>
-                <p className="text-label-sm text-on-surface-variant">
-                  status=&apos;expired&apos; 로 자동 갱신 또는 해지 처리하세요.
-                </p>
-              </div>
-            </div>
-          )}
-          {expiringSoon.length > 0 && (
-            <div className="glass-panel flex items-start gap-3 rounded-xl border border-amber-500/40 bg-amber-500/5 p-4">
-              <AlertTriangle
-                aria-hidden
-                className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-300"
-              />
-              <div>
-                <p className="font-semibold text-amber-300">
-                  만료 임박 계약 {expiringSoon.length}건 (30일 이내)
-                </p>
-                <p className="text-label-sm text-on-surface-variant">
-                  갱신 검토가 필요합니다.
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-      ) : null}
+      {/* ===== KPIs ===== */}
+      <div className="mb-9 grid grid-cols-1 border-l border-t border-line sm:grid-cols-2 xl:grid-cols-4">
+        <KPI label="총 계약" value={totalCount.toLocaleString("ko-KR")} suffix="건" />
+        <KPI
+          label="유효"
+          value={activeCount.toLocaleString("ko-KR")}
+          suffix="건"
+          subtext={`전체 ${totalCount}건 중`}
+        />
+        <KPI
+          label="만료 임박"
+          value={expiringSoon.length.toLocaleString("ko-KR")}
+          suffix="건"
+          tone={expiringSoon.length > 0 ? "warn" : "default"}
+          subtext={expiringSoon.length > 0 ? "30일 이내" : "이상 없음"}
+        />
+        <KPI
+          label="만료됨"
+          value={expired.length.toLocaleString("ko-KR")}
+          suffix="건"
+          tone={expired.length > 0 ? "danger" : "default"}
+          subtext={expired.length > 0 ? "갱신/해지 처리 필요" : "이상 없음"}
+        />
+      </div>
 
-      {/* 목록 */}
-      {contracts.length === 0 ? (
-        <div className="glass-panel rounded-xl p-12 text-center">
-          <p className="text-headline-md font-semibold text-on-surface">
-            등록된 계약서가 없습니다
-          </p>
-          <p className="mt-2 text-body-md text-on-surface-variant">
-            계약서 PDF/이미지를 업로드하면 AI 가 자동으로 항목을 추출합니다.
-          </p>
+      {/* ===== Contracts Table ===== */}
+      <section className="panel mb-9 border border-line">
+        <div className="panel-h">
+          <div className="t font-serif">
+            계약 <em>목록</em>
+          </div>
+          <div className="meta">{totalCount}건</div>
         </div>
-      ) : (
-        <div className="glass-panel overflow-hidden rounded-xl">
-          <div className="overflow-x-auto">
-            <table className="w-full text-data-tabular">
+        {contracts.length === 0 ? (
+          <div className="border border-line bg-bg-1/40 py-12 text-center font-mono text-[11px] uppercase tracking-[0.08em] text-text-3">
+            등록된 계약서가 없습니다. 계약서 PDF/이미지를 업로드하면 AI가 자동으로
+            항목을 추출합니다.
+          </div>
+        ) : (
+          <div className="w-full overflow-x-auto">
+            <table className="tbl min-w-[960px]">
               <thead>
-                <tr className="border-b border-outline-variant/40 text-label-sm uppercase tracking-widest text-on-surface-variant">
-                  <th className="px-4 py-3 text-left">유형</th>
-                  <th className="px-4 py-3 text-left">제목</th>
-                  <th className="px-4 py-3 text-left">거래처</th>
-                  <th className="px-4 py-3 text-right">금액</th>
-                  <th className="px-4 py-3 text-left">기간</th>
-                  <th className="px-4 py-3 text-center">D-day</th>
-                  <th className="px-4 py-3 text-center">상태</th>
+                <tr>
+                  <th>유형</th>
+                  <th>제목</th>
+                  <th>거래처</th>
+                  <th className="text-right">금액</th>
+                  <th>시작일</th>
+                  <th>종료일</th>
+                  <th className="text-right">D-day</th>
+                  <th>상태</th>
                 </tr>
               </thead>
               <tbody>
                 {contracts.map((c) => (
-                  <tr
-                    key={c.id}
-                    className="border-b border-outline-variant/15 last:border-0 transition-colors hover:bg-primary/5"
-                  >
-                    <td className="px-4 py-3">
-                      <span className="rounded bg-surface-container-high px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
-                        {TYPE_LABEL[c.contract_type ?? ""] ?? "—"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 font-medium text-on-surface">
-                      {c.title}
-                    </td>
-                    <td className="px-4 py-3 text-on-surface-variant">
-                      {c.vendors?.name ?? "—"}
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-on-surface">
-                      {c.amount ? `${c.amount.toLocaleString("ko-KR")}원` : "—"}
-                    </td>
-                    <td className="px-4 py-3 text-label-sm text-on-surface-variant tabular-nums">
-                      {c.start_date} ~ {c.end_date ?? "—"}
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      {c.daysToExpiry !== null ? (
-                        <span
-                          className={
-                            "tabular-nums " +
-                            (c.daysToExpiry < 0
-                              ? "text-error-soft"
-                              : c.daysToExpiry < 30
-                                ? "text-amber-300"
-                                : "text-on-surface-variant")
-                          }
-                        >
-                          {c.daysToExpiry >= 0
-                            ? `D-${c.daysToExpiry}`
-                            : `D+${Math.abs(c.daysToExpiry)}`}
-                        </span>
-                      ) : (
-                        "—"
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <span
-                        className={`inline-flex whitespace-nowrap rounded-md border px-2 py-0.5 text-[11px] font-semibold ${STATUS_TONE[c.status] ?? STATUS_TONE.draft}`}
-                      >
-                        {STATUS_LABEL[c.status] ?? c.status}
-                      </span>
-                    </td>
-                  </tr>
+                  <ContractRow key={c.id} contract={c} />
                 ))}
               </tbody>
             </table>
           </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+type DecoratedContract = Contract & { daysToExpiry: number | null };
+
+function statusChipClass(c: DecoratedContract): string {
+  if (c.status === "active") {
+    if (c.daysToExpiry !== null && c.daysToExpiry >= 0 && c.daysToExpiry <= 30) {
+      return "chip pend";
+    }
+    return "chip ok";
+  }
+  if (c.status === "expired") return "chip rej";
+  if (c.status === "terminated") return "chip info";
+  if (c.status === "draft") return "chip pend";
+  return "chip";
+}
+
+function ContractRow({ contract: c }: { contract: DecoratedContract }) {
+  const typeLabel = TYPE_LABEL[c.contract_type ?? ""] ?? "—";
+  const statusLabel = STATUS_LABEL[c.status] ?? c.status;
+  const dDay = c.daysToExpiry;
+  const dDayClass =
+    dDay === null
+      ? "text-text-3"
+      : dDay < 0
+        ? "text-[#E06B5F] italic"
+        : dDay <= 30
+          ? "text-gold italic"
+          : "text-text-1";
+  return (
+    <tr>
+      <td>
+        <span className="chip">{typeLabel}</span>
+      </td>
+      <td>
+        <span className="text-text-1">{c.title}</span>
+      </td>
+      <td>{c.vendors?.name ?? "—"}</td>
+      <td className="n">
+        {c.amount ? `₩${c.amount.toLocaleString("ko-KR")}` : "—"}
+      </td>
+      <td className="font-mono text-[12px]">{c.start_date ?? "—"}</td>
+      <td className="font-mono text-[12px]">{c.end_date ?? "—"}</td>
+      <td className={cn("n", dDayClass)}>
+        {dDay === null
+          ? "—"
+          : dDay >= 0
+            ? `D-${dDay}`
+            : `D+${Math.abs(dDay)}`}
+      </td>
+      <td>
+        <span className={statusChipClass(c)}>
+          <i />
+          {statusLabel}
+        </span>
+      </td>
+    </tr>
+  );
+}
+
+/* ============================================================
+ * KPI primitive (v2 editorial)
+ * ============================================================ */
+function KPI({
+  label,
+  value,
+  prefix,
+  suffix,
+  subtext,
+  tone = "default",
+}: {
+  label: string;
+  value: string;
+  prefix?: string;
+  suffix?: string;
+  subtext?: string;
+  tone?: "default" | "warn" | "danger";
+}) {
+  const toneClass =
+    tone === "danger"
+      ? "text-[#E06B5F] italic"
+      : tone === "warn"
+        ? "text-gold italic"
+        : "text-text-1";
+  return (
+    <div className="kpi-card">
+      <div className="kpi-l">{label}</div>
+      <div className={cn("kpi-v", toneClass)}>
+        {prefix ? <span className="cur">{prefix}</span> : null}
+        {value}
+        {suffix ? <span className="ml-2 text-[16px] text-text-3">{suffix}</span> : null}
+      </div>
+      {subtext ? (
+        <div className="kpi-meta">
+          <span>{subtext}</span>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

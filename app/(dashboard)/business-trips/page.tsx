@@ -1,18 +1,18 @@
 import Link from "next/link";
-import { Plane, Plus } from "lucide-react";
 import { getTranslations } from "next-intl/server";
+import { cn } from "@/lib/utils/cn";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-const STATUS_TONE: Record<string, string> = {
-  requested: "border-amber-500/40 bg-amber-500/10 text-amber-300",
-  approved: "border-tertiary/40 bg-tertiary/10 text-tertiary",
-  in_progress: "border-primary-electric/40 bg-primary-electric/10 text-primary-electric",
-  settled: "border-emerald-500/40 bg-emerald-500/10 text-emerald-300",
-  reimbursed: "border-emerald-500/40 bg-emerald-500/10 text-emerald-300",
-  rejected: "border-error-soft/40 bg-error-soft/10 text-error-soft",
-  cancelled: "border-outline-variant/40 bg-surface-container-high text-on-surface-variant",
+const STATUS_CHIP: Record<string, string> = {
+  requested: "chip pend",
+  approved: "chip info",
+  in_progress: "chip info",
+  settled: "chip ok",
+  reimbursed: "chip ok",
+  rejected: "chip rej",
+  cancelled: "chip",
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -53,118 +53,128 @@ export default async function BusinessTripsPage() {
   const trips = (rows as unknown as Trip[]) ?? [];
   const today = new Date().toISOString().slice(0, 10);
   const upcoming = trips.filter((t) => t.start_date >= today && t.status !== "cancelled");
-  const totalUtilized = trips
+  const pendingCount = trips.filter(
+    (t) => t.status === "requested" || t.status === "in_progress",
+  ).length;
+  const totalCost = trips
     .filter((t) => t.status === "settled" || t.status === "reimbursed")
     .reduce((s, t) => s + t.total_settled, 0);
 
   return (
-    <div className="space-y-stack-lg">
-      <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div className="space-y-2">
-          <p className="inline-flex items-center gap-2 text-label-sm uppercase tracking-widest text-primary">
-            <Plane aria-hidden className="h-4 w-4" />
-            Business Trip Settlement
-          </p>
-          <h1 className="text-headline-lg font-semibold tracking-tight text-on-surface">
-            {t("title")}
+    <div className="animate-view-in">
+      {/* ===== Page Head ===== */}
+      <header className="mb-9 flex flex-col items-start justify-between gap-8 border-b border-line pb-6 sm:flex-row sm:items-end">
+        <div>
+          <div className="eyebrow mb-3">
+            <b>M13</b>Records · Trips
+          </div>
+          <h1 className="page-h">
+            출장 <em>정산.</em>
           </h1>
-          <p className="text-body-md text-on-surface-variant">
-            {t("subtitle")}
-          </p>
+          <p className="page-sub">{t("subtitle")}</p>
         </div>
-        <Link
-          href={"/business-trips/new" as never}
-          className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-gradient-to-b from-primary-electric to-primary-container px-4 py-2 text-label-sm font-semibold text-on-primary transition-opacity hover:opacity-90"
-        >
-          <Plus aria-hidden className="h-4 w-4" />
-          출장 신청
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href={"/business-trips/new" as never} className="btn btn-primary">
+            + 출장 신청
+          </Link>
+        </div>
       </header>
 
-      {/* KPI */}
-      <div className="grid grid-cols-1 gap-gutter md:grid-cols-3">
-        <KpiCard label="전체 출장" value={`${trips.length} 건`} />
-        <KpiCard label="다가오는 출장" value={`${upcoming.length} 건`} tone="primary" />
-        <KpiCard
-          label="누적 정산 금액"
-          value={`${totalUtilized.toLocaleString("ko-KR")}원`}
-          tone="success"
+      {/* ===== KPIs ===== */}
+      <div className="mb-9 grid grid-cols-1 border-l border-t border-line md:grid-cols-3">
+        <KPI label="총 출장 건수" value={String(trips.length)} suffix="건" />
+        <KPI
+          label="정산 대기"
+          value={String(pendingCount)}
+          suffix="건"
+          tone="warn"
+          subtext={`다가오는 ${upcoming.length}건`}
+        />
+        <KPI
+          label="총 비용"
+          value={totalCost.toLocaleString("ko-KR")}
+          prefix="₩"
+          subtext="정산·환급 완료 누적"
         />
       </div>
 
-      {/* 목록 */}
-      {trips.length === 0 ? (
-        <div className="glass-panel rounded-xl p-12 text-center">
-          <p className="text-headline-md font-semibold text-on-surface">
-            등록된 출장이 없습니다
-          </p>
-          <p className="mt-2 text-body-md text-on-surface-variant">
-            우상단 &quot;출장 신청&quot; 버튼으로 시작하세요.
-          </p>
+      {/* ===== 목록 ===== */}
+      <section className="panel mb-9 border border-line">
+        <div className="panel-h">
+          <div className="t font-serif">
+            출장 <em>내역</em>
+          </div>
+          <div className="meta">{trips.length}건</div>
         </div>
-      ) : (
-        <div className="glass-panel overflow-hidden rounded-xl">
-          <div className="overflow-x-auto">
-            <table className="w-full text-data-tabular">
+
+        {trips.length === 0 ? (
+          <div className="border border-line bg-bg-1/40 py-12 text-center">
+            <p className="font-serif text-[20px] text-text-1">
+              등록된 출장이 없습니다
+            </p>
+            <p className="mt-2 font-mono text-[11px] uppercase tracking-[0.08em] text-text-3">
+              우상단 &quot;출장 신청&quot; 버튼으로 시작하세요.
+            </p>
+          </div>
+        ) : (
+          <div className="w-full overflow-x-auto">
+            <table className="tbl min-w-[920px]">
               <thead>
-                <tr className="border-b border-outline-variant/40 text-label-sm uppercase tracking-widest text-on-surface-variant">
-                  <th className="px-4 py-3 text-left">제목</th>
-                  <th className="px-4 py-3 text-left">행선지</th>
-                  <th className="px-4 py-3 text-left">출장자</th>
-                  <th className="px-4 py-3 text-left">기간</th>
-                  <th className="px-4 py-3 text-right">예산</th>
-                  <th className="px-4 py-3 text-right">정산액</th>
-                  <th className="px-4 py-3 text-center">상태</th>
+                <tr>
+                  <th>제목</th>
+                  <th>행선지</th>
+                  <th>출장자</th>
+                  <th>기간</th>
+                  <th className="text-right">예산</th>
+                  <th className="text-right">정산액</th>
+                  <th>상태</th>
                 </tr>
               </thead>
               <tbody>
-                {trips.map((t) => {
-                  const tone = STATUS_TONE[t.status] ?? STATUS_TONE.requested;
-                  const days = Math.ceil(
-                    (new Date(t.end_date).getTime() - new Date(t.start_date).getTime()) /
-                      (1000 * 60 * 60 * 24),
-                  ) + 1;
+                {trips.map((trip) => {
+                  const chipClass = STATUS_CHIP[trip.status] ?? "chip pend";
+                  const days =
+                    Math.ceil(
+                      (new Date(trip.end_date).getTime() -
+                        new Date(trip.start_date).getTime()) /
+                        (1000 * 60 * 60 * 24),
+                    ) + 1;
+                  const isUpcoming =
+                    trip.start_date >= today && trip.status !== "cancelled";
+                  const overBudget = trip.total_settled > trip.budget;
                   return (
-                    <tr
-                      key={t.id}
-                      className="border-b border-outline-variant/15 last:border-0 transition-colors hover:bg-primary/5"
-                    >
-                      <td className="px-4 py-3">
+                    <tr key={trip.id}>
+                      <td>
                         <Link
-                          href={`/business-trips/${t.id}` as never}
-                          className="font-medium text-on-surface hover:text-primary-electric"
+                          href={`/business-trips/${trip.id}` as never}
+                          className={cn(
+                            "text-text-1 hover:text-gold",
+                            isUpcoming && "italic text-gold",
+                          )}
                         >
-                          {t.title}
+                          {trip.title}
                         </Link>
                       </td>
-                      <td className="px-4 py-3 text-on-surface-variant">
-                        {t.destination}
+                      <td>{trip.destination}</td>
+                      <td>{trip.employees?.name ?? "—"}</td>
+                      <td className="font-mono text-[12px] text-text-2">
+                        {trip.start_date} ~ {trip.end_date}
+                        <span className="ml-1 text-text-3">({days}일)</span>
                       </td>
-                      <td className="px-4 py-3 text-on-surface-variant">
-                        {t.employees?.name ?? "—"}
+                      <td className="n">
+                        ₩{trip.budget.toLocaleString("ko-KR")}
                       </td>
-                      <td className="px-4 py-3 text-label-sm text-on-surface-variant tabular-nums">
-                        {t.start_date} ~ {t.end_date} ({days}일)
+                      <td
+                        className={cn(
+                          "n",
+                          overBudget ? "text-[#E06B5F]" : "text-text-1",
+                        )}
+                      >
+                        ₩{trip.total_settled.toLocaleString("ko-KR")}
                       </td>
-                      <td className="px-4 py-3 text-right tabular-nums text-on-surface">
-                        {t.budget.toLocaleString("ko-KR")}원
-                      </td>
-                      <td className="px-4 py-3 text-right tabular-nums">
-                        <span
-                          className={
-                            t.total_settled > t.budget
-                              ? "text-error-soft"
-                              : "text-on-surface"
-                          }
-                        >
-                          {t.total_settled.toLocaleString("ko-KR")}원
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span
-                          className={`inline-flex whitespace-nowrap rounded-md border px-2 py-0.5 text-[11px] font-semibold ${tone}`}
-                        >
-                          {STATUS_LABEL[t.status] ?? t.status}
+                      <td>
+                        <span className={chipClass}>
+                          {STATUS_LABEL[trip.status] ?? trip.status}
                         </span>
                       </td>
                     </tr>
@@ -173,35 +183,52 @@ export default async function BusinessTripsPage() {
               </tbody>
             </table>
           </div>
-        </div>
-      )}
+        )}
+      </section>
     </div>
   );
 }
 
-function KpiCard({
+/* ============================================================
+ * Subcomponents
+ * ============================================================ */
+
+function KPI({
   label,
   value,
-  tone,
+  prefix,
+  suffix,
+  subtext,
+  tone = "default",
 }: {
   label: string;
   value: string;
-  tone?: "primary" | "success";
+  prefix?: string;
+  suffix?: string;
+  subtext?: string;
+  tone?: "default" | "warn" | "danger";
 }) {
-  const colorMap = {
-    primary: "text-primary-electric",
-    success: "text-emerald-300",
-  };
+  const toneClass =
+    tone === "danger"
+      ? "text-[#E06B5F] italic"
+      : tone === "warn"
+        ? "text-gold italic"
+        : "text-text-1";
   return (
-    <div className="glass-panel rounded-xl p-5">
-      <p className="text-label-sm uppercase tracking-widest text-on-surface-variant">
-        {label}
-      </p>
-      <p
-        className={`mt-2 text-headline-md font-bold tabular-nums ${tone ? colorMap[tone] : "text-on-surface"}`}
-      >
+    <div className="kpi-card">
+      <div className="kpi-l">{label}</div>
+      <div className={cn("kpi-v", toneClass)}>
+        {prefix ? <span className="cur">{prefix}</span> : null}
         {value}
-      </p>
+        {suffix ? (
+          <span className="ml-2 text-[16px] text-text-3">{suffix}</span>
+        ) : null}
+      </div>
+      {subtext ? (
+        <div className="kpi-meta">
+          <span>{subtext}</span>
+        </div>
+      ) : null}
     </div>
   );
 }

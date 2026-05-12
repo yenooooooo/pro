@@ -1,16 +1,4 @@
 import Link from "next/link";
-import {
-  AlertTriangle,
-  Building2,
-  CheckCircle2,
-  Clock,
-  FileSignature,
-  Handshake,
-  Mail,
-  Phone,
-  Plus,
-  User,
-} from "lucide-react";
 import { differenceInDays } from "date-fns";
 import { getTranslations } from "next-intl/server";
 import { cn } from "@/lib/utils/cn";
@@ -83,95 +71,132 @@ export default async function VendorsPage({
   const t = await getTranslations("vendors");
 
   return (
-    <div className="space-y-stack-lg">
-      {/* Header */}
-      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
+    <div className="animate-view-in">
+      {/* ===== Page Head ===== */}
+      <header className="mb-9 flex flex-col items-start justify-between gap-8 border-b border-line pb-6 sm:flex-row sm:items-end">
         <div>
-          <h2 className="text-headline-lg font-semibold tracking-tight text-on-surface">
-            {t("title")}
-          </h2>
-          <p className="mt-1 text-body-md text-on-surface-variant">
-            {t("subtitle")} · {decorated.length}건
-          </p>
+          <div className="eyebrow mb-3">
+            <b>M07</b>Records · Vendors
+          </div>
+          <h1 className="page-h">
+            거래처 <em>{decorated.length}.</em>
+          </h1>
+          <p className="page-sub">{t("subtitle")}</p>
         </div>
-        <Link
-          href="/vendors/new"
-          className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary-electric px-4 py-2 text-label-sm font-semibold text-on-primary transition-opacity hover:opacity-90"
-        >
-          <Plus aria-hidden className="h-[18px] w-[18px]" />
-          {t("add")}
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/vendors/new" className="btn btn-primary">
+            + {t("add")}
+          </Link>
+        </div>
+      </header>
+
+      {/* ===== KPI Row ===== */}
+      <div className="mb-9 grid grid-cols-1 border-l border-t border-line md:grid-cols-3">
+        <div className="kpi-card">
+          <div className="kpi-l">{t("kpi_total")}</div>
+          <div className="kpi-v">
+            {decorated.length.toLocaleString("ko-KR")}
+            <span className="ml-1 text-[16px] text-text-3">개</span>
+          </div>
+          <div className="kpi-meta">
+            <span>등록 전체</span>
+            <span />
+          </div>
+        </div>
+        <div className="kpi-card">
+          <div className="kpi-l">{t("kpi_active_contracts")}</div>
+          <div className="kpi-v">
+            {activeCount.toLocaleString("ko-KR")}
+            <span className="ml-1 text-[16px] text-text-3">개</span>
+          </div>
+          <div className="kpi-meta">
+            <span>
+              {decorated.length > 0
+                ? `${Math.round((activeCount / decorated.length) * 100)}% 활성`
+                : "데이터 없음"}
+            </span>
+            <span />
+          </div>
+        </div>
+        <div className="kpi-card">
+          <div className="kpi-l">
+            {t("kpi_expiring_soon")} · D-{EXPIRY_THRESHOLD_DAYS}
+          </div>
+          <div
+            className={cn(
+              "kpi-v",
+              expiringSoon.length + expired.length > 0 && "danger",
+            )}
+          >
+            {(expiringSoon.length + expired.length).toLocaleString("ko-KR")}
+            <span className="ml-1 text-[16px] text-text-3">건</span>
+          </div>
+          <div className="kpi-meta">
+            <span>
+              {expired.length > 0 ? `만료 ${expired.length}건 · ` : ""}
+              {expiringSoon.length > 0 ? `임박 ${expiringSoon.length}건` : "이상 없음"}
+            </span>
+            <span />
+          </div>
+        </div>
       </div>
 
-      {/* KPI Row */}
-      <div className="grid grid-cols-1 gap-gutter md:grid-cols-3">
-        <KPICard
-          label={t("kpi_total")}
-          value={String(decorated.length)}
-          unit="개"
-          icon={Handshake}
-          iconTone="text-primary-electric"
-          barTone="bg-primary-electric"
-          barWidth="100%"
-        />
-        <KPICard
-          label={t("kpi_active_contracts")}
-          value={String(activeCount)}
-          unit="개"
-          icon={CheckCircle2}
-          iconTone="text-tertiary-sky"
-          barTone="bg-tertiary-sky"
-          barWidth={
-            decorated.length > 0
-              ? `${Math.round((activeCount / decorated.length) * 100)}%`
-              : "0%"
-          }
-        />
-        <KPICard
-          label={`${t("kpi_expiring_soon")} (${EXPIRY_THRESHOLD_DAYS}일)`}
-          labelTone={expiringSoon.length > 0 ? "text-error-soft" : undefined}
-          value={String(expiringSoon.length)}
-          unit="건"
-          valueTone={expiringSoon.length > 0 ? "text-error-soft" : undefined}
-          icon={Clock}
-          iconTone={
-            expiringSoon.length > 0 ? "text-error-soft" : "text-on-surface-variant"
-          }
-          barTone={
-            expiringSoon.length > 0 ? "bg-error-soft animate-pulse" : "bg-outline"
-          }
-          barWidth={expiringSoon.length > 0 ? "20%" : "0%"}
-          glowText={expiringSoon.length > 0}
-        />
-      </div>
-
-      {/* 만료 임박/만료 배너 */}
+      {/* ===== 만료 임박/만료 배너 ===== */}
       {expiringSoon.length > 0 || expired.length > 0 ? (
-        <ExpiryBanner expiringSoon={expiringSoon} expired={expired} />
+        <div className="mb-9">
+          <ExpiryBanner expiringSoon={expiringSoon} expired={expired} />
+        </div>
       ) : null}
 
-      {/* Filter Bar */}
-      <div className="glass-panel rounded-xl p-stack-md">
+      {/* ===== Filter Bar ===== */}
+      <div className="mb-9 border border-line bg-bg p-5">
         <VendorFilters q={q} category={category} categories={categories} />
       </div>
 
-      {/* Card grid */}
-      {decorated.length === 0 ? (
-        <div className="glass-panel rounded-xl p-12 text-center">
-          <Building2 aria-hidden className="mx-auto h-10 w-10 text-outline-variant" />
-          <p className="mt-3 text-body-md text-on-surface-variant">
+      {/* ===== Section rule ===== */}
+      <div className="section-rule">
+        <span className="l">
+          <b>M07.01</b>Vendors · Directory
+        </span>
+        <span className="line" />
+      </div>
+
+      {/* ===== Vendor table ===== */}
+      <section className="panel">
+        <div className="panel-h">
+          <div className="t font-serif">
+            거래처 <em>장부.</em>
+          </div>
+          <div className="meta">{decorated.length}건</div>
+        </div>
+        {decorated.length === 0 ? (
+          <div className="border-t border-line py-12 text-center font-mono text-[11px] uppercase tracking-[0.08em] text-text-3">
             {q || category
               ? "조건에 일치하는 거래처가 없습니다."
               : "등록된 거래처가 없습니다. 우측 상단 「거래처 추가」를 눌러 시작하세요."}
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-stack-md md:grid-cols-2 xl:grid-cols-3">
-          {decorated.map((v) => (
-            <VendorCard key={v.id} vendor={v} />
-          ))}
-        </div>
-      )}
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="tbl min-w-[820px]">
+              <thead>
+                <tr>
+                  <th>거래처</th>
+                  <th>분류</th>
+                  <th>담당자</th>
+                  <th>연락처</th>
+                  <th>계약 기간</th>
+                  <th>상태</th>
+                </tr>
+              </thead>
+              <tbody>
+                {decorated.map((v) => (
+                  <VendorRowTr key={v.id} vendor={v} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
     </div>
   );
 }
@@ -207,192 +232,103 @@ function ExpiryBanner({
   expired: DecoratedVendor[];
 }) {
   return (
-    <div className="glass-panel relative overflow-hidden rounded-xl border-l-4 border-l-error-soft p-stack-md">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-gradient-to-r from-error-soft/10 to-transparent"
-      />
-      <div className="relative flex flex-wrap items-center gap-4">
-        <AlertTriangle aria-hidden className="h-6 w-6 flex-shrink-0 text-error-soft" />
-        <div className="flex-1">
-          <p className="text-body-md font-medium text-on-surface">
-            계약 갱신 검토 필요
-            {expiringSoon.length > 0 ? ` · 임박 ${expiringSoon.length}건` : ""}
-            {expired.length > 0 ? ` · 만료 ${expired.length}건` : ""}
-          </p>
-          <p className="mt-0.5 text-label-sm text-on-surface-variant">
-            {EXPIRY_THRESHOLD_DAYS}일 이내 만료 예정 또는 이미 만료된 계약을 검토하세요.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {[...expired, ...expiringSoon].slice(0, 6).map((v) => (
-            <Link
-              key={v.id}
-              href={`/vendors/${v.id}/edit`}
-              className="inline-flex items-center gap-1.5 rounded-md border border-error-soft/30 bg-error-soft/10 px-3 py-1 text-label-sm font-semibold text-error-soft transition-colors hover:bg-error-soft/20"
-            >
-              {v.name} ·{" "}
+    <div className="border border-gold-soft bg-gold/[0.06] p-5">
+      <div className="mb-3 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.12em] text-gold">
+        <span className="h-[6px] w-[6px] rounded-full bg-gold" />
+        계약 갱신 검토 필요
+        {expiringSoon.length > 0 ? ` · 임박 ${expiringSoon.length}건` : ""}
+        {expired.length > 0 ? ` · 만료 ${expired.length}건` : ""}
+      </div>
+      <p className="mb-4 text-[13px] text-text-2">
+        {EXPIRY_THRESHOLD_DAYS}일 이내 만료 예정 또는 이미 만료된 계약을 검토하세요.
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {[...expired, ...expiringSoon].slice(0, 8).map((v) => (
+          <Link
+            key={v.id}
+            href={`/vendors/${v.id}/edit`}
+            className="inline-flex items-center gap-1.5 border border-gold-soft bg-bg-1 px-3 py-1.5 font-mono text-[11px] tracking-[0.05em] text-gold transition-colors hover:bg-gold/10"
+          >
+            {v.name} ·{" "}
+            <span className="tabular-nums">
               {v.daysToExpiry !== null && v.daysToExpiry < 0
                 ? `만료 ${-v.daysToExpiry}일 경과`
                 : `D-${v.daysToExpiry}`}
-            </Link>
-          ))}
-        </div>
+            </span>
+          </Link>
+        ))}
       </div>
     </div>
   );
 }
 
-function VendorCard({ vendor }: { vendor: DecoratedVendor }) {
+function VendorRowTr({ vendor }: { vendor: DecoratedVendor }) {
   const isExpiringSoon =
     vendor.daysToExpiry !== null &&
     vendor.daysToExpiry >= 0 &&
     vendor.daysToExpiry <= EXPIRY_THRESHOLD_DAYS;
   const isExpired = vendor.daysToExpiry !== null && vendor.daysToExpiry < 0;
-  return (
-    <Link
-      href={`/vendors/${vendor.id}/edit`}
-      className={cn(
-        "glass-panel group relative flex cursor-pointer flex-col gap-stack-sm overflow-hidden rounded-xl p-stack-md transition-all",
-        isExpired
-          ? "border-l-4 border-l-error-soft hover:bg-error-soft/5"
-          : isExpiringSoon
-            ? "border-l-4 border-l-error-soft hover:bg-surface-container/80"
-            : "hover:border-primary-electric/30 hover:bg-surface-container/80",
-      )}
-    >
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 transition-opacity group-hover:opacity-100"
-      />
 
-      <div className="relative flex items-start justify-between">
-        <div
-          aria-hidden
-          className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg border border-outline-variant/30 bg-surface-container-high text-primary-electric"
+  const status = isExpired
+    ? { variant: "rej", text: `만료 ${-(vendor.daysToExpiry as number)}일 경과` }
+    : isExpiringSoon
+      ? { variant: "pend", text: `D-${vendor.daysToExpiry}` }
+      : { variant: "ok", text: "유효" };
+
+  return (
+    <tr>
+      <td>
+        <Link
+          href={`/vendors/${vendor.id}/edit`}
+          className="block text-text-1 transition-colors hover:text-gold"
         >
-          <Building2 className="h-5 w-5" />
-        </div>
+          <div className="text-[13px] font-medium">{vendor.name}</div>
+          {vendor.business_no ? (
+            <div className="mt-[2px] font-mono text-[10px] tracking-[0.05em] text-text-3">
+              사업자 {vendor.business_no}
+            </div>
+          ) : null}
+        </Link>
+      </td>
+      <td>
         {vendor.category ? (
-          <span className="inline-flex whitespace-nowrap rounded-md border border-primary-electric/30 bg-primary-electric/10 px-2.5 py-1 text-[11px] font-semibold text-primary-electric">
+          <span className={cn("chip", chipVariantForCategory(vendor.category))}>
+            <i />
             {label(VENDOR_CATEGORY_LABEL, vendor.category)}
           </span>
-        ) : null}
-      </div>
-
-      <div className="relative mt-2">
-        <h3 className="text-body-lg font-semibold text-on-surface transition-colors group-hover:text-primary-electric">
-          {vendor.name}
-        </h3>
-        {vendor.business_no ? (
-          <p className="text-label-sm tabular-nums text-on-surface-variant">
-            사업자 {vendor.business_no}
-          </p>
-        ) : null}
-      </div>
-
-      <div className="relative mt-2 space-y-1.5 text-data-tabular text-on-surface-variant">
-        {vendor.contact_person ? (
-          <div className="flex items-center gap-2">
-            <User aria-hidden className="h-[14px] w-[14px] text-outline" />
-            {vendor.contact_person}
-          </div>
-        ) : null}
-        {vendor.phone ? (
-          <div className="flex items-center gap-2">
-            <Phone aria-hidden className="h-[14px] w-[14px] text-outline" />
-            <span className="tabular-nums">{vendor.phone}</span>
-          </div>
-        ) : null}
-        {vendor.email ? (
-          <div className="flex items-center gap-2 truncate">
-            <Mail aria-hidden className="h-[14px] w-[14px] text-outline" />
-            <span className="truncate">{vendor.email}</span>
-          </div>
-        ) : null}
-      </div>
-
-      <div className="relative mt-auto flex items-center justify-between border-t border-outline-variant/20 pt-4">
-        <div className="flex items-center gap-1.5 text-label-sm tabular-nums text-outline">
-          <FileSignature aria-hidden className="h-3.5 w-3.5" />
-          <span className="truncate">{vendor.contractRange}</span>
-        </div>
-        {isExpired ? (
-          <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border border-error-soft/30 bg-error-soft/10 px-2 py-1 text-[11px] font-semibold text-error-soft">
-            <AlertTriangle aria-hidden className="h-3 w-3" />
-            만료 {-(vendor.daysToExpiry as number)}일
-          </span>
-        ) : isExpiringSoon ? (
-          <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border border-error-soft/30 bg-error-soft/10 px-2 py-1 text-[11px] font-semibold text-error-soft">
-            <AlertTriangle aria-hidden className="h-3 w-3" />
-            D-{vendor.daysToExpiry}
-          </span>
         ) : (
-          <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border border-tertiary-sky/30 bg-tertiary-sky/10 px-2 py-1 text-[11px] font-semibold text-tertiary-sky">
-            <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-tertiary-sky" />
-            유효
-          </span>
+          <span className="font-mono text-[10px] text-text-3">—</span>
         )}
-      </div>
-    </Link>
+      </td>
+      <td className="text-text-2">{vendor.contact_person ?? "—"}</td>
+      <td className="font-mono text-[12px] tabular-nums text-text-2">
+        {vendor.phone ?? "—"}
+        {vendor.email ? (
+          <div className="mt-[2px] truncate text-text-3">{vendor.email}</div>
+        ) : null}
+      </td>
+      <td className="font-mono text-[12px] tabular-nums text-text-2">
+        {vendor.contractRange}
+      </td>
+      <td>
+        <span className={cn("chip", status.variant)}>
+          <i />
+          {status.text}
+        </span>
+      </td>
+    </tr>
   );
 }
 
-function KPICard({
-  label,
-  labelTone,
-  value,
-  valueTone,
-  unit,
-  icon: Icon,
-  iconTone,
-  barTone,
-  barWidth,
-  glowText,
-}: {
-  label: string;
-  labelTone?: string;
-  value: string;
-  valueTone?: string;
-  unit?: string;
-  icon: typeof Handshake;
-  iconTone: string;
-  barTone: string;
-  barWidth: string;
-  glowText?: boolean;
-}) {
-  return (
-    <div className="glass-panel relative flex h-32 flex-col justify-between overflow-hidden rounded-lg p-stack-md">
-      <div className="flex items-start justify-between">
-        <span
-          className={cn(
-            "text-label-sm uppercase tracking-wider",
-            labelTone ?? "text-on-surface-variant",
-          )}
-        >
-          {label}
-        </span>
-        <Icon aria-hidden className={cn("h-5 w-5 opacity-70", iconTone)} />
-      </div>
-      <div className="flex items-baseline gap-2">
-        <span
-          className={cn(
-            "text-display-xl font-bold tracking-tighter tabular-nums",
-            valueTone ?? "text-on-surface",
-            glowText && "drop-shadow-[0_0_10px_rgba(255,180,171,0.5)]",
-          )}
-        >
-          {value}
-        </span>
-        {unit ? (
-          <span className="text-data-tabular text-on-surface-variant">{unit}</span>
-        ) : null}
-      </div>
-      <div
-        aria-hidden
-        className={cn("absolute bottom-0 left-0 h-1", barTone)}
-        style={{ width: barWidth }}
-      />
-    </div>
-  );
+function chipVariantForCategory(category: string): string {
+  switch (category) {
+    case "partner":
+      return "info";
+    case "supplier":
+      return "ok";
+    case "customer":
+      return "pend";
+    default:
+      return "";
+  }
 }
