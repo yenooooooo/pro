@@ -11,6 +11,7 @@ import { HelpModal } from "@/components/features/topbar/HelpModal";
 import { AskNexusModal } from "@/components/features/topbar/AskNexusModal";
 import { PresenceMount } from "@/components/shared/PresenceMount";
 import { LocaleToggle } from "@/components/shared/LocaleToggle";
+import { SystemPulseButton } from "@/components/shared/PulseSweep";
 import type { NotificationItem } from "@/lib/notifications/server";
 import { DASHBOARD_NAV } from "@/constants/nav";
 
@@ -138,6 +139,9 @@ export function TopBar({ userEmail, notifications, userRole }: TopBarProps) {
               ⌃ J
             </kbd>
           </button>
+
+          {/* System Pulse ⊙ */}
+          <SystemPulseButton />
 
           {/* 검색 (Ctrl+K) */}
           <button

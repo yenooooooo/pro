@@ -93,7 +93,23 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}
           <PWARegister />
-          <Toaster position="top-right" richColors theme="dark" />
+          <Toaster
+            position="bottom-center"
+            theme="dark"
+            toastOptions={{
+              style: {
+                background: "#0E1014",
+                border: "1px solid #C99A4A",
+                borderRadius: "0",
+                fontFamily: "JetBrains Mono, ui-monospace, monospace",
+                fontSize: "11px",
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                color: "#EDEEF0",
+                boxShadow: "0 12px 40px rgba(0,0,0,0.6)",
+              },
+            }}
+          />
         </NextIntlClientProvider>
       </body>
     </html>
