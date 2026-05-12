@@ -1,17 +1,6 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import {
-  AlertTriangle,
-  Building2,
-  CalendarClock,
-  Coins,
-  Package,
-  Radar,
-  TrendingUp,
-  Users,
-} from "lucide-react";
 import { cn } from "@/lib/utils/cn";
-import { formatKRW } from "@/lib/utils/format";
 import { createClient } from "@/lib/supabase/server";
 import { aggregateAttendance, WEEK52_THRESHOLD } from "@/lib/attendance/aggregate";
 import {
@@ -318,98 +307,223 @@ export default async function DashboardPage({
     hour12: false,
   });
 
-  return (
-    <div className="hologram-grid relative -mx-4 -my-6 min-h-[calc(100vh-4rem)] overflow-hidden sm:-mx-6 lg:-mx-container-padding lg:-my-8 print:hidden">
-      {/* Ambient indigo glow */}
-      <div
-        aria-hidden
-        className="pointer-events-none fixed left-1/2 top-1/2 z-0 h-[800px] w-[800px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-indigo-600/10 blur-[120px]"
-      />
+  // v2 Command Hero — 미션 리스트 (실 데이터 기반)
+  const missions: Array<{ label: string; done: boolean; meta: string }> = [
+    {
+      label: `${month}월 결산 체크리스트`,
+      done: doneTasks >= totalTasks && totalTasks > 0,
+      meta:
+        totalTasks > 0 ? `${doneTasks}/${totalTasks}` : "—",
+    },
+    {
+      label: "주 52h 초과 직원 점검",
+      done: overworkedEmployees.length === 0,
+      meta:
+        overworkedEmployees.length === 0
+          ? "이상 없음"
+          : `${overworkedEmployees.length}건 초과`,
+    },
+    {
+      label: "계약 만료 임박 거래처 확인",
+      done: expiringVendors.length === 0,
+      meta:
+        expiringVendors.length === 0
+          ? "이상 없음"
+          : `${expiringVendors.length}건 D-30 내`,
+    },
+    {
+      label: "자산 내용연수 점검",
+      done: expiringAssets.length === 0,
+      meta:
+        expiringAssets.length === 0
+          ? "이상 없음"
+          : `${expiringAssets.length}건 임박`,
+    },
+    {
+      label: "연차 촉진 대상자 면담",
+      done: promotionTargets.length === 0,
+      meta:
+        promotionTargets.length === 0
+          ? "해당 없음"
+          : `${promotionTargets.length}명`,
+    },
+  ];
+  const missionDone = missions.filter((m) => m.done).length;
 
-      <div className="relative z-10 mx-auto max-w-[1600px] space-y-stack-lg px-4 py-6 sm:px-6 lg:px-container-padding lg:py-8">
-      {/* Header */}
-      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
-        <div>
-          <p className="mb-2 inline-flex items-center gap-2 text-label-sm uppercase tracking-widest text-indigo-400">
-            <Radar aria-hidden className="h-4 w-4" />
-            {t("system_status")} · {year}년 {month}월
-          </p>
-          <h1 className="text-headline-lg font-bold tracking-tight text-on-surface sm:text-display-xl">
-            {t("title")}
+  return (
+    <div className="animate-view-in">
+      {/* ===== COMMAND HERO ===== */}
+      <section className="mb-9 grid min-h-[460px] grid-cols-1 gap-8 border-b border-line pb-8 pt-2 lg:grid-cols-[1.1fr_1fr]">
+        {/* LEFT — Greeting + Mission */}
+        <div className="flex flex-col justify-center">
+          <div className="mb-6 inline-flex w-max items-center gap-3 border border-line-2 px-3 py-[6px] font-mono text-[11px] uppercase tracking-[0.16em] text-text-2">
+            <span className="h-[6px] w-[6px] animate-gold-pulse rounded-full bg-gold shadow-[0_0_12px_#F5C26B]" />
+            {year}.{String(month).padStart(2, "0")} · {syncTime} KST · Operations live
+          </div>
+          <h1 className="font-serif text-[clamp(48px,5vw,76px)] font-normal leading-[0.98] tracking-[-0.025em] text-text-1">
+            안녕하세요,
+            <br />
+            <em className="not-italic font-serif italic text-gold">총무</em>님.
           </h1>
-          <p className="mt-1 text-body-md text-on-surface-variant">
-            {t("subtitle")}
+          <p className="mt-[22px] max-w-[480px] text-[15px] leading-[1.65] text-text-2">
+            이번 달 미확정 결산 <b className="font-medium text-gold">{totalTasks - doneTasks}건</b>,
+            법적 리스크{" "}
+            <b className="font-medium text-gold">{overworkedEmployees.length}건</b>이
+            대기 중입니다.
+            {expiringVendors.length > 0 ? (
+              <>
+                {" "}
+                오늘 확인할 것은{" "}
+                <b className="font-medium text-gold">거래처 계약 만료</b>{" "}
+                {expiringVendors.length}건이에요.
+              </>
+            ) : null}
           </p>
+          <div className="mt-8 flex gap-[10px]">
+            <Link href={"/closing" as never} className="btn btn-primary">
+              결산 처리 →
+            </Link>
+            <Link href={"/risks" as never} className="btn">
+              리스크 검토
+            </Link>
+          </div>
+
+          {/* Mission checklist */}
+          <div className="mt-9 border-t border-dashed border-line pt-6">
+            <div className="mb-[14px] font-mono text-[10px] uppercase tracking-[0.15em] text-text-3">
+              오늘의 미션 · {missionDone} / {missions.length}
+            </div>
+            <ul className="flex flex-col gap-[10px]">
+              {missions.map((m) => (
+                <li
+                  key={m.label}
+                  className={cn(
+                    "flex items-center gap-[14px] text-[13px]",
+                    m.done ? "text-text-3 line-through decoration-text-4" : "text-text-2",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "flex h-4 w-4 items-center justify-center border font-mono text-[10px]",
+                      m.done
+                        ? "border-gold bg-gold text-[#0A0A0A]"
+                        : "border-line-2 text-transparent",
+                    )}
+                  >
+                    {m.done ? "✓" : ""}
+                  </span>
+                  <span>{m.label}</span>
+                  <small className="ml-auto font-mono text-[10px] tracking-[0.05em] text-text-3">
+                    {m.meta}
+                  </small>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
-        <div className="hidden items-center gap-3 rounded-lg border border-outline-variant/30 bg-surface-container-high/50 px-4 py-2 backdrop-blur-md lg:flex">
-          <span className="text-data-tabular text-slate-400">{t("sync")}:</span>
-          <span className="text-data-tabular font-bold tabular-nums text-tertiary-sky">
-            {syncTime} KST
-          </span>
-          <span
-            aria-hidden
-            className="ml-2 h-2 w-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"
+
+        {/* RIGHT — Side stats panel (v2 Sphere 자리 — Three.js 없이 editorial summary) */}
+        <div className="relative flex flex-col justify-center gap-3 border-l border-dashed border-line pl-6 lg:gap-4">
+          <SideStat label="HEAD" name="직원" value={String((employeesCurr ?? []).length)} />
+          <SideStat
+            label="MTD"
+            name="인건비"
+            value={`₩${(totalPayroll / 10_000_000).toFixed(1)}M`}
+          />
+          <SideStat
+            label="EXP"
+            name="지출"
+            value={`₩${(totalExpense / 10_000_000).toFixed(1)}M`}
+            delta={expenseDelta}
+            deltaInversed
+          />
+          <SideStat
+            label="PEND"
+            name="미결 결산"
+            value={String(totalTasks - doneTasks)}
+            tone={totalTasks - doneTasks > 0 ? "warn" : "default"}
+          />
+          <SideStat
+            label="RISK"
+            name="법적 리스크"
+            value={String(overworkedEmployees.length)}
+            tone={overworkedEmployees.length > 0 ? "danger" : "default"}
+          />
+          <SideStat
+            label="CYCLE"
+            name="결산 진행률"
+            value={`${closingPct}%`}
+            tone={closingPct >= 80 ? "default" : "warn"}
           />
         </div>
-      </div>
+      </section>
 
-      {/* KPI 4종 */}
-      <div className="grid grid-cols-1 gap-gutter sm:grid-cols-2 xl:grid-cols-4">
-        <KPICard
+      {/* ===== KPI grid (4) ===== */}
+      <div className="mb-9 grid grid-cols-1 border-l border-t border-line sm:grid-cols-2 xl:grid-cols-4">
+        <KPI
           label={t("kpi_total_payroll")}
-          value={formatKRW(totalPayroll)}
+          value={totalPayroll}
+          prefix="₩"
           delta={payrollDelta}
-          icon={Coins}
-          tone="primary"
         />
-        <KPICard
+        <KPI
           label={t("kpi_total_expense")}
-          value={formatKRW(totalExpense)}
+          value={totalExpense}
+          prefix="₩"
           delta={expenseDelta}
-          icon={TrendingUp}
-          tone="tertiary"
           deltaInversed
         />
-        <KPICard
+        <KPI
           label={t("kpi_leave_promotion")}
-          value={`${promotionTargets.length}${t("kpi_leave_promotion_unit")}`}
+          value={promotionTargets.length}
+          suffix={t("kpi_leave_promotion_unit")}
           subtext={t("kpi_leave_promotion_desc")}
-          icon={Users}
-          tone="secondary"
+          tone={promotionTargets.length > 0 ? "warn" : "default"}
         />
-        <KPICard
+        <KPI
           label={t("kpi_closing_progress")}
-          value={`${closingPct}%`}
+          value={closingPct}
+          suffix="%"
           subtext={t("kpi_closing_done", { done: doneTasks, total: totalTasks })}
-          icon={CalendarClock}
-          tone="primary"
-          progressValue={closingPct}
+          tone={closingPct < 50 ? "warn" : "default"}
         />
       </div>
 
-      {/* Charts row */}
-      <div className="grid grid-cols-1 gap-gutter lg:grid-cols-2">
-        <Panel title={t("department_costs")} subtitle={t("department_costs_caption", { year, month })}>
+      {/* ===== Chart row ===== */}
+      <div className="row-grid mb-9" style={{ gridTemplateColumns: "1.5fr 1fr" }}>
+        <Panel title={t("department_costs")} meta={`${year} · ${String(month).padStart(2, "0")}`}>
           <DepartmentCostChart data={departmentChart} />
         </Panel>
-        <Panel title={t("category_expenses")} subtitle={t("category_expenses_caption", { year, month, n: 5 })}>
+        <Panel
+          title={t("category_expenses")}
+          meta={`${year}.${String(month).padStart(2, "0")} · 상위 5`}
+        >
           <ExpenseCategoryChart data={categoryChart} />
         </Panel>
       </div>
 
-      {/* 6mo trend */}
-      <Panel title={t("trend_6mo")}>
-        <TrendChart data={trendData} />
-      </Panel>
+      {/* ===== 6mo trend ===== */}
+      <div className="mb-9">
+        <Panel title={t("trend_6mo")}>
+          <TrendChart data={trendData} />
+        </Panel>
+      </div>
 
-      {/* AI 인사이트 */}
-      <AiInsightsCard />
+      {/* ===== AI insights ===== */}
+      <div className="mb-9">
+        <AiInsightsCard />
+      </div>
 
-      {/* Alerts */}
-      <div className="grid grid-cols-1 gap-gutter md:grid-cols-3">
+      {/* ===== Section rule + Alerts ===== */}
+      <div className="section-rule">
+        <span className="l">
+          <b>04</b>Alerts · Live
+        </span>
+        <span className="line" />
+      </div>
+      <div className="grid grid-cols-1 gap-px bg-line md:grid-cols-3">
         <AlertPanel
           title="계약 만료 임박 거래처"
-          icon={Building2}
           empty="만료 임박 거래처 없음"
           href="/vendors"
           viewAllLabel={tCommon("view_all")}
@@ -433,7 +547,6 @@ export default async function DashboardPage({
 
         <AlertPanel
           title="내용연수 만료 자산"
-          icon={Package}
           empty="만료 임박 자산 없음"
           href="/assets"
           viewAllLabel={tCommon("view_all")}
@@ -455,7 +568,6 @@ export default async function DashboardPage({
 
         <AlertPanel
           title="주 52h 초과 직원"
-          icon={AlertTriangle}
           empty="52시간 초과 직원 없음"
           href="/attendance"
           viewAllLabel={tCommon("view_all")}
@@ -469,7 +581,6 @@ export default async function DashboardPage({
             />
           ))}
         </AlertPanel>
-      </div>
       </div>
     </div>
   );
@@ -566,102 +677,74 @@ function build6MonthTrend(
  * UI primitives
  * ============================================================ */
 
+/* ============================================================
+ * v2 UI primitives (Editorial 스타일)
+ * ============================================================ */
+
 function Panel({
   title,
-  subtitle,
+  meta,
   children,
 }: {
   title: string;
-  subtitle?: string;
+  meta?: string;
   children: React.ReactNode;
 }) {
   return (
-    <section className="glass-panel rounded-xl p-stack-md">
-      <div className="mb-stack-md flex items-baseline justify-between">
-        <h3 className="text-headline-md font-semibold text-on-surface">{title}</h3>
-        {subtitle ? (
-          <span className="text-label-sm text-on-surface-variant">{subtitle}</span>
-        ) : null}
+    <section className="panel">
+      <div className="panel-h">
+        <div className="t font-serif">{title}</div>
+        {meta ? <div className="meta">{meta}</div> : null}
       </div>
       {children}
     </section>
   );
 }
 
-function KPICard({
+function KPI({
   label,
   value,
+  prefix,
+  suffix,
   delta,
-  subtext,
-  icon: Icon,
-  tone,
   deltaInversed,
-  progressValue,
+  subtext,
+  tone = "default",
 }: {
   label: string;
-  value: string;
+  value: number;
+  prefix?: string;
+  suffix?: string;
   delta?: Delta | null;
-  subtext?: string;
-  icon: typeof Coins;
-  tone: "primary" | "tertiary" | "secondary";
   deltaInversed?: boolean;
-  progressValue?: number;
+  subtext?: string;
+  tone?: "default" | "warn" | "danger";
 }) {
-  const toneClass = {
-    primary: "text-primary-electric",
-    tertiary: "text-tertiary-sky",
-    secondary: "text-secondary-slate",
-  }[tone];
-  const barClass = {
-    primary: "bg-primary-electric",
-    tertiary: "bg-tertiary-sky",
-    secondary: "bg-secondary-slate",
-  }[tone];
-  const barGlow = {
-    primary: "rgba(192,193,255,0.7)",
-    tertiary: "rgba(123,208,255,0.7)",
-    secondary: "rgba(185,200,222,0.5)",
-  }[tone];
+  const formatted = value.toLocaleString("ko-KR");
+  const toneClass =
+    tone === "danger"
+      ? "text-[#E06B5F] italic"
+      : tone === "warn"
+        ? "text-gold italic"
+        : "text-text-1";
 
   return (
-    <div className="glass-panel group relative flex h-36 flex-col justify-between overflow-hidden rounded-xl p-stack-md transition-all hover:border-primary-electric/30 hover:shadow-[0_0_24px_-8px_rgba(192,193,255,0.4)]">
-      {/* Inner rim light gradient (호버 시 강조) */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/[0.04] to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-      />
-
-      <div className="relative z-10 flex items-start justify-between">
-        <span className="text-label-sm uppercase tracking-wider text-on-surface-variant">
-          {label}
-        </span>
-        <Icon aria-hidden className={cn("h-5 w-5 opacity-70", toneClass)} />
+    <div className="kpi-card">
+      <div className="kpi-l">{label}</div>
+      <div className={cn("kpi-v", toneClass)}>
+        {prefix ? <span className="cur">{prefix}</span> : null}
+        {formatted}
+        {suffix ? <span className="ml-1 text-[16px] text-text-3">{suffix}</span> : null}
       </div>
-
-      <div className="relative z-10 space-y-1">
-        <span className="block text-[28px] font-bold tracking-tighter tabular-nums text-on-surface">
-          {value}
-        </span>
+      <div className="kpi-meta">
         {delta !== undefined ? (
           <DeltaBadge delta={delta} inversed={deltaInversed} />
-        ) : null}
-        {subtext ? (
-          <span className="block text-label-sm text-on-surface-variant">
-            {subtext}
-          </span>
-        ) : null}
+        ) : subtext ? (
+          <span>{subtext}</span>
+        ) : (
+          <span />
+        )}
       </div>
-
-      {/* 하단 액센트 바 (progress가 있으면 진행률, 없으면 항상 풀폭) */}
-      <div
-        aria-hidden
-        className={cn("absolute bottom-0 left-0 h-1 transition-all", barClass)}
-        style={{
-          width:
-            progressValue !== undefined ? `${progressValue}%` : "100%",
-          boxShadow: `0 0 8px ${barGlow}`,
-        }}
-      />
     </div>
   );
 }
@@ -670,44 +753,69 @@ function DeltaBadge({
   delta,
   inversed,
 }: {
-  delta: Delta | null;
+  delta: Delta | null | undefined;
   inversed?: boolean;
 }) {
   if (!delta) {
-    return (
-      <span className="text-label-sm text-on-surface-variant">전월 데이터 없음</span>
-    );
+    return <span className="text-text-3">전월 데이터 없음</span>;
   }
   const isPositive = inversed ? delta.dir === "down" : delta.dir === "up";
-  const sign = delta.dir === "up" ? "+" : delta.dir === "down" ? "" : "±";
-  const label = `${sign}${(delta.pct * 100).toFixed(1)}% 전월비`;
-  if (delta.dir === "flat") {
-    return (
-      <span className="text-label-sm text-on-surface-variant">{label}</span>
-    );
-  }
+  const arrow = delta.dir === "up" ? "▲" : delta.dir === "down" ? "▼" : "—";
+  const label = `${arrow} ${(delta.pct * 100).toFixed(1)}% MoM`;
+  if (delta.dir === "flat") return <span className="text-text-3">{label}</span>;
   return (
-    <span
-      className={cn(
-        "text-label-sm font-medium",
-        isPositive ? "text-tertiary-sky" : "text-error-soft",
-      )}
-    >
+    <span className={isPositive ? "text-[#6BCB8A]" : "text-[#E06B5F]"}>
       {label}
     </span>
   );
 }
 
+function SideStat({
+  label,
+  name,
+  value,
+  delta,
+  deltaInversed,
+  tone = "default",
+}: {
+  label: string;
+  name: string;
+  value: string;
+  delta?: Delta | null;
+  deltaInversed?: boolean;
+  tone?: "default" | "warn" | "danger";
+}) {
+  const valueClass =
+    tone === "danger"
+      ? "text-[#E06B5F] italic"
+      : tone === "warn"
+        ? "text-gold italic"
+        : "text-text-1";
+  return (
+    <div className="flex items-baseline gap-3 font-mono text-[10px] uppercase tracking-[0.08em] text-text-2">
+      <span className="inline-block h-px w-6 bg-gold align-middle" />
+      <b className="font-normal text-gold">{label}</b>
+      <span>{name}</span>
+      <span className={cn("ml-auto font-serif text-[20px] not-italic", valueClass)}>
+        {value}
+      </span>
+      {delta ? (
+        <span className="font-mono text-[10px]">
+          <DeltaBadge delta={delta} inversed={deltaInversed} />
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
 function AlertPanel({
   title,
-  icon: Icon,
   empty,
   href,
   children,
   viewAllLabel,
 }: {
   title: string;
-  icon: typeof AlertTriangle;
   empty: string;
   href?: string;
   children: React.ReactNode;
@@ -717,25 +825,22 @@ function AlertPanel({
   const hasItems = items.length > 0 && items.some(Boolean);
 
   return (
-    <section className="glass-panel flex flex-col rounded-xl">
-      <header className="flex items-center justify-between gap-2 border-b border-outline-variant/20 px-4 py-3">
-        <h3 className="flex items-center gap-2 text-sm font-semibold text-on-surface">
-          <Icon aria-hidden className="h-4 w-4 text-primary-electric" />
-          {title}
-        </h3>
+    <section className="panel">
+      <div className="panel-h">
+        <div className="t font-serif text-[18px]">{title}</div>
         {href ? (
           <Link
-            href={href}
-            className="text-label-sm text-primary-electric transition-colors hover:text-primary-container"
+            href={href as never}
+            className="font-mono text-[10px] uppercase tracking-[0.1em] text-gold transition-colors hover:text-gold-2"
           >
-            {viewAllLabel ?? "전체보기"}
+            {viewAllLabel ?? "전체보기"} →
           </Link>
         ) : null}
-      </header>
+      </div>
       {hasItems ? (
-        <ul className="divide-y divide-outline-variant/15">{children}</ul>
+        <ul className="flex flex-col">{children}</ul>
       ) : (
-        <div className="px-4 py-8 text-center text-body-md text-on-surface-variant">
+        <div className="border-t border-line py-8 text-center font-mono text-[11px] uppercase tracking-[0.08em] text-text-3">
           {empty}
         </div>
       )}
@@ -754,32 +859,30 @@ function AlertItem({
   tone: "warn" | "error";
   href?: string;
 }) {
-  const toneClass =
-    tone === "error"
-      ? "border-error-soft/30 bg-error-soft/10 text-error-soft"
-      : "border-yellow-400/30 bg-yellow-400/10 text-yellow-400";
+  const chipClass = tone === "error" ? "chip rej" : "chip pend";
+  const label = tone === "error" ? "긴급" : "임박";
 
   const content = (
     <li
       className={cn(
-        "flex items-center justify-between gap-3 px-4 py-3 transition-colors",
-        href && "hover:bg-surface-container/40",
+        "flex items-center justify-between gap-3 border-b border-line py-[14px] last:border-b-0",
+        href && "transition-colors hover:bg-bg-1",
       )}
     >
       <div className="min-w-0">
-        <p className="truncate font-medium text-on-surface">{title}</p>
-        <p className="text-label-sm text-on-surface-variant">{meta}</p>
+        <p className="truncate text-[13px] text-text-1">{title}</p>
+        <p className="mt-[2px] font-mono text-[10px] tracking-[0.05em] text-text-3">{meta}</p>
       </div>
-      <span
-        className={cn(
-          "inline-flex flex-shrink-0 items-center rounded-md border px-2 py-1 text-[10px] font-semibold",
-          toneClass,
-        )}
-      >
-        {tone === "error" ? "긴급" : "임박"}
+      <span className={chipClass}>
+        <i />
+        {label}
       </span>
     </li>
   );
 
-  return href ? <Link href={href}>{content}</Link> : content;
+  return href ? (
+    <Link href={href as never}>{content}</Link>
+  ) : (
+    content
+  );
 }
