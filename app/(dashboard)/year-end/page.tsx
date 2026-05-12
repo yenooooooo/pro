@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Calendar, FileText, Users } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -64,6 +63,7 @@ export default async function YearEndPage({
     0,
   );
   const completedCount = settlements?.length ?? 0;
+  const totalEmployees = emps?.length ?? 0;
 
   const yearOptions = Array.from(
     { length: 4 },
@@ -71,25 +71,23 @@ export default async function YearEndPage({
   );
 
   return (
-    <div className="space-y-stack-lg">
-      <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div className="space-y-2">
-          <p className="inline-flex items-center gap-2 text-label-sm uppercase tracking-widest text-primary">
-            <Calendar aria-hidden className="h-4 w-4" />
-            Year-End Tax Settlement
-          </p>
-          <h1 className="text-headline-lg font-semibold tracking-tight text-on-surface">
-            {t("title")}
+    <div className="animate-view-in">
+      {/* ===== Page Head ===== */}
+      <header className="mb-9 flex flex-col items-start justify-between gap-8 border-b border-line pb-6 sm:flex-row sm:items-end">
+        <div>
+          <div className="eyebrow mb-3">
+            <b>M14</b>Cycle · Year-End
+          </div>
+          <h1 className="page-h">
+            연말 <em>정산.</em>
           </h1>
-          <p className="text-body-md text-on-surface-variant">
-            {t("subtitle")}
-          </p>
+          <p className="page-sub">{t("subtitle")}</p>
         </div>
         <form method="get" className="flex items-center gap-2">
           <select
             name="year"
             defaultValue={year}
-            className="h-11 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+            className="h-9 border border-line bg-bg-1 px-3 font-mono text-[12px] text-text-1 focus:border-gold-soft"
           >
             {yearOptions.map((y) => (
               <option key={y} value={y}>
@@ -97,111 +95,124 @@ export default async function YearEndPage({
               </option>
             ))}
           </select>
-          <button
-            type="submit"
-            className="inline-flex h-11 items-center rounded-lg bg-primary px-4 text-label-sm font-semibold text-on-primary transition-opacity hover:opacity-90"
-          >
+          <button type="submit" className="btn">
             적용
           </button>
         </form>
       </header>
 
-      {/* KPI */}
-      <div className="grid grid-cols-1 gap-gutter md:grid-cols-3">
-        <KpiCard
-          icon={Users}
-          label="입력 완료"
-          value={`${completedCount} / ${emps?.length ?? 0}명`}
-          tone="default"
-        />
-        <KpiCard
-          icon={FileText}
-          label={`${year}년 환급액 합계`}
-          value={`${totalRefund.toLocaleString("ko-KR")}원`}
-          tone="primary"
-        />
-        <KpiCard
-          icon={FileText}
-          label="추가납부 합계"
-          value={`${totalAdditional.toLocaleString("ko-KR")}원`}
-          tone="error"
-        />
+      {/* ===== KPIs ===== */}
+      <div className="mb-9 grid grid-cols-1 border-l border-t border-line md:grid-cols-2 xl:grid-cols-4">
+        <div className="kpi-card">
+          <div className="kpi-l">입력 완료</div>
+          <div className="kpi-v">
+            {completedCount.toLocaleString("ko-KR")}
+            <span className="ml-2 text-[16px] text-text-3">
+              / {totalEmployees.toLocaleString("ko-KR")}명
+            </span>
+          </div>
+        </div>
+        <div className="kpi-card">
+          <div className="kpi-l">{year}년 환급 예상</div>
+          <div className="kpi-v text-[#6BCB8A]">
+            <span className="cur">₩</span>
+            {totalRefund.toLocaleString("ko-KR")}
+          </div>
+        </div>
+        <div className="kpi-card">
+          <div className="kpi-l">추가납부 합계</div>
+          <div className="kpi-v warn">
+            <span className="cur">₩</span>
+            {totalAdditional.toLocaleString("ko-KR")}
+          </div>
+        </div>
+        <div className="kpi-card">
+          <div className="kpi-l">대상 직원</div>
+          <div className="kpi-v">
+            {totalEmployees.toLocaleString("ko-KR")}
+            <span className="ml-2 text-[16px] text-text-3">명</span>
+          </div>
+        </div>
       </div>
 
-      {/* 직원 목록 */}
-      <section className="glass-panel overflow-hidden rounded-xl">
-        <h2 className="border-b border-outline-variant/30 px-6 py-4 text-headline-md font-semibold text-on-surface">
-          {year}년 정산 대상 직원
-        </h2>
+      {/* ===== Settlement Table ===== */}
+      <section className="panel">
+        <div className="panel-h">
+          <div className="t font-serif">
+            <em>{year}</em> 정산 대상
+          </div>
+          <div className="meta">
+            {totalEmployees.toLocaleString("ko-KR")} 명 · {completedCount.toLocaleString("ko-KR")} 입력완료
+          </div>
+        </div>
+
         <div className="overflow-x-auto">
-          <table className="w-full text-data-tabular">
+          <table className="tbl">
             <thead>
-              <tr className="border-b border-outline-variant/30 text-label-sm uppercase tracking-widest text-on-surface-variant">
-                <th className="px-4 py-3 text-left">사번</th>
-                <th className="px-4 py-3 text-left">이름</th>
-                <th className="px-4 py-3 text-left">부서</th>
-                <th className="px-4 py-3 text-right">기본급</th>
-                <th className="px-4 py-3 text-right">결정세액</th>
-                <th className="px-4 py-3 text-right">기납부</th>
-                <th className="px-4 py-3 text-right">환급/추가납부</th>
-                <th className="px-4 py-3 text-center">상태</th>
-                <th className="px-4 py-3"></th>
+              <tr>
+                <th>사번</th>
+                <th>이름</th>
+                <th>부서</th>
+                <th className="text-right">기본급</th>
+                <th className="text-right">결정세액</th>
+                <th className="text-right">기납부</th>
+                <th className="text-right">환급/추가납부</th>
+                <th className="text-center">상태</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
               {(emps ?? []).map((e) => {
                 const s = settlementMap.get(e.id);
-                const refundColor =
-                  !s
-                    ? "text-on-surface-variant"
-                    : s.refund_amount > 0
-                      ? "text-emerald-300"
-                      : s.refund_amount < 0
-                        ? "text-error-soft"
-                        : "text-on-surface-variant";
+                const refundColor = !s
+                  ? "text-text-3"
+                  : s.refund_amount > 0
+                    ? "text-[#6BCB8A]"
+                    : s.refund_amount < 0
+                      ? "text-[#E06B5F] italic font-serif"
+                      : "text-text-3";
                 return (
-                  <tr
-                    key={e.id}
-                    className="border-b border-outline-variant/15 last:border-0 transition-colors hover:bg-primary/5"
-                  >
-                    <td className="px-4 py-3 text-on-surface-variant">
+                  <tr key={e.id}>
+                    <td className="font-mono text-[12px] text-text-3">
                       {e.employee_no ?? "—"}
                     </td>
-                    <td className="px-4 py-3 font-medium text-on-surface">
-                      {e.name}
-                    </td>
-                    <td className="px-4 py-3 text-on-surface-variant">
+                    <td className="text-text-1">{e.name}</td>
+                    <td className="text-text-2">
                       {e.departments?.name ?? "—"}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-on-surface">
+                    <td className="n">
                       {e.base_salary.toLocaleString("ko-KR")}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-on-surface">
+                    <td className="n">
                       {s ? s.determined_tax.toLocaleString("ko-KR") : "—"}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-on-surface-variant">
+                    <td className="n text-text-3">
                       {s ? s.prepaid_tax.toLocaleString("ko-KR") : "—"}
                     </td>
-                    <td className={`px-4 py-3 text-right tabular-nums font-semibold ${refundColor}`}>
+                    <td
+                      className={`px-[14px] py-[14px] text-right font-mono tabular-nums border-b border-line ${refundColor}`}
+                    >
                       {s
                         ? `${s.refund_amount > 0 ? "+" : ""}${s.refund_amount.toLocaleString("ko-KR")}원`
                         : "—"}
                     </td>
-                    <td className="px-4 py-3 text-center">
+                    <td className="text-center">
                       {s ? (
-                        <span className="inline-flex items-center rounded-md border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-300">
+                        <span className="chip ok">
+                          <i />
                           입력완료
                         </span>
                       ) : (
-                        <span className="inline-flex items-center rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[11px] font-semibold text-amber-300">
+                        <span className="chip pend">
+                          <i />
                           미입력
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="text-right">
                       <Link
                         href={`/year-end/${e.id}?year=${year}` as never}
-                        className="text-label-sm font-semibold text-primary-electric hover:text-primary-container"
+                        className="font-mono text-[10px] uppercase tracking-[0.1em] text-gold transition-colors hover:text-gold-2"
                       >
                         편집 →
                       </Link>
@@ -213,37 +224,6 @@ export default async function YearEndPage({
           </table>
         </div>
       </section>
-    </div>
-  );
-}
-
-function KpiCard({
-  icon: Icon,
-  label,
-  value,
-  tone,
-}: {
-  icon: typeof Users;
-  label: string;
-  value: string;
-  tone: "primary" | "default" | "error";
-}) {
-  const colorMap = {
-    primary: "text-primary-electric",
-    default: "text-on-surface",
-    error: "text-error-soft",
-  };
-  return (
-    <div className="glass-panel rounded-xl p-5">
-      <div className="flex items-center justify-between">
-        <p className="text-label-sm uppercase tracking-widest text-on-surface-variant">
-          {label}
-        </p>
-        <Icon aria-hidden className="h-4 w-4 text-on-surface-variant/40" />
-      </div>
-      <p className={`mt-2 text-headline-md font-bold tabular-nums ${colorMap[tone]}`}>
-        {value}
-      </p>
     </div>
   );
 }

@@ -1,13 +1,4 @@
-import {
-  Activity,
-  Building2,
-  CalendarPlus,
-  FileSpreadsheet,
-  Search,
-  Sparkles,
-  UserPlus,
-  Users,
-} from "lucide-react";
+import { CalendarPlus, FileSpreadsheet, Search, UserPlus } from "lucide-react";
 import Link from "next/link";
 import { differenceInYears, format } from "date-fns";
 import { getTranslations } from "next-intl/server";
@@ -140,166 +131,142 @@ export default async function EmployeesPage({
   }
 
   return (
-    <div className="space-y-stack-lg">
-      {/* Header */}
-      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
+    <div className="animate-view-in">
+      {/* ===== Page Head ===== */}
+      <header className="mb-9 flex flex-col items-start justify-between gap-8 border-b border-line pb-6 sm:flex-row sm:items-end">
         <div>
-          <h2 className="text-headline-lg font-semibold tracking-tight text-on-surface">
-            {t("title")}
-          </h2>
-          <p className="mt-1 text-body-md text-on-surface-variant">
-            {t("subtitle")}
-          </p>
+          <div className="eyebrow mb-3">
+            <b>M02</b>Records · Directory
+          </div>
+          <h1 className="page-h">
+            직원 <em>{totalCount}.</em>
+          </h1>
+          <p className="page-sub">{t("subtitle")}</p>
         </div>
-        <div className="flex flex-wrap gap-3">
-          <Link
-            href="/employees/import"
-            className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-outline-variant/50 bg-surface-container px-4 py-2 text-label-sm text-on-surface transition-colors hover:bg-surface-container-high"
-          >
-            <FileSpreadsheet aria-hidden className="h-[18px] w-[18px]" />
+        <div className="flex flex-wrap gap-2">
+          <Link href="/employees/import" className="btn">
+            <FileSpreadsheet aria-hidden className="h-[14px] w-[14px]" />
             {t("import_excel")}
           </Link>
-          <Link
-            href="/employees/new"
-            className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary-electric px-4 py-2 text-label-sm font-semibold text-on-primary transition-colors hover:bg-primary-fixed-dim"
-          >
-            <UserPlus aria-hidden className="h-[18px] w-[18px]" />
+          <Link href="/employees/new" className="btn btn-primary">
+            <UserPlus aria-hidden className="h-[14px] w-[14px]" />
             {t("add")}
           </Link>
         </div>
+      </header>
+
+      {/* ===== KPIs ===== */}
+      <div className="mb-9 grid grid-cols-1 border-l border-t border-line md:grid-cols-3">
+        <KPI label={t("kpi_total_active")} value={totalCount} suffix={t("kpi_total_active_unit")} />
+        <KPI label={t("kpi_departments")} value={allDepts.length} suffix={t("kpi_departments_unit")} />
+        <KPI label={t("kpi_avg_tenure")} value={Number(avgYearsRaw.toFixed(1))} suffix={t("kpi_avg_tenure_unit")} />
       </div>
 
-      {/* Top KPI Row */}
-      <div className="grid grid-cols-1 gap-gutter md:grid-cols-3">
-        <KPICard
-          label={t("kpi_total_active")}
-          value={String(totalCount)}
-          unit={t("kpi_total_active_unit")}
-          icon={Users}
-          iconTone="text-primary-electric"
-          barTone="bg-primary-electric"
-          barWidth="80%"
-        />
-        <KPICard
-          label={t("kpi_departments")}
-          value={String(allDepts.length)}
-          unit={t("kpi_departments_unit")}
-          icon={Building2}
-          iconTone="text-tertiary-sky"
-          barTone="bg-tertiary-sky"
-          barWidth="60%"
-        />
-        <KPICard
-          label={t("kpi_avg_tenure")}
-          value={avgYearsRaw.toFixed(1)}
-          unit={t("kpi_avg_tenure_unit")}
-          icon={Activity}
-          iconTone="text-secondary-slate"
-          barTone="bg-secondary-slate"
-          barWidth="50%"
-        />
-      </div>
-
-      {/* Bento Grid */}
-      <div className="grid grid-cols-12 gap-gutter">
-        {/* LEFT 8col — Directory */}
-        <div className="col-span-12 lg:col-span-8">
-          <div className="glass-panel rounded-xl p-stack-md">
-            {/* Search + filters */}
-            <div className="mb-stack-md flex flex-wrap items-center gap-3">
-              <form action="/employees" method="GET" className="relative w-full max-w-xs flex-1">
-                {searchParams.dept ? (
-                  <input type="hidden" name="dept" value={searchParams.dept} />
-                ) : null}
-                <Search
-                  aria-hidden
-                  className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-outline"
-                />
-                <input
-                  type="search"
-                  name="q"
-                  defaultValue={searchParams.q ?? ""}
-                  placeholder={t("search_placeholder")}
-                  className="min-h-11 w-full rounded-lg border border-outline-variant/40 bg-surface-container-low py-1.5 pl-9 pr-3 text-data-tabular text-on-surface placeholder:text-outline focus:border-primary-electric focus:outline-none focus:ring-1 focus:ring-primary-electric"
-                />
-              </form>
-
-              <div className="flex flex-wrap gap-2">
-                <FilterChip
-                  href={buildHref({ dept: undefined })}
-                  active={!searchParams.dept}
-                >
-                  {tCommon("all")}
-                </FilterChip>
-                {allDepts.map((d) => (
-                  <FilterChip
-                    key={d.id}
-                    href={buildHref({ dept: d.id })}
-                    active={searchParams.dept === d.id}
-                  >
-                    {d.name}
-                  </FilterChip>
-                ))}
-              </div>
-
-              <span className="ml-auto text-label-sm text-on-surface-variant">
-                {t("displayed", { count: list.length })}
-              </span>
+      {/* ===== Bento (8/4) ===== */}
+      <div className="row-grid" style={{ gridTemplateColumns: "minmax(0, 2fr) minmax(0, 1fr)" }}>
+        {/* LEFT — Directory */}
+        <section className="panel">
+          <div className="panel-h">
+            <div className="t font-serif">
+              <em>Directory</em>
             </div>
-
-            {/* Directory grid */}
-            {list.length === 0 ? (
-              <div className="rounded-lg border border-outline-variant/30 bg-surface-container-lowest/40 p-12 text-center text-body-md text-on-surface-variant">
-                {t("no_match")}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 gap-stack-md md:grid-cols-2 xl:grid-cols-3">
-                {list.map((emp) => (
-                  <EmployeeCard
-                    key={emp.id}
-                    emp={emp}
-                    labels={{
-                      unassignedDept: t("unassigned_dept"),
-                      unassignedPosition: t("unassigned_position"),
-                      hireDateLabel: t("hire_date_label"),
-                    }}
-                  />
-                ))}
-              </div>
-            )}
+            <div className="meta">{t("displayed", { count: list.length })}</div>
           </div>
-        </div>
 
-        {/* RIGHT 4col — 부서 분포 + 신규 입사 */}
-        <div className="col-span-12 flex flex-col gap-gutter lg:col-span-4">
-          {/* 부서별 분포 */}
-          <div className="glass-panel rounded-xl p-stack-md">
-            <h3 className="mb-stack-md flex items-center gap-2 text-headline-md font-semibold text-on-surface">
-              <Building2 aria-hidden className="h-5 w-5 text-primary-electric" />
-              {t("dept_distribution")}
-            </h3>
+          {/* Search + filters */}
+          <div className="mb-6 flex flex-wrap items-center gap-3">
+            <form
+              action="/employees"
+              method="GET"
+              className="relative w-full max-w-xs flex-1"
+            >
+              {searchParams.dept ? (
+                <input type="hidden" name="dept" value={searchParams.dept} />
+              ) : null}
+              <Search
+                aria-hidden
+                className="pointer-events-none absolute left-3 top-1/2 h-3 w-3 -translate-y-1/2 text-text-3"
+              />
+              <input
+                type="search"
+                name="q"
+                defaultValue={searchParams.q ?? ""}
+                placeholder={t("search_placeholder")}
+                className="h-9 w-full border border-line bg-bg-1 py-1.5 pl-9 pr-3 font-mono text-[12px] text-text-1 placeholder:text-text-3 focus:border-gold-soft"
+              />
+            </form>
+            <div className="flex flex-wrap gap-2">
+              <FilterChip
+                href={buildHref({ dept: undefined })}
+                active={!searchParams.dept}
+              >
+                {tCommon("all")}
+              </FilterChip>
+              {allDepts.map((d) => (
+                <FilterChip
+                  key={d.id}
+                  href={buildHref({ dept: d.id })}
+                  active={searchParams.dept === d.id}
+                >
+                  {d.name}
+                </FilterChip>
+              ))}
+            </div>
+          </div>
+
+          {/* Directory grid */}
+          {list.length === 0 ? (
+            <div className="border border-line bg-bg-1/40 py-12 text-center font-mono text-[11px] uppercase tracking-[0.08em] text-text-3">
+              {t("no_match")}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-px bg-line md:grid-cols-2 xl:grid-cols-3">
+              {list.map((emp) => (
+                <EmployeeCard
+                  key={emp.id}
+                  emp={emp}
+                  labels={{
+                    unassignedDept: t("unassigned_dept"),
+                    unassignedPosition: t("unassigned_position"),
+                    hireDateLabel: t("hire_date_label"),
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* RIGHT — Dept distribution + New hires */}
+        <div className="flex flex-col gap-px bg-line">
+          <section className="panel">
+            <div className="panel-h">
+              <div className="t font-serif text-[18px]">
+                <em>부서별</em> 분포
+              </div>
+            </div>
             {deptDistribution.length === 0 ? (
-              <p className="text-body-md text-on-surface-variant">{t("no_dept_data")}</p>
+              <p className="font-mono text-[11px] uppercase tracking-[0.08em] text-text-3">
+                {t("no_dept_data")}
+              </p>
             ) : (
               <div className="space-y-4">
                 {deptDistribution.map((d) => {
-                  const tone = DEPT_TONE[d.name] ?? DEFAULT_TONE;
                   const pct = Math.round(d.ratio * 100);
                   return (
                     <div key={d.id}>
-                      <div className="mb-1.5 flex justify-between text-data-tabular">
-                        <span className="text-on-surface">{d.name}</span>
-                        <span className="font-bold text-on-surface">
-                          {d.count}
-                          <span className="ml-1 text-xs font-normal text-on-surface-variant">
-                            ({pct}%)
+                      <div className="mb-1.5 flex items-baseline justify-between font-mono text-[12px]">
+                        <span className="text-text-1">{d.name}</span>
+                        <span className="text-text-1">
+                          <span className="font-serif text-[18px] italic">{d.count}</span>
+                          <span className="ml-1.5 text-[10px] text-text-3">
+                            {pct}%
                           </span>
                         </span>
                       </div>
-                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-container-highest">
+                      <div className="h-px w-full bg-line">
                         <div
                           aria-hidden
-                          className={cn("h-full rounded-full", tone.bar)}
+                          className="h-px bg-gold"
                           style={{ width: `${pct}%` }}
                         />
                       </div>
@@ -308,21 +275,26 @@ export default async function EmployeesPage({
                 })}
               </div>
             )}
-          </div>
+          </section>
 
-          {/* 신규 입사 */}
-          <div className="glass-panel rounded-xl p-stack-md">
-            <h3 className="mb-stack-md flex items-center gap-2 text-headline-md font-semibold text-on-surface">
-              <Sparkles aria-hidden className="h-5 w-5 text-tertiary-sky" />
-              {t("new_hires")}
-            </h3>
-            <p className="mb-4 text-label-sm text-on-surface-variant">
-              {t("new_hires_caption", { year: today.getFullYear(), month: today.getMonth() + 1 })}
-            </p>
+          <section className="panel">
+            <div className="panel-h">
+              <div className="t font-serif text-[18px]">
+                <em>신규</em> 입사
+              </div>
+              <div className="meta">
+                {t("new_hires_caption", {
+                  year: today.getFullYear(),
+                  month: today.getMonth() + 1,
+                })}
+              </div>
+            </div>
             {newHires.length === 0 ? (
-              <p className="text-body-md text-on-surface-variant">{t("no_new_hires")}</p>
+              <p className="font-mono text-[11px] uppercase tracking-[0.08em] text-text-3">
+                {t("no_new_hires")}
+              </p>
             ) : (
-              <ul className="space-y-3">
+              <ul className="space-y-px bg-line">
                 {newHires.map((emp) => {
                   const tone = emp.department?.name
                     ? (DEPT_TONE[emp.department.name] ?? DEFAULT_TONE)
@@ -330,27 +302,27 @@ export default async function EmployeesPage({
                   return (
                     <li
                       key={emp.id}
-                      className="flex items-center gap-3 rounded-lg border border-outline-variant/30 bg-surface-container/50 p-2.5 transition-colors hover:bg-surface-container"
+                      className="flex items-center gap-3 bg-bg p-3 transition-colors hover:bg-bg-1"
                     >
                       <InitialsAvatar name={emp.name} size="sm" tone={tone.avatar} />
                       <div className="min-w-0 flex-1">
-                        <div className="truncate text-data-tabular text-on-surface">
+                        <div className="truncate text-[13px] text-text-1">
                           {emp.name}
                         </div>
-                        <div className="truncate text-label-sm text-on-surface-variant">
+                        <div className="truncate font-mono text-[10px] tracking-[0.05em] text-text-3">
                           {emp.department?.name ?? "—"} · {emp.hire_date}
                         </div>
                       </div>
                       <CalendarPlus
                         aria-hidden
-                        className="h-4 w-4 flex-shrink-0 text-tertiary-sky"
+                        className="h-3 w-3 flex-shrink-0 text-gold"
                       />
                     </li>
                   );
                 })}
               </ul>
             )}
-          </div>
+          </section>
         </div>
       </div>
     </div>
@@ -370,10 +342,10 @@ function FilterChip({
     <Link
       href={href}
       className={cn(
-        "inline-flex min-h-11 items-center rounded-full px-4 text-label-sm transition-colors",
+        "chip transition-colors",
         active
-          ? "border border-primary-electric/40 bg-primary-electric/10 text-primary-electric"
-          : "border border-outline-variant/50 bg-surface-container text-on-surface-variant hover:border-outline-variant",
+          ? "border-gold text-gold"
+          : "hover:border-line-3 hover:text-text-1",
       )}
     >
       {children}
@@ -402,83 +374,47 @@ function EmployeeCard({
   return (
     <Link
       href={`/employees/${emp.id}`}
-      className="group relative flex flex-col gap-stack-sm overflow-hidden rounded-xl border border-outline-variant/30 bg-surface-container-low/60 p-stack-md backdrop-blur-[12px] transition-colors hover:border-primary-electric/30 hover:bg-surface-container/80"
+      className="group flex flex-col gap-3 bg-bg p-4 transition-colors hover:bg-bg-1"
     >
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 transition-opacity group-hover:opacity-100"
-      />
-
-      <div className="relative flex items-start justify-between">
+      <div className="flex items-start justify-between">
         <InitialsAvatar name={emp.name} size="lg" tone={tone.avatar} />
-        <span
-          className={cn(
-            "inline-flex whitespace-nowrap rounded-md border px-2.5 py-1 text-[11px] font-semibold",
-            tone.badge,
-          )}
-        >
-          {emp.department?.name ?? labels.unassignedDept}
-        </span>
+        <span className="chip">{emp.department?.name ?? labels.unassignedDept}</span>
       </div>
-
-      <div className="relative mt-2">
-        <h3 className="text-body-lg font-semibold text-on-surface transition-colors group-hover:text-primary-electric">
+      <div>
+        <h3 className="font-serif text-[22px] italic leading-tight text-text-1 transition-colors group-hover:text-gold">
           {emp.name}
         </h3>
-        <p className="text-sm text-on-surface-variant">
+        <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.08em] text-text-3">
           {emp.position?.name ?? labels.unassignedPosition}
         </p>
       </div>
-
-      <div className="relative mt-auto flex items-center justify-between border-t border-outline-variant/20 pt-4">
-        <span className="text-[12px] tabular-nums text-outline">{labels.hireDateLabel} {hireText}</span>
-        <span className="text-[11px] tabular-nums text-on-surface-variant">
-          {emp.employee_no}
+      <div className="mt-auto flex items-center justify-between border-t border-line pt-3 font-mono text-[10px] tracking-[0.05em] text-text-3">
+        <span>
+          {labels.hireDateLabel} {hireText}
         </span>
+        <span className="text-text-2">{emp.employee_no}</span>
       </div>
     </Link>
   );
 }
 
-/* KPI Card — common pattern */
-function KPICard({
+/* KPI Card — v2 wrapper (Page-level KPI 컴포넌트는 dashboard 에 있음. 여기는 employees 전용 변형) */
+function KPI({
   label,
   value,
-  unit,
-  icon: Icon,
-  iconTone,
-  barTone,
-  barWidth,
+  suffix,
 }: {
   label: string;
-  value: string;
-  unit?: string;
-  icon: typeof Users;
-  iconTone: string;
-  barTone: string;
-  barWidth: string;
+  value: number;
+  suffix?: string;
 }) {
   return (
-    <div className="glass-panel relative flex h-32 flex-col justify-between overflow-hidden rounded-lg p-stack-md">
-      <div className="flex items-start justify-between">
-        <span className="text-label-sm uppercase tracking-wider text-on-surface-variant">
-          {label}
-        </span>
-        <Icon aria-hidden className={cn("h-5 w-5 opacity-70", iconTone)} />
+    <div className="kpi-card">
+      <div className="kpi-l">{label}</div>
+      <div className="kpi-v">
+        {value.toLocaleString("ko-KR")}
+        {suffix ? <span className="ml-2 text-[16px] text-text-3">{suffix}</span> : null}
       </div>
-      <div className="flex items-baseline gap-2">
-        <span className="text-display-xl font-bold tracking-tighter tabular-nums text-on-surface">
-          {value}
-        </span>
-        {unit ? (
-          <span className="text-data-tabular text-on-surface-variant">{unit}</span>
-        ) : null}
-      </div>
-      <div
-        aria-hidden
-        className={cn("absolute bottom-0 left-0 h-1", barTone)}
-        style={{ width: barWidth }}
-      />
     </div>
   );
 }
